@@ -13,10 +13,10 @@ class Term(Taxonomy):
     measure = JSONField(null=True, blank=True)
 
 
-class TermTaxonomy(models.Model):
+class TermTaxonomy(BaseModel):
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="post_terms")
     taxonomy = models.CharField(max_length=50)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child")
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
 
@@ -31,7 +31,9 @@ class Publication(BaseModel, Taxonomy):
 
 class Post(BaseModel, Taxonomy):
     user = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
-    publications = models.ForeignKey(Publication, related_name="posts", on_delete=models.CASCADE)
+    primary_publication = models.ForeignKey(Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL,
+                                            null=True)
+    publications = models.ManyToManyField(Publication, related_name="posts", blank=True)
     post_parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="post_child")
 
     content = models.TextField(null=True, blank=True)  # Use Markdown

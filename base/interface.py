@@ -26,7 +26,7 @@ class BaseModel(models.Model):
 
 
 class Taxonomy(models.Model):
-    title = models.CharField(max_length=200, unique=True)
+    title = models.CharField(max_length=200)
     slug = models.CharField(max_length=200, unique=True)
     description = models.CharField(max_length=500, blank=True, null=True)
 

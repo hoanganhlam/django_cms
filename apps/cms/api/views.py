@@ -17,6 +17,9 @@ class PublicationViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     lookup_field = 'pk'
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class TermTaxonomyViewSet(viewsets.ModelViewSet):
     models = models.TermTaxonomy
@@ -54,3 +57,6 @@ class PostViewSet(viewsets.ModelViewSet):
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
     lookup_field = 'pk'
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
