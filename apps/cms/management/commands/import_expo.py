@@ -65,10 +65,6 @@ def fetch_x(i):
 class Command(BaseCommand):
     def handle(self, *args, **options):
         # fetch_data(1)
-        queryset = Post.objects.all()
-        for post in queryset:
-            data = fetch_x(post.id)
-            if data is not None:
-                post.meta["full_name"] = data.get("full_name")
-                post.save()
-                print(post.id)
+        queryset = TermTaxonomy.objects.filter(term__title__contains="vue")
+        for term in queryset:
+            pub.publication_terms.add(term)

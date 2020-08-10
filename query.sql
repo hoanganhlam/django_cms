@@ -89,7 +89,7 @@ END;
 $$ LANGUAGE PLPGSQL;
 
 -- VOTE_OBJECT
-CREATE OR REPLACE FUNCTION VOTE_OBJECT(user_id int, i int) RETURNS json AS
+CREATE OR REPLACE FUNCTION VOTE_OBJECT(user_id INT, i INT = NULL) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (SELECT (
@@ -97,7 +97,8 @@ FROM (SELECT (
                                 SELECT *
                                 FROM activity_action_voters
                                 WHERE user_id = VOTE_OBJECT.user_id
-                                  AND action_id = VOTE_OBJECT.i)
+                                  AND CASE WHEN i IS NOT NULL THEN action_id = VOTE_OBJECT.i ELSE FALSE END
+                            )
              ) AS is_voted,
              (
                  SELECT count(*)
@@ -217,7 +218,23 @@ CREATE OR REPLACE FUNCTION FETCH_POST(i int) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (
-         SELECT cms_post.*
+         SELECT cms_post.*,
+                (SELECT FETCH_MEDIA(CAST(cms_post.options ->> 'media' AS INTEGER))) AS "media",
+                (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT ct.id,
+                                    ct.taxonomy,
+                                    (SELECT FETCH_TERM(ct.term_id)) AS "term"
+                             FROM cms_termtaxonomy ct
+                                      JOIN cms_post_post_terms cppt ON ct.id = cppt.termtaxonomy_id
+                             WHERE cppt.post_id = cms_post.id
+                             GROUP BY ct.id
+                         ) t
+                )                                                                   AS "post_terms",
+                (
+                    SELECT VOTE_OBJECT(user_id, CAST(cms_post.options ->> 'action_post' AS INTEGER))
+                )                                                                   AS "vote_object"
          FROM cms_post
          WHERE cms_post.id = i
      ) t;
@@ -229,7 +246,23 @@ CREATE OR REPLACE FUNCTION FETCH_POST(i varchar) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (
-         SELECT cms_post.*
+         SELECT cms_post.*,
+                (SELECT FETCH_MEDIA(CAST(cms_post.options ->> 'media' AS INTEGER))) AS "media",
+                (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT ct.id,
+                                    ct.taxonomy,
+                                    (SELECT FETCH_TERM(ct.term_id)) AS "term"
+                             FROM cms_termtaxonomy ct
+                                      JOIN cms_post_post_terms cppt ON ct.id = cppt.termtaxonomy_id
+                             WHERE cppt.post_id = cms_post.id
+                             GROUP BY ct.id
+                         ) t
+                )                                                                   AS "post_terms",
+                (
+                    SELECT VOTE_OBJECT(user_id, CAST(cms_post.options ->> 'action_post' AS INTEGER))
+                )                                                                   AS "vote_object"
          FROM cms_post
          WHERE cms_post.slug = i
          LIMIT 1
@@ -292,8 +325,7 @@ CREATE OR REPLACE FUNCTION FETCH_TERM(i int) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (
-         SELECT ct.id,
-                ct.title
+         SELECT ct.*
          FROM cms_term ct
          WHERE ct.id = i
          LIMIT 1
@@ -443,7 +475,10 @@ FROM (
                                                  WHERE cppt.post_id = aa.id
                                                  GROUP BY ct.id
                                              ) t
-                                    )                                                             AS "post_terms"
+                                    )                                                             AS "post_terms",
+                                    (
+                                        SELECT VOTE_OBJECT(user_id, CAST(aa.options ->> 'action_post' AS INTEGER))
+                                    )                                                             AS "vote_object"
                              FROM cms_post aa
                              WHERE aa.db_status = 1
                                AND aa.status = 'POSTED'
@@ -570,6 +605,55 @@ FROM (
      ) e
 $$ LANGUAGE SQL;
 
+-- FETCH_COMMENTS
+CREATE OR REPLACE FUNCTION FETCH_COMMENTS(page_size int = NULL,
+                                          os int = NULL,
+                                          order_by varchar = NULL,
+                                          user_id int = NULL,
+                                          parent_id int = NULL,
+                                          action_id int = NULL) RETURNS JSON AS
+$$
+SELECT row_to_json(e)
+FROM (
+         SELECT (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT ac.*
+                             FROM activity_comment ac
+                             WHERE ac.db_status = 1
+                               AND CASE
+                                       WHEN FETCH_COMMENTS.action_id is NOT NULL THEN
+                                           ac.activity_id = action_id
+                                       ELSE FALSE END
+                               AND CASE
+                                       WHEN FETCH_COMMENTS.parent_id IS NOT NULL THEN
+                                           ac.parent_comment_id = FETCH_COMMENTS.parent_id
+                                       ELSE TRUE END
+                             GROUP BY ac.id
+                             ORDER BY ac.id DESC
+                             LIMIT page_size
+                             OFFSET
+                             os
+                         ) t
+                ) AS results,
+                (
+                    SELECT COUNT(*)
+                    FROM (
+                             SELECT ac.id
+                             FROM activity_comment ac
+                             WHERE ac.db_status = 1
+                               AND CASE
+                                       WHEN FETCH_COMMENTS.action_id is NOT NULL THEN
+                                           ac.activity_id = action_id
+                                       ELSE FALSE END
+                               AND CASE
+                                       WHEN FETCH_COMMENTS.parent_id IS NOT NULL THEN
+                                           ac.parent_comment_id = FETCH_COMMENTS.parent_id
+                                       ELSE TRUE END
+                         ) t
+                ) AS count
+     ) e
+$$ LANGUAGE SQL;
 
 ALTER SEQUENCE cms_post_id_seq RESTART WITH 1904;
 SELECT FETCH_POST('nuxt-basic-auth-module');

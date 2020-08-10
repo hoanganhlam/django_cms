@@ -30,6 +30,7 @@ class Publication(BaseModel, Taxonomy):
 
 
 class Post(BaseModel, Taxonomy):
+    pid = models.IntegerField(null=True, blank=True)
     user = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
     primary_publication = models.ForeignKey(Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL,
                                             null=True)
@@ -37,9 +38,10 @@ class Post(BaseModel, Taxonomy):
     post_parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="post_child")
 
     content = models.TextField(null=True, blank=True)  # Use Markdown
+    # DRAFT / PENDING / POSTED / DELETED
     status = models.CharField(max_length=20, default="DRAFT")
     post_type = models.CharField(max_length=20, default="BLOG")
-    options = JSONField(null=True, blank=True)
+    options = JSONField(null=True, blank=True)  # activity=1
     post_date = models.DateTimeField(null=True, blank=True)
 
     measure = JSONField(null=True, blank=True)

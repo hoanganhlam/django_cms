@@ -113,4 +113,5 @@ class Comment(interface.BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     activity = models.ForeignKey(Action, on_delete=models.CASCADE, related_name="comments")
     content = models.TextField(max_length=500)
+    parent_comment = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True)
     voters = models.ManyToManyField(User, blank=True, related_name='voted_comments')

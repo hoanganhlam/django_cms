@@ -36,7 +36,7 @@ class Taxonomy(models.Model):
 
     def save(self, **kwargs):
         # generate unique slug
-        if hasattr(self, 'slug'):
+        if hasattr(self, 'slug') and self.id is None:
             unique_slugify(self, self.title)
         super(Taxonomy, self).save(**kwargs)
 
