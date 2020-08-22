@@ -11,11 +11,14 @@ from utils.other import get_paginator
 from apps.activity import verbs, action
 
 
-def get_action_id(app_id, slug):
-    if slug.isnumeric():
-        q = Q(id=int(slug))
+def get_action_id(app_id, slug, flag):
+    if flag:
+        q = Q(uid=int(slug))
     else:
-        q = Q(slug=slug)
+        if slug.isnumeric():
+            q = Q(id=int(slug))
+        else:
+            q = Q(slug=slug)
     post = models.Post.objects.filter(q).first()
     action_id = None
     if post is not None:
@@ -95,8 +98,9 @@ def fetch_posts(request, app_id):
 def fetch_post(request, app_id, slug):
     if request.method == "GET":
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POST(%s)", [
-                int(slug) if slug.isnumeric() else slug
+            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+                int(slug) if slug.isnumeric() else slug,
+                request.GET.get("uid") is not None
             ])
             result = cursor.fetchone()[0]
             cursor.close()
@@ -106,7 +110,7 @@ def fetch_post(request, app_id, slug):
 
 @api_view(['GET', 'POST'])
 def fetch_comments(request, app_id, slug):
-    action_id = get_action_id(app_id, slug)
+    action_id = get_action_id(app_id, slug, request.GET.get("uid") is not None)
     if request.method == "GET":
         if action_id is not None:
             parent_id = request.GET.get("parent")
@@ -150,7 +154,7 @@ def fetch_comments(request, app_id, slug):
 
 @api_view(['GET', 'POST'])
 def push_vote(request, app_id, slug):
-    action_id = get_action_id(app_id, slug)
+    action_id = get_action_id(app_id, slug, request.GET.get("uid") is not None)
     if request.method == "GET":
         pass
     elif request.method == "POST":

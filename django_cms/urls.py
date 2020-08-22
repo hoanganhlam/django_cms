@@ -28,5 +28,5 @@ urlpatterns = [
     url(r'^v1/activity/', include(('apps.activity.api.urls', 'api_activity'))),
     url(r'^v1/cms/', include(('apps.cms.api.urls', 'api_cms'))),
     url(r'^v1/global-cms/', include(('apps.cms.api_public.urls', 'api_public_cms'))),
-
+    url(r'^v1/commerce/', include(('apps.commerce.api.urls', 'api_commerce'))),
 ]
