@@ -96,7 +96,7 @@ def fetch_posts(request, app_id):
                                request.GET.get("type", None),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + app_id + '}',
-                               True
+                               False
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
