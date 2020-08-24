@@ -1,4 +1,3 @@
-from . import serializers
 from apps.cms import models
 from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
@@ -53,7 +52,7 @@ def fetch_taxonomies(request, app_id):
                                user_id,
                                request.GET.get("taxonomy", None),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                               '{' + app_id + '}',
+                               app_id,
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
@@ -65,8 +64,20 @@ def fetch_taxonomies(request, app_id):
 
 @api_view(['GET', 'DELETE', 'PUT'])
 def fetch_taxonomy(request, app_id, slug):
-    tax = models.TermTaxonomy.objects.filter(term__slug=slug, taxonomy=request.GET.get("taxonomy")).first()
-    return Response(serializers.TermTaxonomySerializer(tax).data)
+    user_id = request.user.id if request.user.is_authenticated else None
+    if request.method == "GET":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_TAXONOMY(%s, %s, %s, %s)", [
+                slug,
+                app_id,
+                request.GET.get("taxonomy"),
+                user_id
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+    return Response()
 
 
 @api_view(['GET', 'POST'])
@@ -75,7 +86,7 @@ def fetch_posts(request, app_id):
         p = get_paginator(request)
         user_id = request.user.id if request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s)",
+            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                            [
                                p.get("page_size"),
                                p.get("offs3t"),
@@ -85,6 +96,7 @@ def fetch_posts(request, app_id):
                                request.GET.get("type", None),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + app_id + '}',
+                               True
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:

@@ -9,7 +9,8 @@ class PublicationSerializer(serializers.ModelSerializer):
         extra_fields = []
         extra_kwargs = {
             'user': {'read_only': True},
-            'slug': {'read_only': True}
+            'slug': {'read_only': True},
+            'medias': {'read_only': True},
         }
 
     def to_representation(self, instance):
@@ -43,25 +44,6 @@ class TermSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Term
         fields = '__all__'
-
-
-class TermTaxonomySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.TermTaxonomy
-        fields = '__all__'
-        extra_fields = []
         extra_kwargs = {
-            'term': {'read_only': True}
+            'slug': {'read_only': True}
         }
-
-    def get_field_names(self, declared_fields, info):
-        expanded_fields = super(TermTaxonomySerializer, self).get_field_names(declared_fields, info)
-
-        if getattr(self.Meta, 'extra_fields', None):
-            return expanded_fields + self.Meta.extra_fields
-        else:
-            return expanded_fields
-
-    def to_representation(self, instance):
-        self.fields["term"] = TermSerializer(read_only=True)
-        return super(TermTaxonomySerializer, self).to_representation(instance)

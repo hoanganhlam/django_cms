@@ -1,7 +1,3 @@
-from rest_framework import viewsets, permissions
-from rest_framework.filters import OrderingFilter, SearchFilter
-from base import pagination
-from . import serializers
 from apps.cms import models
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -25,7 +21,7 @@ def fetch_taxonomies(request):
                                user_id,
                                request.GET.get("taxonomy", None),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                               '{' + request.GET.get('publications') + '}' if request.GET.get('publications') else None,
+                               request.GET.get('publication'),
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
@@ -37,8 +33,20 @@ def fetch_taxonomies(request):
 
 @api_view(['GET', 'DELETE', 'PUT'])
 def fetch_taxonomy(request, slug):
-    tax = models.TermTaxonomy.objects.filter(term__slug=slug, taxonomy=request.GET.get("type")).first()
-    return Response(serializers.TermTaxonomySerializer(tax).data)
+    user_id = request.user.id if request.user.is_authenticated else None
+    if request.method == "GET":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_TAXONOMY(%s, %s, %s, %s)", [
+                slug,
+                request.GET.get("publication"),
+                request.GET.get("taxonomy"),
+                user_id
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+    return Response()
 
 
 @api_view(['GET', 'POST'])
@@ -47,7 +55,7 @@ def fetch_posts(request):
         p = get_paginator(request)
         user_id = request.user.id if request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s)",
+            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                            [
                                p.get("page_size"),
                                p.get("offs3t"),
@@ -57,6 +65,7 @@ def fetch_posts(request):
                                request.GET.get("type", None),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + request.GET.get('publications') + '}' if request.GET.get('publications') else None,
+                               True
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
@@ -70,10 +79,12 @@ def fetch_posts(request):
 def fetch_post(request, slug):
     if request.method == "GET":
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POST(%s)", [
-                int(slug) if slug.isnumeric() else slug
+            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+                int(slug) if slug.isnumeric() else slug,
+                request.GET.get("uid") is not None
             ])
             result = cursor.fetchone()[0]
             cursor.close()
             connection.close()
             return Response(status=status.HTTP_200_OK, data=result)
+    return Response()

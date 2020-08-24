@@ -3,6 +3,7 @@ from base.interface import BaseModel, Taxonomy
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from apps.media.models import Media
+from . import default
 
 
 # Create your models here.
@@ -13,20 +14,21 @@ class Term(Taxonomy):
     measure = JSONField(null=True, blank=True)
 
 
-class TermTaxonomy(BaseModel):
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name="post_terms")
-    taxonomy = models.CharField(max_length=50)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
-    options = JSONField(null=True, blank=True)
-    measure = JSONField(null=True, blank=True)
-
-
 class Publication(BaseModel, Taxonomy):
     user = models.ForeignKey(User, related_name="publications", on_delete=models.CASCADE)
+    options = JSONField(null=True, blank=True, default=default.publication_options)
+    measure = JSONField(null=True, blank=True)
+    medias = models.ManyToManyField(Media, related_name="publication", blank=True)
+
+
+class PublicationTerm(BaseModel):
+    publication = models.ForeignKey(Publication, related_name="pub_terms", on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, related_name="pub_terms", on_delete=models.CASCADE)
+    taxonomy = models.CharField(max_length=50)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
+    description = models.TextField(max_length=256, null=True, blank=True)
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
-    publication_terms = models.ManyToManyField(TermTaxonomy, related_name="publications", blank=True)
-    medias = models.ManyToManyField(Media, related_name="publication", blank=True)
 
 
 class Post(BaseModel, Taxonomy):
@@ -49,4 +51,4 @@ class Post(BaseModel, Taxonomy):
 
     measure = JSONField(null=True, blank=True)
     meta = JSONField(null=True, blank=True)
-    post_terms = models.ManyToManyField(TermTaxonomy, related_name="posts", blank=True)
+    terms = models.ManyToManyField(PublicationTerm, related_name="posts", blank=True)
