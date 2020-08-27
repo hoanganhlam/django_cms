@@ -24,9 +24,9 @@ class PostSerializer(serializers.ModelSerializer):
         extra_fields = [],
         extra_kwargs = {
             'user': {'read_only': True},
-            'post_type': {'read_only': True},
-            'status': {'read_only': True},
-            'slug': {'read_only': True}
+            'slug': {'read_only': True},
+            'created': {'read_only': True},
+            'updated': {'read_only': True},
         }
 
     def get_field_names(self, declared_fields, info):
@@ -46,4 +46,14 @@ class TermSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'slug': {'read_only': True}
+        }
+
+
+class PubTermSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PublicationTerm
+        fields = '__all__'
+        extra_kwargs = {
+            'created': {'read_only': True},
+            'updated': {'read_only': True},
         }

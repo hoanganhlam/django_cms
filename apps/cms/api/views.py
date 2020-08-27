@@ -3,8 +3,6 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from . import serializers
 from apps.cms import models
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class PublicationViewSet(viewsets.ModelViewSet):

@@ -24,6 +24,7 @@ urlpatterns = [
     re_path(r'^account-confirm-email/(?P<key>[-:\w]+)/$', VerifyEmailView.as_view(), name='account_confirm_email'),
     url(r'^v1/', include(('apps.cms.api_public_guess.urls', 'api_public_cms_v2'))),
     #
+    url(r'^v1/general/', include(('apps.general.api.urls', 'api_general'))),
     url(r'^v1/auth/', include(('apps.authentication.api.urls', 'api_auth'))),
     url(r'^v1/media/', include(('apps.media.api.urls', 'api_media'))),
     url(r'^v1/activity/', include(('apps.activity.api.urls', 'api_activity'))),
