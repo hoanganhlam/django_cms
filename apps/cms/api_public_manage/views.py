@@ -26,7 +26,7 @@ class PostViewSet(viewsets.ModelViewSet):
             user_id = request.user.id if request.user.is_authenticated else None
             with connection.cursor() as cursor:
                 meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
-                cursor.execute("SELECT FETCH_POSTS(%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                                [
                                    p.get("page_size"),
                                    p.get("offs3t"),
@@ -37,8 +37,8 @@ class PostViewSet(viewsets.ModelViewSet):
                                    request.GET.get("status", None),
                                    request.GET.get("taxonomies_operator", "OR"),
                                    '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                                   '{' + request.GET.get("publication") + '}' if request.GET.get("publication",
-                                                                                                 None) else None,
+                                   '{' + request.GET.get("publications") + '}' if request.GET.get("publications",
+                                                                                                  None) else None,
                                    request.GET.get("related_operator", "OR"),
                                    '{' + request.GET.get('post_related') + '}' if request.GET.get(
                                        'post_related') else None,
