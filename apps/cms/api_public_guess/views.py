@@ -126,7 +126,9 @@ def fetch_posts(request, app_id):
             status="POSTED",
             post_type=request.data.get("post_type"),
             user=request.user if request.user.is_authenticated else None,
-            meta=meta
+            meta=meta,
+            show_cms=False,
+            is_guess_post=True
         )
         if request.data.get("post_related", None) is not None:
             for p in request.data.get("post_related", None):

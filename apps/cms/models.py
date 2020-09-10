@@ -48,7 +48,8 @@ class Post(BaseModel, Taxonomy):
     post_type = models.CharField(max_length=20, default="BLOG")
     options = JSONField(null=True, blank=True)  # activity=1
     post_date = models.DateTimeField(null=True, blank=True)
-
+    is_guess_post = models.BooleanField(default=False)
+    show_cms = models.BooleanField(default=False)
     measure = JSONField(null=True, blank=True)
     meta = JSONField(null=True, blank=True)
     terms = models.ManyToManyField(PublicationTerm, related_name="posts", blank=True)
