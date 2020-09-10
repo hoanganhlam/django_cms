@@ -8,6 +8,7 @@ from utils.other import get_paginator
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
+import json
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -18,30 +19,38 @@ class PostViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
-    lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        p = get_paginator(request)
-        user_id = request.user.id if request.user.is_authenticated else None
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               p.get("search"),
-                               request.GET.get("order_by"),
-                               user_id,
-                               request.GET.get("post_type", None),
-                               '{' + request.GET.get('terms') + '}' if request.GET.get('terms') else None,
-                               '{' + request.GET.get('publications') + '}' if request.GET.get('publications') else None,
-                               True
-                           ])
-            result = cursor.fetchone()[0]
-            if result.get("results") is None:
-                result["results"] = []
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data=result)
+        if request.method == "GET":
+            p = get_paginator(request)
+            user_id = request.user.id if request.user.is_authenticated else None
+            with connection.cursor() as cursor:
+                meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
+                cursor.execute("SELECT FETCH_POSTS(%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                               [
+                                   p.get("page_size"),
+                                   p.get("offs3t"),
+                                   p.get("search"),
+                                   request.GET.get("order_by"),
+                                   user_id,
+                                   request.GET.get("post_type", None),
+                                   request.GET.get("status", None),
+                                   request.GET.get("taxonomies_operator", "OR"),
+                                   '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
+                                   '{' + request.GET.get("publication") + '}' if request.GET.get("publication",
+                                                                                                 None) else None,
+                                   request.GET.get("related_operator", "OR"),
+                                   '{' + request.GET.get('post_related') + '}' if request.GET.get(
+                                       'post_related') else None,
+                                   json.dumps(meta) if meta else None,
+                                   False
+                               ])
+                result = cursor.fetchone()[0]
+                if result.get("results") is None:
+                    result["results"] = []
+                cursor.close()
+                connection.close()
+                return Response(status=status.HTTP_200_OK, data=result)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
