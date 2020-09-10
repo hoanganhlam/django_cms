@@ -33,7 +33,7 @@ class PublicationTerm(BaseModel):
 
 class Post(BaseModel, Taxonomy):
     pid = models.IntegerField(null=True, blank=True)
-    user = models.ForeignKey(User, related_name="posts", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="posts", on_delete=models.SET_NULL, null=True, blank=True)
     primary_publication = models.ForeignKey(
         Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL,
         null=True)

@@ -8,6 +8,8 @@ from django.db import connection
 from django.db.models import Q
 from utils.other import get_paginator
 from apps.activity import verbs, action
+from apps.cms.models import Post, Publication
+import json
 
 
 def get_action_id(app_id, slug, flag):
@@ -86,7 +88,8 @@ def fetch_posts(request, app_id):
         p = get_paginator(request)
         user_id = request.user.id if request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
+            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                            [
                                p.get("page_size"),
                                p.get("offs3t"),
@@ -94,13 +97,47 @@ def fetch_posts(request, app_id):
                                request.GET.get("order_by"),
                                user_id,
                                request.GET.get("type", None),
+                               request.GET.get("taxonomies_operator", "OR"),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + app_id + '}',
+                               request.GET.get("related_operator", "OR"),
+                               '{' + request.GET.get('post_related') + '}' if request.GET.get('post_related') else None,
+                               json.dumps(meta) if meta else None,
                                False
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
                 result["results"] = []
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+    if request.method == "POST":
+        err = []
+        if request.data.get("publications", None) is None or len(request.data.get("publications", None)) == 0:
+            err.append("ERR_PUBLICATION")
+        if len(err):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        pub = Publication.objects.get(pk=request.data.get("publications")[0])
+        meta = request.data.get("meta", {})
+        meta["price"] = request.data.get("price", 0)
+        post = Post.objects.create(
+            title=request.data.get("title"),
+            primary_publication=pub,
+            status="POSTED",
+            post_type=request.data.get("post_type"),
+            user=request.user if request.user.is_authenticated else None,
+            meta=meta
+        )
+        if request.data.get("post_related", None) is not None:
+            for p in request.data.get("post_related", None):
+                pr = Post.objects.get(pk=p)
+                post.post_related.add(pr)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+                post.id,
+                request.GET.get("uid") is not None
+            ])
+            result = cursor.fetchone()[0]
             cursor.close()
             connection.close()
             return Response(status=status.HTTP_200_OK, data=result)

@@ -1,5 +1,7 @@
 from apps.cms import models
 from rest_framework import serializers
+from apps.media.api.serializers import MediaSerializer
+from apps.media.models import Media
 
 
 class PublicationSerializer(serializers.ModelSerializer):
@@ -18,10 +20,12 @@ class PublicationSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    media = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Post
         fields = '__all__'
-        extra_fields = [],
+        extra_fields = ['media'],
         extra_kwargs = {
             'user': {'read_only': True},
             'slug': {'read_only': True},
@@ -35,6 +39,12 @@ class PostSerializer(serializers.ModelSerializer):
             return expanded_fields + list(self.Meta.extra_fields[0])
         else:
             return expanded_fields
+
+    def get_media(self, instance):
+        if instance.meta.get("media"):
+            media = Media.objects.get(pk=instance.meta.get("media"))
+            return MediaSerializer(media).data
+        return None
 
     def to_representation(self, instance):
         return super(PostSerializer, self).to_representation(instance)

@@ -1,3 +1,10 @@
+-- ARRAY_SORT
+CREATE OR REPLACE FUNCTION ARRAY_SORT(anyarray) RETURNS anyarray AS
+$$
+SELECT array_agg(x order by x)
+FROM unnest($1) x;
+$$ LANGUAGE SQL;
+
 -- CHAR_TO_INT
 CREATE FUNCTION CHAR_TO_INT(character varying) RETURNS integer AS
 $$
@@ -108,7 +115,7 @@ FROM (SELECT (
 $$ LANGUAGE sql;
 
 -- IS_IN_TERMS
-CREATE OR REPLACE FUNCTION IS_IN_TERMS(post_id int, term_ids int[] = NULL) RETURNS BOOLEAN AS
+CREATE OR REPLACE FUNCTION IS_IN_TERMS(post_id int, operator varchar = NULL, term_ids int[] = NULL) RETURNS BOOLEAN AS
 $$
 DECLARE
 BEGIN
@@ -116,9 +123,9 @@ BEGIN
         SELECT EXISTS(
                        SELECT x.id
                        FROM cms_post x
-                                JOIN cms_post_post_terms cppt on x.id = cppt.post_id
+                                JOIN cms_post_terms cppt on x.id = cppt.post_id
                        WHERE x.id = IS_IN_TERMS.post_id
-                         AND cppt.termtaxonomy_id = ANY (IS_IN_TERMS.term_ids)
+                         AND cppt.publicationterm_id = ANY (IS_IN_TERMS.term_ids)
                    ));
 END;
 $$ LANGUAGE PLPGSQL;
@@ -132,14 +139,93 @@ BEGIN
         SELECT EXISTS(
                        SELECT x.id
                        FROM cms_post x
-                                JOIN cms_post_publications cpp on x.id = cpp.post_id
+                                LEFT JOIN cms_post_publications cpp on x.id = cpp.post_id
                        WHERE x.id = IS_IN_PUBS.post_id
-                         AND (cpp.publication_id = ANY (IS_IN_PUBS.pub_ids) OR
-                              x.primary_publication_id = ANY (IS_IN_PUBS.pub_ids))
+                         AND (
+                               cpp.publication_id = ANY (IS_IN_PUBS.pub_ids)
+                               OR
+                               x.primary_publication_id = ANY (IS_IN_PUBS.pub_ids))
                    ));
 END;
 $$ LANGUAGE PLPGSQL;
+
+-- IS_IN_POST_RELATED
+CREATE OR REPLACE FUNCTION IS_IN_POST_RELATED(post_id int, operator varchar = NULL, post_related_id int[] = NULL) RETURNS BOOLEAN AS
+$$
+DECLARE
+BEGIN
+    RETURN (
+        CASE
+            WHEN IS_IN_POST_RELATED.operator = 'AND'
+                THEN (WITH related AS (
+                SELECT cp.id
+                FROM cms_post cp
+                         LEFT JOIN cms_post_post_related cppr on cp.id = cppr.to_post_id AND cp.id != post_id
+                WHERE cppr.from_post_id = post_id
+                ORDER BY cp.id
+            )
+                      SELECT ARRAY(SELECT id FROM related) = ARRAY_SORT(post_related_id))
+            ELSE (
+                SELECT EXISTS(
+                               SELECT cp.id
+                               FROM cms_post cp
+                                        LEFT JOIN cms_post_post_related cppr on cp.id = cppr.to_post_id AND cp.id != post_id
+                               WHERE cppr.from_post_id = post_id
+                                 AND cppr.to_post_id = ANY (post_related_id)
+                           )
+            )
+            END
+        );
+END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION json_arr2text_arr(_js json)
+    RETURNS text[]
+    LANGUAGE sql
+    IMMUTABLE PARALLEL SAFE AS
+'SELECT ARRAY(SELECT json_array_elements_text(_js))';
 --
+
+-- FETCH_POST_RELATED
+CREATE OR REPLACE FUNCTION FETCH_POST_RELATED(post_id int) RETURNS json AS
+$$
+SELECT array_to_json(array_agg(row_to_json(t)))
+FROM (
+         SELECT cp.id,
+                cp.title,
+                cp.post_type,
+                cp.meta,
+                (SELECT FETCH_MEDIA(CAST(cp.meta ->> 'media' AS INTEGER))) AS "media"
+         FROM cms_post cp
+                  LEFT JOIN cms_post_post_related cppr on cp.id = cppr.to_post_id AND cp.id != post_id
+         WHERE cppr.from_post_id = post_id
+     ) t;
+$$ LANGUAGE SQL;
+
+-- FETCH_RELATED
+CREATE OR REPLACE FUNCTION FETCH_RELATED(post_id int, publication_id int = NULL) RETURNS json AS
+$$
+SELECT array_to_json(array_agg(row_to_json(t)))
+FROM (
+         SELECT cp.*,
+                (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT ct.id,
+                                    ct.taxonomy,
+                                    (SELECT FETCH_TERM(ct.term_id)) AS "term"
+                             FROM cms_publicationterm ct
+                                      JOIN cms_post_terms cppt ON ct.id = cppt.publicationterm_id
+                             WHERE cppt.post_id = cp.id
+                             GROUP BY ct.id
+                         ) t
+                ) AS "post_terms"
+         FROM cms_post cp
+         WHERE cp.primary_publication_id = publication_id
+         LIMIT 5
+     ) t;
+
+$$ LANGUAGE SQL;
 
 -- FETCH_CONTENT_TYPE
 CREATE OR REPLACE FUNCTION FETCH_CONTENT_TYPE(name varchar) returns integer as
@@ -214,57 +300,86 @@ FROM (
 $$ LANGUAGE sql;
 
 --  FETCH_POST
-CREATE OR REPLACE FUNCTION FETCH_POST(i int) RETURNS json AS
+CREATE OR REPLACE FUNCTION FETCH_POST(i int, is_uid boolean) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (
          SELECT cms_post.*,
-                (SELECT FETCH_MEDIA(CAST(cms_post.options ->> 'media' AS INTEGER))) AS "media",
+                (SELECT FETCH_MEDIA(CAST(cms_post.meta ->> 'media' AS INTEGER))) AS "media",
+                (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT mm.id,
+                                    (SELECT MAKE_THUMB(mm.path)) as sizes
+                             FROM media_media mm
+                                      JOIN LATERAL jsonb_array_elements_text(cms_post.meta -> 'medias') ids ON TRUE
+                             WHERE mm.id::text = ids
+                         ) t
+                )                                                                AS "medias",
                 (
                     SELECT array_to_json(array_agg(row_to_json(t)))
                     FROM (
                              SELECT ct.id,
                                     ct.taxonomy,
                                     (SELECT FETCH_TERM(ct.term_id)) AS "term"
-                             FROM cms_termtaxonomy ct
-                                      JOIN cms_post_post_terms cppt ON ct.id = cppt.termtaxonomy_id
-                             WHERE cppt.post_id = cms_post.id
+                             FROM cms_publicationterm ct
+                                      JOIN cms_post_terms cpt on ct.id = cpt.publicationterm_id
+                             WHERE cpt.post_id = cms_post.id
                              GROUP BY ct.id
                          ) t
-                )                                                                   AS "post_terms",
+                )                                                                AS "terms",
+                (
+                    SELECT FETCH_POST_RELATED(FETCH_POST.i)
+                )                                                                AS "post_related",
                 (
                     SELECT VOTE_OBJECT(user_id, CAST(cms_post.options ->> 'action_post' AS INTEGER))
-                )                                                                   AS "vote_object"
+                )                                                                AS "vote_object"
          FROM cms_post
-         WHERE cms_post.id = i
-     ) t;
+         WHERE CASE
+                   WHEN FETCH_POST.is_uid IS TRUE THEN cms_post.pid = FETCH_POST.i
+                   ELSE cms_post.id = FETCH_POST.i
+                   END) t;
 
 $$ LANGUAGE sql;
 
 --  FETCH_POST
-CREATE OR REPLACE FUNCTION FETCH_POST(i varchar) RETURNS json AS
+CREATE OR REPLACE FUNCTION FETCH_POST(i varchar, is_uid boolean) RETURNS json AS
 $$
 SELECT row_to_json(t)
 FROM (
          SELECT cms_post.*,
-                (SELECT FETCH_MEDIA(CAST(cms_post.options ->> 'media' AS INTEGER))) AS "media",
+                (SELECT FETCH_MEDIA(CAST(cms_post.meta ->> 'media' AS INTEGER)))     AS "media",
+                (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT mm.id,
+                                    (SELECT MAKE_THUMB(mm.path)) as sizes
+                             FROM media_media mm
+                                      JOIN LATERAL jsonb_array_elements_text(cms_post.meta -> 'medias') ids ON TRUE
+                             WHERE mm.id::text = ids
+                         ) t
+                )                                                                    AS "medias",
                 (
                     SELECT array_to_json(array_agg(row_to_json(t)))
                     FROM (
                              SELECT ct.id,
                                     ct.taxonomy,
                                     (SELECT FETCH_TERM(ct.term_id)) AS "term"
-                             FROM cms_termtaxonomy ct
-                                      JOIN cms_post_post_terms cppt ON ct.id = cppt.termtaxonomy_id
-                             WHERE cppt.post_id = cms_post.id
+                             FROM cms_publicationterm ct
+                                      JOIN cms_post_terms cpt on ct.id = cpt.publicationterm_id
+                             WHERE cpt.post_id = cms_post.id
                              GROUP BY ct.id
                          ) t
-                )                                                                   AS "post_terms",
+                )                                                                    AS "terms",
+                (
+                    SELECT FETCH_POST_RELATED(cms_post.id)
+                )                                                                    AS "post_related",
                 (
                     SELECT VOTE_OBJECT(user_id, CAST(cms_post.options ->> 'action_post' AS INTEGER))
-                )                                                                   AS "vote_object"
+                )                                                                    AS "vote_object",
+                (SELECT FETCH_RELATED(cms_post.id, cms_post.primary_publication_id)) AS "related"
          FROM cms_post
-         WHERE cms_post.slug = i
+         WHERE cms_post.slug = FETCH_POST.i
          LIMIT 1
      ) t;
 
@@ -320,6 +435,19 @@ FROM (
 
 $$ LANGUAGE sql;
 
+-- FETCH_MEDIAS
+CREATE OR REPLACE FUNCTION FETCH_MEDIAS(i int[]) RETURNS json AS
+$$
+SELECT array_to_json(array_agg(row_to_json(t)))
+FROM (
+         SELECT mm.id,
+                (SELECT MAKE_THUMB(mm.path)) as sizes
+         FROM media_media mm
+         WHERE mm.id = ANY (i)
+     ) t;
+
+$$ LANGUAGE sql;
+
 -- FETCH_TERM
 CREATE OR REPLACE FUNCTION FETCH_TERM(i int) RETURNS json AS
 $$
@@ -333,7 +461,60 @@ FROM (
 
 $$ LANGUAGE SQL;
 
+-- FETCH_TAXONOMY
+CREATE OR REPLACE FUNCTION FETCH_TAXONOMY(slug varchar, pub_id int, taxonomy varchar, user_id int = null) RETURNS json AS
+$$
+SELECT row_to_json(t)
+FROM (
+         SELECT cp.*,
+                (SELECT FETCH_TERM(cp.term_id)) AS "term"
+         FROM cms_publicationterm cp
+                  JOIN cms_term ct on cp.term_id = ct.id
+         WHERE ct.slug = FETCH_TAXONOMY.slug
+           AND cp.publication_id = pub_id
+           AND cp.taxonomy = FETCH_TAXONOMY.taxonomy
+     ) t;
+
+$$ LANGUAGE sql;
+
 --
+
+-- FETCH_TERMS
+CREATE OR REPLACE FUNCTION FETCH_TERMS(page_size int = NULL,
+                                       os int = NULL,
+                                       search varchar = NULL,
+                                       order_by varchar = NULL) RETURNS JSON AS
+$$
+SELECT row_to_json(e)
+FROM (
+         SELECT (
+                    SELECT array_to_json(array_agg(row_to_json(t)))
+                    FROM (
+                             SELECT aa.*
+                             FROM cms_term aa
+                             WHERE CASE
+                                       WHEN FETCH_TERMS.search IS NOT NULL THEN
+                                           LOWER(aa.title) LIKE LOWER(CONCAT('%', FETCH_TERMS.search, '%'))
+                                       ELSE TRUE END
+                             ORDER BY aa.id DESC
+                             LIMIT page_size
+                             OFFSET
+                             os
+                         ) t
+                ) AS results,
+                (
+                    SELECT COUNT(*)
+                    FROM (
+                             SELECT aa.id
+                             FROM cms_term aa
+                             WHERE CASE
+                                       WHEN FETCH_TERMS.search IS NOT NULL THEN
+                                           LOWER(aa.title) LIKE LOWER(CONCAT('%', FETCH_TERMS.search, '%'))
+                                       ELSE TRUE END
+                         ) t
+                ) AS count
+     ) e
+$$ LANGUAGE SQL;
 
 -- FETCH_ACTIVITIES
 CREATE OR REPLACE FUNCTION FETCH_ACTIVITIES(page_size int = NULL,
@@ -454,8 +635,13 @@ CREATE OR REPLACE FUNCTION FETCH_POSTS(page_size int = NULL,
                                        order_by varchar = NULL,
                                        user_id int = null,
                                        post_type varchar = NULL,
+                                       taxonomies_operator varchar = NULL,
                                        taxonomies integer[] = NULL,
-                                       publications integer[] = NULL) RETURNS JSON AS
+                                       publications integer[] = NULL,
+                                       post_related_operator varchar = NULL,
+                                       post_related integer[] = NULL,
+                                       meta json = NULL,
+                                       managing boolean = FALSE) RETURNS JSON AS
 $$
 SELECT row_to_json(e)
 FROM (
@@ -463,25 +649,41 @@ FROM (
                     SELECT array_to_json(array_agg(row_to_json(t)))
                     FROM (
                              SELECT aa.*,
-                                    (SELECT FETCH_MEDIA(CAST(aa.options ->> 'media' AS INTEGER))) AS "media",
+                                    (SELECT FETCH_MEDIA(CAST(aa.meta ->> 'media' AS INTEGER))) AS "media",
+                                    (
+                                        SELECT array_to_json(array_agg(row_to_json(t)))
+                                        FROM (
+                                                 SELECT mm.id,
+                                                        (SELECT MAKE_THUMB(mm.path)) as sizes
+                                                 FROM media_media mm
+                                                          JOIN LATERAL jsonb_array_elements_text(aa.meta -> 'medias') ids ON TRUE
+                                                 WHERE mm.id::text = ids
+                                             ) t
+                                    )                                                          AS "medias",
                                     (
                                         SELECT array_to_json(array_agg(row_to_json(t)))
                                         FROM (
                                                  SELECT ct.id,
                                                         ct.taxonomy,
                                                         (SELECT FETCH_TERM(ct.term_id)) AS "term"
-                                                 FROM cms_termtaxonomy ct
-                                                          JOIN cms_post_post_terms cppt ON ct.id = cppt.termtaxonomy_id
-                                                 WHERE cppt.post_id = aa.id
+                                                 FROM cms_publicationterm ct
+                                                          JOIN cms_post_terms cpt on ct.id = cpt.publicationterm_id
+                                                 WHERE cpt.post_id = aa.id
                                                  GROUP BY ct.id
                                              ) t
-                                    )                                                             AS "post_terms",
+                                    )                                                          AS "terms",
                                     (
                                         SELECT VOTE_OBJECT(user_id, CAST(aa.options ->> 'action_post' AS INTEGER))
-                                    )                                                             AS "vote_object"
+                                    )                                                          AS "vote_object",
+                                    (
+                                        SELECT FETCH_POST_RELATED(aa.id)
+                                    )                                                          AS "post_related"
                              FROM cms_post aa
                              WHERE aa.db_status = 1
-                               AND aa.status = 'POSTED'
+                               AND CASE
+                                       WHEN FETCH_POSTS.managing IS FALSE THEN
+                                           aa.status = 'POSTED'
+                                       ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_POSTS.post_type IS NOT NULL THEN aa.post_type = FETCH_POSTS.post_type
                                        ELSE TRUE END
@@ -491,7 +693,12 @@ FROM (
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_POSTS.taxonomies IS NOT NULL THEN
-                                               (SELECT IS_IN_TERMS(aa.id, FETCH_POSTS.taxonomies))
+                                           (SELECT IS_IN_TERMS(aa.id, taxonomies_operator, FETCH_POSTS.taxonomies))
+                                       ELSE TRUE END
+                               AND CASE
+                                       WHEN FETCH_POSTS.post_related IS NOT NULL THEN
+                                           (SELECT IS_IN_POST_RELATED(aa.id, FETCH_POSTS.post_related_operator,
+                                                                      FETCH_POSTS.post_related))
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_POSTS.publications IS NOT NULL THEN
@@ -509,7 +716,10 @@ FROM (
                              SELECT aa.id
                              FROM cms_post aa
                              WHERE aa.db_status = 1
-                               AND aa.status = 'POSTED'
+                               AND CASE
+                                       WHEN FETCH_POSTS.managing IS FALSE THEN
+                                           aa.status = 'POSTED'
+                                       ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_POSTS.post_type IS NOT NULL THEN aa.post_type = FETCH_POSTS.post_type
                                        ELSE TRUE END
@@ -520,6 +730,11 @@ FROM (
                                AND CASE
                                        WHEN FETCH_POSTS.taxonomies IS NOT NULL THEN
                                                (SELECT IS_IN_TERMS(aa.id, FETCH_POSTS.taxonomies))
+                                       ELSE TRUE END
+                               AND CASE
+                                       WHEN FETCH_POSTS.post_related IS NOT NULL THEN
+                                           (SELECT IS_IN_POST_RELATED(aa.id, FETCH_POSTS.post_related_operator,
+                                                                      FETCH_POSTS.post_related))
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_POSTS.publications IS NOT NULL THEN
@@ -538,7 +753,7 @@ CREATE OR REPLACE FUNCTION FETCH_TERM_TAXONOMIES(page_size int = NULL,
                                                  user_id int = null,
                                                  taxonomy varchar = NULL,
                                                  taxonomies integer[] = NULL,
-                                                 publications integer[] = NULL) RETURNS JSON AS
+                                                 publication integer = NULL) RETURNS JSON AS
 $$
 SELECT row_to_json(e)
 FROM (
@@ -546,14 +761,22 @@ FROM (
                     SELECT array_to_json(array_agg(row_to_json(t)))
                     FROM (
                              SELECT ct.*,
-                                    (SELECT FETCH_TERM(ct.term_id)) AS "term"
-                             FROM cms_termtaxonomy ct
-                                      JOIN cms_publication_publication_terms cppt on ct.id = cppt.termtaxonomy_id
-                                      JOIN cms_term ctm on ct.term_id = ctm.id
+                                    (SELECT FETCH_TERM(ct.term_id)) AS "term",
+                                    (
+                                        SELECT COUNT(*)
+                                        FROM (
+                                                 SELECT cppr.id
+                                                 FROM cms_post_terms cppr
+                                                 WHERE cppr.publicationterm_id = ct.id
+                                             ) e
+                                    )                               AS "total_post"
+
+                             FROM cms_publicationterm ct
+                                      JOIN cms_term term on ct.term_id = term.id
                              WHERE ct.db_status = 1
                                AND CASE
-                                       WHEN FETCH_TERM_TAXONOMIES.publications IS NOT NULL THEN
-                                           cppt.publication_id = ANY (FETCH_TERM_TAXONOMIES.publications)
+                                       WHEN FETCH_TERM_TAXONOMIES.publication IS NOT NULL THEN
+                                           ct.publication_id = FETCH_TERM_TAXONOMIES.publication
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_TERM_TAXONOMIES.taxonomy IS NOT NULL THEN
@@ -565,7 +788,7 @@ FROM (
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_TERM_TAXONOMIES.search IS NOT NULL THEN
-                                               LOWER(ctm.title) LIKE
+                                               LOWER(term.title) LIKE
                                                LOWER(CONCAT('%', FETCH_TERM_TAXONOMIES.search, '%'))
                                        ELSE TRUE END
                              GROUP BY ct.id
@@ -579,13 +802,12 @@ FROM (
                     SELECT COUNT(*)
                     FROM (
                              SELECT ct.id
-                             FROM cms_termtaxonomy ct
-                                      JOIN cms_publication_publication_terms cppt on ct.id = cppt.termtaxonomy_id
-                                      JOIN cms_term ctm on ct.term_id = ctm.id
+                             FROM cms_publicationterm ct
+                                      JOIN cms_term term on ct.term_id = term.id
                              WHERE ct.db_status = 1
                                AND CASE
-                                       WHEN FETCH_TERM_TAXONOMIES.publications IS NOT NULL THEN
-                                           cppt.publication_id = ANY (FETCH_TERM_TAXONOMIES.publications)
+                                       WHEN FETCH_TERM_TAXONOMIES.publication IS NOT NULL THEN
+                                           ct.publication_id = FETCH_TERM_TAXONOMIES.publication
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_TERM_TAXONOMIES.taxonomy IS NOT NULL THEN
@@ -597,7 +819,7 @@ FROM (
                                        ELSE TRUE END
                                AND CASE
                                        WHEN FETCH_TERM_TAXONOMIES.search IS NOT NULL THEN
-                                               LOWER(ctm.title) LIKE
+                                               LOWER(term.title) LIKE
                                                LOWER(CONCAT('%', FETCH_TERM_TAXONOMIES.search, '%'))
                                        ELSE TRUE END
                          ) t
@@ -656,4 +878,13 @@ FROM (
 $$ LANGUAGE SQL;
 
 ALTER SEQUENCE cms_post_id_seq RESTART WITH 1904;
-SELECT FETCH_POST('nuxt-basic-auth-module');
+
+SELECT FETCH_POST_RELATED(5718);
+SELECT IS_IN_PUBS(5724, '{6}');
+
+SELECT x.id
+FROM cms_post x
+         LEFT JOIN cms_post_publications cpp on x.id = cpp.post_id
+WHERE x.id = 5724
+  AND x.primary_publication_id = ANY ('{6}')
+

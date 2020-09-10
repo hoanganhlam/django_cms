@@ -17,7 +17,7 @@ def on_pre_save(sender, instance, *args, **kwargs):
                 action_object_content_type=ContentType.objects.get(model='post'),
                 action_object_object_id=str(instance.id)
             ).first()
-            if check is None:
+            if check is None and instance.user is not None:
                 new_action = action.send(
                     instance.user,
                     verb=verbs.POST_CREATED,
@@ -25,7 +25,8 @@ def on_pre_save(sender, instance, *args, **kwargs):
                     target=instance.primary_publication if instance.primary_publication is not None else None
                 )
                 check = new_action[0][1]
-            instance.options['action_post'] = check.id
+            if check is not None:
+                instance.options['action_post'] = check.id
 
 
 @receiver(post_save, sender=Post)

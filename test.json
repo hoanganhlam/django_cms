@@ -1,0 +1,36 @@
+{
+    "pet": true,
+    "draw": {
+        "id": 3514,
+        "path": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52f642bbbf4aa2b40cd6dc37a6b32c3e449b1de1dfc64dd20adbcdfa25808d51",
+        "user": 1,
+        "sizes": {
+            "thumb_24_24": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/cache/24x24/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=271f28bf58ce2fdde74c83bbc03d4f9880e5dbe65794a18c314420444095fe0a",
+            "thumb_247_247": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/cache/247x247/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=fa25d9fb5c33b2c88113ed976ff2393ea6cf3d7978aaf31c70e09fde1395f514"
+        },
+        "title": "PLANT_SMALL_DRAW_003.png",
+        "created": "2020-09-05 10:02",
+        "updated": "2020-09-05 10:02",
+        "db_status": 1,
+        "description": ""
+    },
+    "size": "M",
+    "soil": "Cây cần sử dụng đất thoát nước tốt, nhiều mùn, nhiều dinh dưỡng.",
+    "light": "Cây phù hợp sống tại nơi ánh sáng khuếch tán từ 40-50%, vị trí thích hợp để trồng cây là những nơi có ánh sáng chiếu vào từ 4-5 giờ.",
+    "media": 3510,
+    "price": 80000,
+    "colors": [
+        "Green",
+        "Purple",
+        "Yellow"
+    ],
+    "medias": [],
+    "humidity": "Cây đuôi công rất thích ẩm > 60%.",
+    "watering": "Cây chịu hạn khá tốt vì thế chỉ cần tưới đầy đủ. Quan sát thấy mặt đất khô thì mới cần tưới thêm nước. Khi tưới cần chú ý tười đều không tưới quá nhiều",
+    "max_height": 75,
+    "score_light": 3,
+    "temperature": "Nhiệt độ thích hợp nhất để trồng đuôi công là từ 18-28 độ C, thích hợp trồng trong nhà",
+    "score_humidity": 3,
+    "score_watering": 3,
+    "score_temperature": 3
+}
