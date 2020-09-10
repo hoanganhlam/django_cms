@@ -97,13 +97,13 @@ def fetch_posts(request, app_id):
                                request.GET.get("order_by"),
                                user_id,
                                request.GET.get("type", None),
+                               'POSTED',
                                request.GET.get("taxonomies_operator", "OR"),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + app_id + '}',
                                request.GET.get("related_operator", "OR"),
                                '{' + request.GET.get('post_related') + '}' if request.GET.get('post_related') else None,
-                               json.dumps(meta) if meta else None,
-                               False
+                               json.dumps(meta) if meta else None
                            ])
             result = cursor.fetchone()[0]
             if result.get("results") is None:
