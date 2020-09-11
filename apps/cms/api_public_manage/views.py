@@ -26,7 +26,7 @@ class PostViewSet(viewsets.ModelViewSet):
             user_id = request.user.id if request.user.is_authenticated else None
             with connection.cursor() as cursor:
                 meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
-                cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                                [
                                    p.get("page_size"),
                                    p.get("offs3t"),
@@ -35,6 +35,8 @@ class PostViewSet(viewsets.ModelViewSet):
                                    user_id,
                                    request.GET.get("post_type", None),
                                    request.GET.get("status", None),
+                                   request.GET.get("is_guess_post", None),
+                                   request.GET.get("show_cms", None),
                                    request.GET.get("taxonomies_operator", "OR"),
                                    '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                    '{' + request.GET.get("publications") + '}' if request.GET.get("publications",
@@ -59,7 +61,9 @@ class PostViewSet(viewsets.ModelViewSet):
             slug = kwargs['pk']
             cursor.execute("SELECT FETCH_POST(%s, %s)", [
                 int(slug) if slug.isnumeric() else slug,
-                request.GET.get("uid") is not None
+                request.GET.get("uid") is not None,
+                request.GET.get("is_guess_post"),
+                request.GET.get("show_cms")
             ])
             result = cursor.fetchone()[0]
             cursor.close()
@@ -138,12 +142,10 @@ class PubTermViewSet(viewsets.ModelViewSet):
                 term = models.Term.objects.filter(title=request.data.get("term_title")).first()
                 if term is None:
                     term = models.Term.objects.create(title=request.data.get("term_title"))
-
         try:
             pub = models.Publication.objects.get(pk=int(request.data.get("publication")))
         except models.Publication.DoesNotExist:
             pub = None
-
         if term is None:
             errors.append({"term": "TERM_NONE"})
         if request.data.get("taxonomy") is None:
@@ -156,7 +158,8 @@ class PubTermViewSet(viewsets.ModelViewSet):
         tax = models.PublicationTerm.objects.filter(
             publication=pub,
             taxonomy=request.data.get("taxonomy"),
-            term=term
+            term=term,
+            db_status=1
         ).first()
         if tax is None:
             tax = models.PublicationTerm.objects.create(
@@ -206,5 +209,6 @@ class PubTermViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.perform_destroy(instance)
+        instance.db_status = -1
+        instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

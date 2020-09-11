@@ -89,7 +89,7 @@ def fetch_posts(request, app_id):
         user_id = request.user.id if request.user.is_authenticated else None
         with connection.cursor() as cursor:
             meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
-            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                            [
                                p.get("page_size"),
                                p.get("offs3t"),
@@ -98,6 +98,8 @@ def fetch_posts(request, app_id):
                                user_id,
                                request.GET.get("type", None),
                                'POSTED',
+                               request.GET.get("show_cms", None),
+                               request.GET.get("is_guess_post", None),
                                request.GET.get("taxonomies_operator", "OR"),
                                '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
                                '{' + app_id + '}',
@@ -149,9 +151,11 @@ def fetch_posts(request, app_id):
 def fetch_post(request, app_id, slug):
     if request.method == "GET":
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
                 int(slug) if slug.isnumeric() else slug,
-                request.GET.get("uid") is not None
+                request.GET.get("uid") is not None,
+                request.GET.get("is_guess_post"),
+                request.GET.get("show_cms")
             ])
             result = cursor.fetchone()[0]
             cursor.close()
