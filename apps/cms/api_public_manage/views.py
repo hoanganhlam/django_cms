@@ -59,7 +59,7 @@ class PostViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         with connection.cursor() as cursor:
             slug = kwargs['pk']
-            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
                 int(slug) if slug.isnumeric() else slug,
                 request.GET.get("uid") is not None,
                 request.GET.get("is_guess_post"),
