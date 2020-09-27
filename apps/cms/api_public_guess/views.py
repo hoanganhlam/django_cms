@@ -124,6 +124,7 @@ def fetch_posts(request, app_id):
         meta["price"] = request.data.get("price", 0)
         post = Post.objects.create(
             title=request.data.get("title"),
+            description=request.data.get("description"),
             primary_publication=pub,
             status="POSTED",
             post_type=request.data.get("post_type"),
