@@ -118,7 +118,7 @@ def fetch_posts(request, app_id):
         if request.data.get("publications", None) is None or len(request.data.get("publications", None)) == 0:
             err.append("ERR_PUBLICATION")
         if len(err):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(data=err, status=status.HTTP_400_BAD_REQUEST)
         pub = Publication.objects.get(pk=request.data.get("publications")[0])
         meta = request.data.get("meta", {})
         meta["price"] = request.data.get("price", 0)
@@ -137,9 +137,11 @@ def fetch_posts(request, app_id):
                 pr = Post.objects.get(pk=p)
                 post.post_related.add(pr)
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POST(%s, %s)", [
+            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
                 post.id,
-                request.GET.get("uid") is not None
+                request.GET.get("uid") is not None,
+                None,
+                None
             ])
             result = cursor.fetchone()[0]
             cursor.close()
