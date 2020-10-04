@@ -1,5 +1,7 @@
 from apps.cms import models
 from apps.cms.api import serializers
+from apps.media.models import Media
+from apps.media.api.serializers import MediaSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -8,6 +10,7 @@ from utils.other import get_paginator
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
+from utils.instagram import fetch_by_hash_tag
 import json
 
 
@@ -212,3 +215,46 @@ class PubTermViewSet(viewsets.ModelViewSet):
         instance.db_status = -1
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+def fetch_ig_post(request):
+    if request.method == "GET":
+        out = fetch_by_hash_tag(request.GET.get("search"), request.GET.get("next", None))
+        return Response(out)
+
+
+@api_view(['POST'])
+def import_ig_post(request):
+    if request.method == "POST":
+        items = request.data.get("items", [])
+        pub = models.Publication.objects.get(pk=request.data.get("pub"))
+        related = models.Post.objects.filter(id__in=request.data.get("related", []))
+        for item in items:
+            instance = models.Post.objects.filter(meta__ig_id=item.get("ig_id")).first()
+            if instance is None and len(item.get("images", [])) > 0:
+                medias = []
+                for img in item.get("images", []):
+                    media = Media.objects.save_url(img)
+                    medias.append(media.id)
+                    print(MediaSerializer(media).data.get("id"))
+                meta = {
+                    "ig_id": item.get("ig_id"),
+                    "credit": item.get("user").get("username"),
+                    "medias": medias
+                }
+                instance = models.Post.objects.create(
+                    title="Post by " + item.get("user").get("full_name") if item.get("user").get(
+                        "full_name") else item.get("user").get("username"),
+                    description=item.get("caption")[:300] if item.get("caption") else None,
+                    meta=meta,
+                    primary_publication=pub,
+                    user=request.user,
+                    post_type=request.data.get("post_type", "post"),
+                    show_cms=True,
+                    status="POSTED"
+                )
+                for r in related:
+                    instance.post_related.add(r)
+                    instance.publications.add(pub)
+        return Response({})
