@@ -39,6 +39,20 @@ def get_action_id(app_id, slug, flag):
     return action_id
 
 
+@api_view(['GET'])
+def fetch_publication(request, app_id):
+    if request.method == "GET":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
+                app_id,
+                request.user.id if request.user.is_authenticated else None
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+
+
 @api_view(['GET', 'POST'])
 def fetch_taxonomies(request, app_id):
     if request.method == "GET":
