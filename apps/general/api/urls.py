@@ -6,4 +6,5 @@ router = DefaultRouter()
 
 urlpatterns = [
     url(r'^set-pub', views.set_pub),
+    url(r'^fetch', views.fetch_url),
 ]

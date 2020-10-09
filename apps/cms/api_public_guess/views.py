@@ -139,6 +139,7 @@ def fetch_posts(request, app_id):
         post = Post.objects.create(
             title=request.data.get("title"),
             description=request.data.get("description"),
+            content=request.data.get("content"),
             primary_publication=pub,
             status="POSTED",
             post_type=request.data.get("post_type"),
