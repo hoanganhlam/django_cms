@@ -40,11 +40,11 @@ def get_action_id(app_id, slug, flag):
 
 
 @api_view(['GET'])
-def fetch_publication(request, app_id):
+def fetch_publication(request):
     if request.method == "GET":
         with connection.cursor() as cursor:
             cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
-                app_id,
+                request.GET.get("host"),
                 request.user.id if request.user.is_authenticated else None
             ])
             result = cursor.fetchone()[0]

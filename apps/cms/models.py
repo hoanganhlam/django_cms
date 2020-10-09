@@ -15,6 +15,7 @@ class Term(Taxonomy):
 
 
 class Publication(BaseModel, Taxonomy):
+    host = models.CharField(null=True, blank=True, max_length=150)
     user = models.ForeignKey(User, related_name="publications", on_delete=models.CASCADE)
     options = JSONField(null=True, blank=True, default=default.publication_options)
     measure = JSONField(null=True, blank=True)
