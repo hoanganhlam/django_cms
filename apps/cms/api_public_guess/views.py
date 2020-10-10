@@ -134,35 +134,37 @@ def fetch_posts(request, app_id):
         if len(err):
             return Response(data=err, status=status.HTTP_400_BAD_REQUEST)
         pub = Publication.objects.get(pk=request.data.get("publications")[0])
-        meta = request.data.get("meta", {})
-        meta["price"] = request.data.get("price", 0)
-        post = Post.objects.create(
-            title=request.data.get("title"),
-            description=request.data.get("description"),
-            content=request.data.get("content"),
-            primary_publication=pub,
-            status="POSTED",
-            post_type=request.data.get("post_type"),
-            user=request.user if request.user.is_authenticated else None,
-            meta=meta,
-            show_cms=False,
-            is_guess_post=True
-        )
-        if request.data.get("post_related", None) is not None:
-            for p in request.data.get("post_related", None):
-                pr = Post.objects.get(pk=p)
-                post.post_related.add(pr)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
-                post.id,
-                request.GET.get("uid") is not None,
-                None,
-                None
-            ])
-            result = cursor.fetchone()[0]
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data=result)
+        if pub.options.get("allow_guess_post", False):
+            meta = request.data.get("meta", {})
+            meta["price"] = request.data.get("price", 0)
+            post = Post.objects.create(
+                title=request.data.get("title"),
+                description=request.data.get("description"),
+                content=request.data.get("content"),
+                primary_publication=pub,
+                status="POSTED",
+                post_type=request.data.get("post_type"),
+                user=request.user if request.user.is_authenticated else None,
+                meta=meta,
+                show_cms=pub.options.get("auto_guess_public", False),
+                is_guess_post=True
+            )
+            if request.data.get("post_related", None) is not None:
+                for p in request.data.get("post_related", None):
+                    pr = Post.objects.get(pk=p)
+                    post.post_related.add(pr)
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
+                    post.id,
+                    request.GET.get("uid") is not None,
+                    None,
+                    None
+                ])
+                result = cursor.fetchone()[0]
+                cursor.close()
+                connection.close()
+                return Response(status=status.HTTP_200_OK, data=result)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['GET', 'DELETE', 'PUT'])

@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from utils.web_checker import get_web_meta
+import feedparser
 
 
 @api_view(['POST'])
@@ -19,5 +20,7 @@ def fetch_url(request):
     url = request.GET.get("url")
     if url:
         return Response(get_web_meta(url))
+    elif request.GET.get("rss"):
+        return Response(feedparser.parse(request.GET.get("rss")))
     else:
         return Response({})
