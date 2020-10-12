@@ -221,7 +221,7 @@ def fetch_comments(request, app_id, slug):
             if request.data.get("parent_comment"):
                 c.parent_comment_id = request.data.get("parent_comment")
             c.save()
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=CommentSerializer(c).data)
+            return Response(status=status.HTTP_201_CREATED, data=CommentSerializer(c).data)
         return Response(status=status.HTTP_400_BAD_REQUEST, data=msg)
     else:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -239,13 +239,12 @@ def push_vote(request, app_id, slug):
         if not request.user.is_authenticated:
             msg.append({"action": "AUTH_REQUIRED"})
         if len(msg) == 0:
-            action = Action.objects.get(pk=action_id)
-
-            if request.user in action.voters.all():
-                action.voters.remove(request.user)
+            old_action = Action.objects.get(pk=action_id)
+            if request.user in old_action.voters.all():
+                old_action.voters.remove(request.user)
                 data = False
             else:
-                action.voters.add(request.user)
+                old_action.voters.add(request.user)
                 data = True
             return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
         return Response(status=status.HTTP_400_BAD_REQUEST, data=msg)

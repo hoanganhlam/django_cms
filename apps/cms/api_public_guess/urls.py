@@ -16,6 +16,6 @@ urlpatterns = [
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/(?P<slug>[-\w]+)/$', views.fetch_taxonomy),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/$', views.fetch_posts),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/$', views.fetch_post),
-    url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/comments$', views.fetch_comments),
-    url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/votes$', views.push_vote),
+    url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/comments/$', views.fetch_comments),
+    url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/votes/$', views.push_vote),
 ]
