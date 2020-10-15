@@ -40,6 +40,31 @@ def get_action_id(app_id, slug, flag):
 
 
 @api_view(['GET'])
+def init(request):
+    if request.method == "GET":
+        user = None
+        if request.user.is_authenticated:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
+                    request.user.username,
+                    request.user.id if request.user.is_authenticated else None
+                ])
+                user = cursor.fetchone()[0]
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
+                request.GET.get("host"),
+                request.user.id if request.user.is_authenticated else None
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data={
+                "p": result,
+                "u": user
+            })
+
+
+@api_view(['GET'])
 def fetch_publication(request):
     if request.method == "GET":
         with connection.cursor() as cursor:

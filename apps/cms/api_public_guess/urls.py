@@ -10,6 +10,7 @@ router.register(r'orders', commerce.OrderViewSet)
 
 urlpatterns = [
     url(r'^pub-(?P<app_id>[-\w]+)/', include(router.urls)),
+    url(r'^init/', views.init),
     url(r'^pub/', views.fetch_publication),
     url(r'^pub-(?P<app_id>[-\w]+)/shopping-profile/$', commerce.view_shopping_profile),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/$', views.fetch_taxonomies),
