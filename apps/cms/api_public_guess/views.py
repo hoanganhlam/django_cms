@@ -191,7 +191,7 @@ def graph(request):
                         "post_related": params.get("post_related"),
                         "meta": params.get("meta")
                     }), schemas, None)
-            cache.set(path, out, timeout=CACHE_TTL)
+            cache.set(path, out, timeout=60 * 60 * 24)
         return Response(out)
 
 
