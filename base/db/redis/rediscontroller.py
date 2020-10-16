@@ -7,6 +7,7 @@ import logging
 import threading
 import json
 import redis
+
 logger = logging.getLogger('django')
 
 
@@ -15,8 +16,10 @@ class RedisController:
         if not RedisController.__instance:
             RedisController.__instance = RedisController.__RedisController()
         return RedisController.__instance
+
     def __getattr__(self, value):
         return getattr(self.__instance, value)
+
     def __setattr__(self, key, value):
         return setattr(self.__instance, key, value)
 
@@ -25,6 +28,7 @@ class RedisController:
         client = None
         db = None
         running = False
+
         def __init__(self):
             pass
 
@@ -42,7 +46,7 @@ class RedisController:
                 while self.client is None:
                     try:
                         logger.info('Redis is trying connect ...')
-                        logger.debug('config: {}'.format(json.dumps(self.config),))
+                        logger.debug('config: {}'.format(json.dumps(self.config), ))
                         # if self.pool is None:
                         #     self.pool = redis.ConnectionPool(**self.config)
                         # self.client = redis.Redis(connection_pool=self.pool)
@@ -79,7 +83,7 @@ class RedisController:
             return self.client.exists(key)
 
         def set(self, key, val):
-            return  self.client.set(key, json.dumps(val))
+            return self.client.set(key, json.dumps(val))
 
         def get(self, key):
             val = self.client.get(key)
