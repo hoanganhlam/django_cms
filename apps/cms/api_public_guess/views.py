@@ -192,7 +192,12 @@ def graph(request):
                         "post_related": params.get("post_related"),
                         "meta": params.get("meta")
                     }), schemas, None)
-            cache.set(path, out, timeout=60 * 60 * 6)
+            new_path = path
+            if "&force=true" in path:
+                new_path = path.replace("&force=true", "")
+            elif "?force=true" in path:
+                new_path = path.replace("?force=true", "")
+            cache.set(new_path, out, timeout=60 * 60 * 6)
         return Response(out)
 
 
