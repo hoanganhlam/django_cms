@@ -149,7 +149,8 @@ def graph(request):
         out = {}
         path = request.data.get("path")
         query = request.data.get("query")
-        if path and path in cache:
+        force = request.GET.get("force", False)
+        if path and path in cache and force is None:
             out = cache.get(path)
         else:
             user_id = request.user.id if request.user.is_authenticated else None
