@@ -247,6 +247,19 @@ def fetch_taxonomy(request, app_id, slug):
 @api_view(['GET', 'POST'])
 def fetch_posts(request, app_id):
     if request.method == "GET":
+        app = models.Publication.objects.get(pk=app_id)
+        tax_list = app.options.get("taxonomies")
+        term_ids = []
+        if tax_list:
+            for tax in tax_list:
+                if request.GET.get(tax.get("label")):
+                    qs = models.PublicationTerm.objects.filter(
+                        publication=app,
+                        taxonomy=tax.get("label"),
+                        term__slug=request.GET.get(tax.get("label"))
+                    )
+                    for s in qs:
+                        term_ids.append(str(s.id))
         p = get_paginator(request)
         user_id = request.user.id if request.user.is_authenticated else None
         return Response(status=status.HTTP_200_OK, data=query_posts({
@@ -260,7 +273,7 @@ def fetch_posts(request, app_id):
             "is_guess_post": request.GET.get("is_guess_post"),
             "show_cms": request.GET.get("show_cms", None),
             "taxonomies_operator": request.GET.get("taxonomies_operator"),
-            "taxonomies": request.GET.get('taxonomies'),
+            "taxonomies": "".join(term_ids),
             "app_id": app_id,
             "related_operator": request.GET.get("related_operator"),
             "post_related": request.GET.get('post_related'),
