@@ -87,11 +87,17 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
+        if request.data.get("post_related"):
+            related = models.Post.objects.filter(id__in=request.data.get("post_related"))
+            old_related = instance.post_related.all()
+            for r in related:
+                if r not in old_related:
+                    instance.post_related.add(r)
+
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
-
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):

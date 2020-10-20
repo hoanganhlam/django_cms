@@ -31,6 +31,7 @@ class PostSerializer(serializers.ModelSerializer):
             'slug': {'read_only': True},
             'created': {'read_only': True},
             'updated': {'read_only': True},
+            'post_related': {'read_only': True},
         }
 
     def get_field_names(self, declared_fields, info):
