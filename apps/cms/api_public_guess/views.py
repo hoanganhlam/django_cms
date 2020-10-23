@@ -197,7 +197,7 @@ def graph(request):
                 new_path = path.replace("&force=true", "")
             elif "?force=true" in path:
                 new_path = path.replace("?force=true", "")
-            cache.set(new_path, out, timeout=60 * 60 * 6)
+            cache.set(new_path, out, timeout=30 * 60 * 60 * 24)
         return Response(out)
 
 
@@ -247,6 +247,7 @@ def fetch_taxonomy(request, app_id, slug):
 @api_view(['GET', 'POST'])
 def fetch_posts(request, app_id):
     if request.method == "GET":
+        # print(request.META['QUERY_STRING'])
         app = models.Publication.objects.get(pk=app_id)
         tax_list = app.options.get("taxonomies")
         term_ids = []

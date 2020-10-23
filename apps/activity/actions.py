@@ -120,8 +120,7 @@ def action_handler(verb, **kwargs):
         if obj is not None:
             check(obj)
             setattr(new_action, '%s_object_id' % opt, obj.pk)
-            setattr(new_action, '%s_content_type' % opt,
-                    ContentType.objects.get_for_model(obj))
+            setattr(new_action, '%s_content_type' % opt, ContentType.objects.get_for_model(obj))
     for opt in ('is_activity', 'is_notify', 'message'):
         obj = kwargs.pop(opt, None)
         if obj is not None:
