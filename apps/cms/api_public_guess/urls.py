@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^init/', views.init),
     url(r'^pub/', views.fetch_publication),
     url(r'^graph/', views.graph),
+    url(r'^pub-(?P<app_id>[-\w]+)/home/$', views.home),
     url(r'^pub-(?P<app_id>[-\w]+)/shopping-profile/$', commerce.view_shopping_profile),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/$', views.fetch_taxonomies),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/(?P<slug>[-\w]+)/$', views.fetch_taxonomy),

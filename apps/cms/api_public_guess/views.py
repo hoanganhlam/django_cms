@@ -1,18 +1,21 @@
-from apps.cms import models
-from apps.activity.models import Comment, Action
-from apps.activity.api.serializers import CommentSerializer
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+import json
 from django.db import connection
 from django.db.models import Q
-from utils.other import get_paginator
-from apps.activity import verbs, action
-from apps.cms.models import Post, Publication
-import json
 from django.core.cache import cache
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from apps.activity import verbs, action
+from apps.cms.models import Post, Publication, Term
+from apps.cms.api import serializers
+from apps.authentication.api.serializers import UserSerializer
+from apps.cms import models
+from apps.activity.models import Comment, Action
+from apps.activity.api.serializers import CommentSerializer
+from utils.other import get_paginator
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -130,6 +133,35 @@ def init(request):
 
 
 @api_view(['GET'])
+def home(request, app_id):
+    if request.method == "GET":
+        key = "pub_home_" + str(app_id)
+        force = request.GET.get("force", False)
+        if key in cache and force is False:
+            data = cache.get(key)
+        else:
+            pub = None
+            if app_id != "0":
+                if app_id.isdigit():
+                    pub = Publication.objects.get(pk=app_id)
+                else:
+                    pub = Publication.objects.get(slug=app_id)
+            terms = Term.objects.filter()[:5]
+            posts = Post.objects.filter(primary_publication__id=7, post_type="plant")[:11]
+            users = User.objects.filter()[:16]
+            publications = Publication.objects.filter()[:12]
+            data = {
+                "terms": serializers.TermSerializer(terms, many=True).data,
+                "posts": serializers.PostSerializer(posts, many=True).data,
+                "users": UserSerializer(users, many=True).data,
+                "publications": serializers.PublicationSerializer(publications, many=True).data,
+                "pub": serializers.PublicationSerializer(pub).data
+            }
+            cache.set(key, data, timeout=CACHE_TTL)
+        return Response(data)
+
+
+@api_view(['GET'])
 def fetch_publication(request):
     if request.method == "GET":
         with connection.cursor() as cursor:
@@ -197,7 +229,7 @@ def graph(request):
                 new_path = path.replace("&force=true", "")
             elif "?force=true" in path:
                 new_path = path.replace("?force=true", "")
-            cache.set(new_path, out, timeout=30 * 60 * 60 * 24)
+            cache.set(new_path, out, timeout=CACHE_TTL)
         return Response(out)
 
 
