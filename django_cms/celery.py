@@ -23,5 +23,10 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour=0)
 
     },
+    'add-every-5-seconds': {
+        'task': 'apps.cms.tasks.test',
+        'schedule': 5
+
+    },
 }
 app.conf.timezone = 'UTC'

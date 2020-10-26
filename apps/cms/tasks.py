@@ -50,3 +50,8 @@ def add():
                                         term=term
                                     )
                                     new_post.terms.add(pub_term)
+
+
+@shared_task
+def test():
+    print("OK")
