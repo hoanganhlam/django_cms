@@ -1,36 +1,82 @@
 {
-    "pet": true,
-    "draw": {
-        "id": 3514,
-        "path": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52f642bbbf4aa2b40cd6dc37a6b32c3e449b1de1dfc64dd20adbcdfa25808d51",
-        "user": 1,
-        "sizes": {
-            "thumb_24_24": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/cache/24x24/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=271f28bf58ce2fdde74c83bbc03d4f9880e5dbe65794a18c314420444095fe0a",
-            "thumb_247_247": "https://bubblask.sgp1.digitaloceanspaces.com/mastercms/cache/247x247/favdes/images/guess/202095/083cbcf0492940b1b17f68cd4adc7c4b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AAONGXRBJP5L2P4GKU2U%2F20200905%2Fsgp1%2Fs3%2Faws4_request&X-Amz-Date=20200905T100251Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=fa25d9fb5c33b2c88113ed976ff2393ea6cf3d7978aaf31c70e09fde1395f514"
-        },
-        "title": "PLANT_SMALL_DRAW_003.png",
-        "created": "2020-09-05 10:02",
-        "updated": "2020-09-05 10:02",
-        "db_status": 1,
-        "description": ""
+    'title': '8 Node.js Projects Worth Looking At',
+    'title_detail': {
+        'type': 'text/plain',
+        'language': None,
+        'base': 'https://medium.com/feed/better-programming/tagged/react',
+        'value': '8 Node.js Projects Worth Looking At'
     },
-    "size": "M",
-    "soil": "Cây cần sử dụng đất thoát nước tốt, nhiều mùn, nhiều dinh dưỡng.",
-    "light": "Cây phù hợp sống tại nơi ánh sáng khuếch tán từ 40-50%, vị trí thích hợp để trồng cây là những nơi có ánh sáng chiếu vào từ 4-5 giờ.",
-    "media": 3510,
-    "price": 80000,
-    "colors": [
-        "Green",
-        "Purple",
-        "Yellow"
+    'summary': '<div class="medium-feed-item"><p class="medium-feed-image"><a href="https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react"><img src="https://cdn-images-1.medium.com/max/1920/1*ZXGMOCq93xnn36iHfDJcYQ.jpeg" width="1920" /></a></p><p class="medium-feed-snippet">Some known, some promising, all amazing</p><p class="medium-feed-link"><a href="https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react">Continue reading on Better Programming »</a></p></div>',
+    'summary_detail': {
+        'type': 'text/html',
+        'language': None,
+        'base': 'https://medium.com/feed/better-programming/tagged/react',
+        'value': '<div class="medium-feed-item"><p class="medium-feed-image"><a href="https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react"><img src="https://cdn-images-1.medium.com/max/1920/1*ZXGMOCq93xnn36iHfDJcYQ.jpeg" width="1920" /></a></p><p class="medium-feed-snippet">Some known, some promising, all amazing</p><p class="medium-feed-link"><a href="https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react">Continue reading on Better Programming »</a></p></div>'
+    },
+    'links': [
+        {
+            'rel': 'alternate',
+            'type': 'text/html',
+            'href': 'https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react'
+        }
     ],
-    "medias": [],
-    "humidity": "Cây đuôi công rất thích ẩm > 60%.",
-    "watering": "Cây chịu hạn khá tốt vì thế chỉ cần tưới đầy đủ. Quan sát thấy mặt đất khô thì mới cần tưới thêm nước. Khi tưới cần chú ý tười đều không tưới quá nhiều",
-    "max_height": 75,
-    "score_light": 3,
-    "temperature": "Nhiệt độ thích hợp nhất để trồng đuôi công là từ 18-28 độ C, thích hợp trồng trong nhà",
-    "score_humidity": 3,
-    "score_watering": 3,
-    "score_temperature": 3
+    'link': 'https://medium.com/better-programming/8-node-js-projects-worth-looking-at-32a7290fc6d6?source=rss----d0b105d10f0a--react',
+    'id': 'https://medium.com/p/32a7290fc6d6',
+    'guidislink': False,
+    'tags': [
+        {
+            'term': 'javascript',
+            'scheme': None,
+            'label': None
+        },
+        {
+            'term': 'web-development',
+            'scheme': None,
+            'label': None
+        },
+        {
+            'term': 'nodejs',
+            'scheme': None,
+            'label': None
+        },
+        {
+            'term': 'react',
+            'scheme': None,
+            'label': None
+        },
+        {
+            'term': 'programming',
+            'scheme': None,
+            'label': None
+        }
+    ],
+    'authors': [
+        {
+            'name': 'Juan Cruz Martinez'
+        }
+    ],
+    'author': 'Juan Cruz Martinez',
+    'author_detail': {
+        'name': 'Juan Cruz Martinez'
+    },
+    'published': 'Fri, 23 Oct 2020 18:01:27 GMT',
+    'published_parsed': time.struct_time(tm_year=2020,
+    tm_mon=10,
+    tm_mday=23,
+    tm_hour=18,
+    tm_min=1,
+    tm_sec=27,
+    tm_wday=4,
+    tm_yday=297,
+    tm_isdst=0),
+    'updated': '2020-10-23T18:01:27.586Z',
+    'updated_parsed': time.struct_time(tm_year=2020,
+    tm_mon=10,
+    tm_mday=23,
+    tm_hour=18,
+    tm_min=1,
+    tm_sec=27,
+    tm_wday=4,
+    tm_yday=297,
+    tm_isdst=0)
 }
