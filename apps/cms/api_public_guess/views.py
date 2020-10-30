@@ -98,7 +98,7 @@ def query_post(slug, q):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
             int(slug) if slug.isnumeric() else slug,
-            q.get("uid") is not None,
+            q.get("uid"),
             q.get("is_guess_post"),
             q.get("show_cms")
         ])
@@ -281,6 +281,8 @@ def fetch_posts(request, app_id):
     if request.method == "GET":
         # print(request.META['QUERY_STRING'])
         app = models.Publication.objects.get(pk=app_id)
+        if app.options is None:
+            app.options = {}
         tax_list = app.options.get("taxonomies")
         term_ids = []
         if tax_list:
