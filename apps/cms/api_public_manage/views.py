@@ -11,7 +11,10 @@ from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from utils.instagram import fetch_by_hash_tag
+from utils.slug import vi_slug
 import json
+import requests
+import datetime
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -265,3 +268,134 @@ def import_ig_post(request):
                     instance.post_related.add(r)
                     instance.publications.add(pub)
         return Response({})
+
+
+@api_view(['GET', 'POST'])
+def fetch_terms(request):
+    if request.method == "GET":
+        p = get_paginator(request)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_TERMS_WITH_SEARCH(%s, %s, %s, %s, %s, %s)",
+                           [
+                               p.get("page_size"),
+                               p.get("offs3t"),
+                               p.get("search"),
+                               request.GET.get("order_by"),
+                               request.GET.get("taxonomy", None),
+                               request.GET.get("pub", None)
+                           ])
+            result = cursor.fetchone()[0]
+            if result.get("results") is None:
+                result["results"] = []
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+    if request.method == "POST":
+        term, created = models.Term.objects.get_or_create(title=request.data.get("title"), defaults={
+            "options": {"need_fetch": True}
+        })
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_TERM_WITH_TAX(%s, %s)", [
+                term.slug,
+                request.GET.get("pub")
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+
+
+@api_view(['GET'])
+def fetch_term(request, slug):
+    if request.method == "GET":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_TERM_WITH_TAX(%s, %s)", [
+                slug,
+                request.GET.get("pub")
+            ])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
+    return Response()
+
+
+@api_view(['GET'])
+def fetch_term_vl(request, slug):
+    if request.method == "GET":
+        kw = models.SearchKeyword.objects.filter(slug=slug).first()
+        if kw is None:
+            term = models.Term.objects.get(slug=slug)
+            kw = models.SearchKeyword.objects.create(title=term.title, fetch_status="queue")
+        else:
+            kw.fetch_status = "queue"
+            kw.save()
+        return Response({"id": kw.id, "fetch_status": "queue"})
+    return Response()
+
+
+def ext_a(n):
+    return n.get("formattedValue", "")
+
+
+@api_view(['POST', "GET"])
+def sync_drive(request):
+    if request.method == "GET":
+        file_name = request.GET.get("name")
+        api_key = "AIzaSyDGJRZXgn_r9BAIzu-lH7ndQhR1sJAY78M"
+        access_token = "ya29.a0AfH6SMC2mGmL8rm3s2nuLUQD_yLzPEX-xhq7VI0qCoiow6XPNc92gqGdmKy20IramNUoS8z0w4uMn22DAnrdejyssv63UfNPv-gf2Ni4oAW5-zXzlcalZPCDda59a7TYE3ulOMT_yMqIGHOJ2OHTALjmG8KyD_MQfbw"
+        endpoint = "https://www.googleapis.com/drive/v3/files?q=name%3D%22{0}%22&key={1}".format(file_name, api_key)
+        headers = {"Authorization": "Bearer {0}".format(access_token)}
+        data = requests.get(endpoint, headers=headers).json()
+        if data.get("files"):
+            the_file = data.get("files")[0]
+            endpoint_2 = "https://sheets.googleapis.com/v4/spreadsheets/{0}?includeGridData=true&key={1}".format(
+                the_file.get("id"), api_key
+            )
+            file_data = requests.get(endpoint_2, headers=headers).json()
+            if file_data.get("sheets"):
+                row_data = file_data.get("sheets")[0].get("data")[0].get("rowData")
+                keys = list(map(lambda x: ext_a(x), row_data[2].get("values")))
+                start = 3
+                out = []
+                while start < len(row_data):
+                    keyword = row_data[start].get("values")[0].get("formattedValue", None)
+                    checker = models.SearchKeyword.objects.filter(slug=vi_slug(keyword)).first()
+                    if checker is None or checker.searches.count() == 0:
+                        if checker is None:
+                            checker = models.SearchKeyword.objects.create(title=keyword)
+                        new_record = {
+                            "records": []
+                        }
+                        meta = {}
+                        for i, val in enumerate(row_data[start].get("values")):
+                            if keys[i] == "Keyword" and val.get("formattedValue", None) is not None:
+                                new_record["title"] = val.get("formattedValue", None)
+                            if keys[i] == "Top of page bid (low range)" and val.get("formattedValue", None) is not None:
+                                meta["bid_low"] = val.get("formattedValue", None)
+                                new_record["bid_low"] = val.get("formattedValue", None)
+                            if keys[i] == "Top of page bid (high range)" and val.get("formattedValue",
+                                                                                     None) is not None:
+                                meta["bid_high"] = val.get("formattedValue", None)
+                                new_record["bid_high"] = val.get("formattedValue", None)
+                            if "Searches: " in keys[i]:
+                                date_str = keys[i].replace("Searches: ", "")
+                                date_obj = datetime.datetime.strptime(date_str, '%b %Y')
+
+                                models.SearchKeywordVolume.objects.create(
+                                    search_keyword=checker,
+                                    value=val.get("formattedValue", None),
+                                    date_taken=date_obj
+                                )
+                                new_record["records"].append({
+                                    "date": date_obj,
+                                    "value": val.get("formattedValue", None)
+                                })
+                        checker.meta = meta
+                        checker.save()
+                        out.append(new_record)
+                    start += 1
+                return Response(out)
+        return Response()
+
+# Create term => save with flag* => app_helper fetch and search => call to sync_drive => save()

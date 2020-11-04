@@ -56,3 +56,19 @@ def extract_lonely_image(img):
 def print_iterator(it):
     for x in it:
         print(x)
+
+
+def get_keyword_suggestion(keyword):
+    out = []
+    qs = ["What", "can", "when", "how", "Which", "why", "will", "who", "whe", "are"]
+    for q in qs:
+        url = "http://suggestqueries.google.com/complete/search"
+        r = requests.get(
+            url,
+            params={"q": q + " " + keyword, "output": "toolbar", "hl": "en"},
+            headers={"Content-Type": "text/html; charset=UTF-8"}
+        )
+        soup = BeautifulSoup(r.content, 'xml')
+        for x in soup.find_all('suggestion'):
+            out.append(x.get("data"))
+    return out

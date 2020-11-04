@@ -9,9 +9,22 @@ from . import default
 # Create your models here.
 
 
+class SearchKeyword(Taxonomy, BaseModel):
+    meta = JSONField(null=True, blank=True)
+    # IGNORE / QUEUE / FETCHING / FETCHED
+    fetch_status = models.CharField(default="IGNORE", max_length=20)
+
+
 class Term(Taxonomy):
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
+    suggestions = models.ManyToManyField(SearchKeyword, blank=True, related_name="term")
+
+
+class SearchKeywordVolume(models.Model):
+    search_keyword = models.ForeignKey(SearchKeyword, related_name="searches", on_delete=models.CASCADE)
+    value = models.IntegerField(default=0)
+    date_taken = models.DateTimeField()
 
 
 class Publication(BaseModel, Taxonomy):
@@ -54,3 +67,10 @@ class Post(BaseModel, Taxonomy):
     measure = JSONField(null=True, blank=True)
     meta = JSONField(null=True, blank=True)
     terms = models.ManyToManyField(PublicationTerm, related_name="posts", blank=True)
+
+
+class Ranker(models.Model):
+    term = models.ForeignKey(Term, related_name="list_ranker", on_delete=models.CASCADE)
+    publication = models.ForeignKey(Publication, related_name="list_ranker", on_delete=models.CASCADE)
+    value = models.IntegerField(default=101)
+    date_taken = models.DateTimeField()
