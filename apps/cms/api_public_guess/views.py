@@ -147,7 +147,7 @@ def home(request, app_id):
                 else:
                     pub = Publication.objects.get(slug=app_id)
             terms = Term.objects.filter()[:5]
-            posts = Post.objects.filter(primary_publication__id=7, post_type="plant")[:11]
+            posts = Post.objects.filter(post_type="article")[:11]
             users = User.objects.filter()[:16]
             publications = Publication.objects.filter()[:12]
             data = {
