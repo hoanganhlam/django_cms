@@ -80,6 +80,8 @@ def make_post(force, host_name, index, query):
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
+    print(index)
+    print(data)
     if query.get("master", False) is True:
         data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
         data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
