@@ -59,7 +59,7 @@ def make_page(force, host_name, query, **kwargs):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     order = query.get("order", "popular")
-    out[order]["results"] = list(map(lambda x: make_post(False, "", str(x), {}), out[order]["results"][start: end]))
+    out[order]["results"] = list(map(lambda x: make_post(force, "", str(x), {}), out[order]["results"][start: end]))
     for flag in ["newest", "popular"]:
         if flag != order:
             if query.get("full"):
