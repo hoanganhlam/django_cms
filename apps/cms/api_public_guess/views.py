@@ -373,7 +373,7 @@ def push_vote(request, app_id, slug):
 def public_init(request, app_host):
     schema = request.data.get("schema") if request.data.get("schema") else ["id"]
     out = clone_dict({
-        "p": caching.make_init(False, app_host),
+        "p": caching.make_init(request.GET.get("force") == "true", app_host),
         "u": None
     }, schemas=schema)
     return Response(out)
@@ -386,7 +386,7 @@ def public_page(request, app_host):
     params = request.data.get("param") or {} if request.data.get("param") is not None else {}
     page_size = params.get('page_size', 10)
     page = params.get('page', 1)
-    out = caching.make_page(False, app_host, query={
+    out = caching.make_page(request.GET.get("force") == "true", app_host, query={
         "term": params.get("term"),
         "taxonomy": params.get("taxonomy"),
         "page_size": page_size,
@@ -399,9 +399,8 @@ def public_page(request, app_host):
 # Post Detail
 @api_view(['POST'])
 def public_post(request, app_host, slug):
-    schema = request.data.get("schema") if request.data.get("schema") else ["id"]
+    schema = request.data.get(request.GET.get("force") == "true") if request.data.get("schema") else ["id"]
     out = caching.make_post(False, host_name=app_host, index=slug, query={
-        "is_guess_post": False,
         "show_cms": True
     })
     return Response(clone_dict(out, schemas=schema, out=None))

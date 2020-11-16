@@ -20,7 +20,7 @@ def make_init(force, host_name):
 
 def make_page(force, host_name, query, **kwargs):
     key_path = host_name + "_page"
-    q = Q(primary_publication__host=host_name)
+    q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     taxonomy = query.get("taxonomy")
     post_type = query.get("post_type")
     term = query.get("term")
