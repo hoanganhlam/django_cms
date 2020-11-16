@@ -22,7 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
     re_path(r'^account-confirm-email/(?P<key>[-:\w]+)/$', VerifyEmailView.as_view(), name='account_confirm_email'),
-    url(r'^v1/', include(('apps.cms.api_public_guess.urls', 'api_public_cms_v2'))),
     #
     url(r'^v1/general/', include(('apps.general.api.urls', 'api_general'))),
     url(r'^v1/auth/', include(('apps.authentication.api.urls', 'api_auth'))),
@@ -32,4 +31,6 @@ urlpatterns = [
     url(r'^v1/cms-private/', include(('apps.cms.api.urls', 'api_cms'))),
     url(r'^v1/cms-public/', include(('apps.cms.api_public_manage.urls', 'api_public_cms'))),
     url(r'^v1/commerce/', include(('apps.commerce.api.urls', 'api_commerce'))),
+
+    url(r'^v1/', include(('apps.cms.api_public_guess.urls', 'api_public_cms_v2'))),
 ]
