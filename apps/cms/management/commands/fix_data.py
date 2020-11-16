@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from apps.cms.models import Post, Term, SearchKeyword
 from utils.web_checker import get_keyword_suggestion
+import requests
 
 
 class Command(BaseCommand):

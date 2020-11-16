@@ -11,10 +11,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from utils.instagram import fetch_by_hash_tag
-from utils.slug import vi_slug
 import json
-import requests
-import datetime
+from apps.cms.tasks import task_sync_drive
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -334,68 +332,25 @@ def fetch_term_vl(request, slug):
     return Response()
 
 
-def ext_a(n):
-    return n.get("formattedValue", "")
-
-
 @api_view(['POST', "GET"])
 def sync_drive(request):
     if request.method == "GET":
         file_name = request.GET.get("name")
-        api_key = "AIzaSyDGJRZXgn_r9BAIzu-lH7ndQhR1sJAY78M"
-        access_token = "ya29.a0AfH6SMC2mGmL8rm3s2nuLUQD_yLzPEX-xhq7VI0qCoiow6XPNc92gqGdmKy20IramNUoS8z0w4uMn22DAnrdejyssv63UfNPv-gf2Ni4oAW5-zXzlcalZPCDda59a7TYE3ulOMT_yMqIGHOJ2OHTALjmG8KyD_MQfbw"
-        endpoint = "https://www.googleapis.com/drive/v3/files?q=name%3D%22{0}%22&key={1}".format(file_name, api_key)
-        headers = {"Authorization": "Bearer {0}".format(access_token)}
-        data = requests.get(endpoint, headers=headers).json()
-        if data.get("files"):
-            the_file = data.get("files")[0]
-            endpoint_2 = "https://sheets.googleapis.com/v4/spreadsheets/{0}?includeGridData=true&key={1}".format(
-                the_file.get("id"), api_key
-            )
-            file_data = requests.get(endpoint_2, headers=headers).json()
-            if file_data.get("sheets"):
-                row_data = file_data.get("sheets")[0].get("data")[0].get("rowData")
-                keys = list(map(lambda x: ext_a(x), row_data[2].get("values")))
-                start = 3
-                out = []
-                while start < len(row_data):
-                    keyword = row_data[start].get("values")[0].get("formattedValue", None)
-                    checker = models.SearchKeyword.objects.filter(slug=vi_slug(keyword)).first()
-                    if checker is None or checker.searches.count() == 0:
-                        if checker is None:
-                            checker = models.SearchKeyword.objects.create(title=keyword)
-                        new_record = {
-                            "records": []
-                        }
-                        meta = {}
-                        for i, val in enumerate(row_data[start].get("values")):
-                            if keys[i] == "Keyword" and val.get("formattedValue", None) is not None:
-                                new_record["title"] = val.get("formattedValue", None)
-                            if keys[i] == "Top of page bid (low range)" and val.get("formattedValue", None) is not None:
-                                meta["bid_low"] = val.get("formattedValue", None)
-                                new_record["bid_low"] = val.get("formattedValue", None)
-                            if keys[i] == "Top of page bid (high range)" and val.get("formattedValue",
-                                                                                     None) is not None:
-                                meta["bid_high"] = val.get("formattedValue", None)
-                                new_record["bid_high"] = val.get("formattedValue", None)
-                            if "Searches: " in keys[i]:
-                                date_str = keys[i].replace("Searches: ", "")
-                                date_obj = datetime.datetime.strptime(date_str, '%b %Y')
-
-                                models.SearchKeywordVolume.objects.create(
-                                    search_keyword=checker,
-                                    value=val.get("formattedValue", None),
-                                    date_taken=date_obj
-                                )
-                                new_record["records"].append({
-                                    "date": date_obj,
-                                    "value": val.get("formattedValue", None)
-                                })
-                        checker.meta = meta
-                        checker.save()
-                        out.append(new_record)
-                    start += 1
-                return Response(out)
+        kw = models.SearchKeyword.objects.filter(title=request.GET.get("kw")).first()
+        if kw:
+            kw.fetch_status = "fetching"
+            kw.save()
+        task_sync_drive.apply_async(
+            args=["file_name"],
+            kwargs={"file_name": file_name},
+            countdown=1
+        )
         return Response()
+
+
+@api_view(["GET"])
+def pending_kw(request):
+    kws = models.SearchKeyword.objects.filter(fetch_status="queue", searches__isnull=True)
+    return Response(list(map(lambda x: x.title, kws)))
 
 # Create term => save with flag* => app_helper fetch and search => call to sync_drive => save()

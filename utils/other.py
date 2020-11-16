@@ -25,3 +25,22 @@ def get_paginator(request):
         "page": page,
         "offs3t": offs3t
     }
+
+
+def clone_dict(dct, schemas, out=None):
+    if out is None:
+        if type(dct) == dict:
+            out = {}
+        if type(dct) == list:
+            out = []
+    if type(dct) == dict:
+        for schema in schemas:
+            if type(schema) == dict:
+                k = list(schema.keys())[0]
+                out[k] = clone_dict(dct.get(k), schema[k], None)
+            elif type(schema) == str:
+                out[schema] = dct.get(schema)
+    elif type(dct) == list:
+        for d in dct:
+            out.append(clone_dict(d, schemas, None))
+    return out

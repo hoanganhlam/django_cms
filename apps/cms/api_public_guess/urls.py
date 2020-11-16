@@ -11,8 +11,10 @@ router.register(r'orders', commerce.OrderViewSet)
 urlpatterns = [
     url(r'^pub-(?P<app_id>[-\w]+)/', include(router.urls)),
     url(r'^init/', views.init),
+
     url(r'^pub/', views.fetch_publication),
     url(r'^graph/', views.graph),
+
     url(r'^pub-(?P<app_id>[-\w]+)/home/$', views.home),
     url(r'^pub-(?P<app_id>[-\w]+)/shopping-profile/$', commerce.view_shopping_profile),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/$', views.fetch_taxonomies),
@@ -21,4 +23,8 @@ urlpatterns = [
     url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/$', views.fetch_post),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/comments/$', views.fetch_comments),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/votes/$', views.push_vote),
+
+    url(r'^(?P<app_host>[-\w.]+)/init/', views.public_init),
+    url(r'^(?P<app_host>[-\w.]+)/posts/$', views.public_page),
+    url(r'^(?P<app_host>[-\w.]+)/posts/(?P<slug>[-\w]+)/$', views.public_post),
 ]

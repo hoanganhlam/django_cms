@@ -1,4 +1,3 @@
-import json
 from django.db import connection
 from django.db.models import Q
 from django.core.cache import cache
@@ -15,7 +14,9 @@ from apps.authentication.api.serializers import UserSerializer
 from apps.cms import models
 from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
-from utils.other import get_paginator
+from utils.other import get_paginator, clone_dict
+from utils.query import query_post, query_posts, query_publication
+from utils import caching
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -47,66 +48,7 @@ def get_action_id(app_id, slug, flag):
     return action_id
 
 
-def clone_dict(dct, schemas, out=None):
-    if out is None:
-        if type(dct) == dict:
-            out = {}
-        if type(dct) == list:
-            out = []
-    if type(dct) == dict:
-        for schema in schemas:
-            if type(schema) == dict:
-                k = list(schema.keys())[0]
-                out[k] = clone_dict(dct.get(k), schema[k], None)
-            elif type(schema) == str:
-                out[schema] = dct.get(schema)
-    elif type(dct) == list:
-        for d in dct:
-            out.append(clone_dict(d, schemas, None))
-    return out
-
-
-def query_posts(q):
-    with connection.cursor() as cursor:
-        meta = json.loads(q.get("meta")) if q.get("meta") else None
-        cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                       [
-                           q.get("page_size"),
-                           q.get("offs3t"),
-                           q.get("search"),
-                           q.get("order_by"),
-                           q.get("user_id"),
-                           q.get("type"),
-                           q.get("status"),
-                           q.get("is_guess_post", False),
-                           q.get("show_cms", True),
-                           q.get("taxonomies_operator", "OR"),
-                           '{' + q.get('taxonomies') + '}' if q.get('taxonomies') else None,
-                           '{' + q.get('app_id') + '}' if q.get('app_id') else None,
-                           q.get("related_operator", "OR"),
-                           '{' + q.get('post_related') + '}' if q.get('post_related') else None,
-                           json.dumps(meta) if meta else None
-                       ])
-        result = cursor.fetchone()[0]
-        if result.get("results") is None:
-            result["results"] = []
-        cursor.close()
-        return result
-
-
-def query_post(slug, q):
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
-            int(slug) if slug.isnumeric() else slug,
-            q.get("uid"),
-            q.get("is_guess_post"),
-            q.get("show_cms")
-        ])
-        result = cursor.fetchone()[0]
-        cursor.close()
-        return result
-
-
+# ==========================================================================
 @api_view(['GET'])
 def init(request):
     if request.method == "GET":
@@ -164,15 +106,7 @@ def home(request, app_id):
 @api_view(['GET'])
 def fetch_publication(request):
     if request.method == "GET":
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
-                request.GET.get("host"),
-                request.user.id if request.user.is_authenticated else None
-            ])
-            result = cursor.fetchone()[0]
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data=result)
+        return Response(status=status.HTTP_200_OK, data=query_publication(request.GET.get("host")))
 
 
 @api_view(['POST'])
@@ -431,3 +365,43 @@ def push_vote(request, app_id, slug):
         return Response(status=status.HTTP_400_BAD_REQUEST, data=msg)
     else:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+# ==========================================================================
+# Init
+@api_view(['POST'])
+def public_init(request, app_host):
+    schema = request.data.get("schema") if request.data.get("schema") else ["id"]
+    out = clone_dict({
+        "p": caching.make_init(False, app_host),
+        "u": None
+    }, schemas=schema)
+    return Response(out)
+
+
+# Post List - Taxonomy
+@api_view(['POST'])
+def public_page(request, app_host):
+    schema = request.data.get("schema") if request.data.get("schema") else ["id"]
+    params = request.data.get("param") or {} if request.data.get("param") is not None else {}
+    page_size = params.get('page_size', 10)
+    page = params.get('page', 1)
+    out = caching.make_page(False, app_host, query={
+        "term": params.get("term"),
+        "taxonomy": params.get("taxonomy"),
+        "page_size": page_size,
+        "offset": page_size * page - page_size,
+        "order": params.get("order")
+    })
+    return Response(clone_dict(out, schemas=schema, out=None))
+
+
+# Post Detail
+@api_view(['POST'])
+def public_post(request, app_host, slug):
+    schema = request.data.get("schema") if request.data.get("schema") else ["id"]
+    out = caching.make_post(False, host_name=app_host, index=slug, query={
+        "is_guess_post": False,
+        "show_cms": True
+    })
+    return Response(clone_dict(out, schemas=schema, out=None))

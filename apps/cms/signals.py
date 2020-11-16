@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
-from apps.cms.models import Post
-from apps.activity.models import Action
+from apps.cms.models import Post, Term, Publication
+from apps.activity.models import Action, Comment
 from apps.activity import verbs, action
 
 
@@ -30,3 +30,18 @@ def on_post_save(sender, instance, created, *args, **kwargs):
                 if check is not None:
                     instance.options['action_post'] = check.id
         instance.save()
+
+
+@receiver(post_save, sender=Term)
+def on_term_save(sender, instance, created, *args, **kwargs):
+    pass
+
+
+@receiver(post_save, sender=Publication)
+def on_pub_save(sender, instance, created, *args, **kwargs):
+    pass
+
+
+@receiver(post_save, sender=Comment)
+def on_comment_save(sender, instance, created, *args, **kwargs):
+    pass

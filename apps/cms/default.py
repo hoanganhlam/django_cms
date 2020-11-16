@@ -2,6 +2,11 @@ def publication_options():
     return {
         "taxonomies": [
             {
+                "label": 'keyword',
+                "title": 'Keyword',
+                "description": None
+            },
+            {
                 "label": 'category',
                 "title": 'Category',
                 "description": None
@@ -14,13 +19,13 @@ def publication_options():
         ],
         "post_types": [
             {
-                "label": 'post',
-                "title": 'Post',
+                "label": 'article',
+                "title": 'Article',
                 "description": None
             },
             {
-                "label": 'product',
-                "title": 'Product',
+                "label": 'post',
+                "title": 'Post',
                 "description": None
             }
         ],

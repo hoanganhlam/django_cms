@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'^fetch-terms/(?P<slug>[-\w]+)/fetch-search/$', views.fetch_term_vl),
     url(r'^import-ig$', views.import_ig_post),
     url(r'^sync-drive/$', views.sync_drive),
+    url(r'^pending-kw/$', views.pending_kw),
 ]
