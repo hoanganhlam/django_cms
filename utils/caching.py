@@ -78,7 +78,7 @@ def make_post(force, host_name, index, query):
     else:
         data = cache.get(key_path)
     if query.get("master", False) is True:
-        data["next"] = make_post(force, host_name, str(data["next"]), {}) if type(data["next"]) is int else None
-        data["previous"] = make_post(force, host_name, str(data["previous"]), {}) if type(
-            data["previous"]) is int else None
+        data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
+        data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
+            data.get("previous")) is int else None
     return data
