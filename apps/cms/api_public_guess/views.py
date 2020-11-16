@@ -399,8 +399,8 @@ def public_page(request, app_host):
 # Post Detail
 @api_view(['POST'])
 def public_post(request, app_host, slug):
-    schema = request.data.get(request.GET.get("force") == "true") if request.data.get("schema") else ["id"]
-    out = caching.make_post(False, host_name=app_host, index=slug, query={
+    schema = request.data.get("schema") if request.data.get("schema") else ["id"]
+    out = caching.make_post(request.GET.get("force") == "true", host_name=app_host, index=slug, query={
         "show_cms": True
     })
     return Response(clone_dict(out, schemas=schema, out=None))
