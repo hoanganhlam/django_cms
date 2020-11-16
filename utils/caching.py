@@ -37,8 +37,8 @@ def make_page(force, host_name, query, **kwargs):
     # ====================================================================================
     if key_path not in cache or force:
         term_object = Term.objects.filter(slug=term).first() if term is not None else None
-        newest = Post.objects.filter(q).order_by("-id").values_list('id', flat=True)
-        popular = Post.objects.filter(q).order_by("id").values_list('id', flat=True)
+        newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
+        popular = list(Post.objects.filter(q).order_by("id").values_list('id', flat=True))
         terms = Term.objects.filter(pub_terms__publication__host=host_name)[:10]
         out = {
             "term": TermSerializer(term_object).data,  # const
@@ -62,7 +62,10 @@ def make_page(force, host_name, query, **kwargs):
     out[order]["results"] = list(map(lambda x: make_post(False, "", str(x), {}), out[order]["results"][start: end]))
     for flag in ["newest", "popular"]:
         if flag != order:
-            out[flag]["results"] = []
+            if query.get("full"):
+                out[flag]["results"] = list(map(lambda x: make_post(False, "", str(x), {}), out[flag]["results"][: 5]))
+            else:
+                out[flag]["results"] = []
     # ====================================================================================
     return out
 

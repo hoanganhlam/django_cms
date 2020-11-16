@@ -391,7 +391,8 @@ def public_page(request, app_host):
         "taxonomy": params.get("taxonomy"),
         "page_size": page_size,
         "offset": page_size * page - page_size,
-        "order": params.get("order")
+        "order": params.get("order", "popular"),
+        "full": params.get("full", None)
     })
     return Response(clone_dict(out, schemas=schema, out=None))
 
