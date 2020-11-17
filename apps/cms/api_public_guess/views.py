@@ -109,64 +109,6 @@ def fetch_publication(request):
         return Response(status=status.HTTP_200_OK, data=query_publication(request.GET.get("host")))
 
 
-@api_view(['POST'])
-def graph(request):
-    if request.method == "POST":
-        out = {}
-        path = request.data.get("path")
-        query = request.data.get("query")
-        force = request.GET.get("force", False)
-        if path and path in cache and force is False:
-            out = cache.get(path)
-        else:
-            user_id = request.user.id if request.user.is_authenticated else None
-            for q in query:
-                params = q.get("p") or {}
-                # for k in params.keys():
-                #     if type(params[k]) == dict and params[k].get("type") == "relation" and params[k].get("fields"):
-                #         temp = out
-                #         for f in params[k].get("fields"):
-                #             if temp and type(temp) == dict:
-                #                 temp = temp.get(f)
-                #         params[k] = temp
-                schemas = q.get("s") or ["id"]
-                if q.get("q") == "post_detail":
-                    temp = query_post(params.get("slug"), {
-                        "uid": params.get("uid"),
-                        "is_guess_post": params.get("is_guess_post"),
-                        "show_cms": params.get("show_cms")
-                    })
-                    out[q.get("o")] = clone_dict(temp, schemas, None)
-                if q.get("q") == "post_list":
-                    page_size = params.get('page_size', 10)
-                    page = params.get('page', 1)
-                    offs3t = page_size * page - page_size
-                    out[q.get("o")] = clone_dict(query_posts({
-                        "page_size": page_size,
-                        "offs3t": offs3t,
-                        "search": params.get("search"),
-                        "order_by": params.get("order_by"),
-                        "user_id": user_id,
-                        "type": params.get("type"),
-                        "status": params.get("status"),
-                        "is_guess_post": params.get("is_guess_post"),
-                        "show_cms": params.get("show_cms", None),
-                        "taxonomies_operator": params.get("taxonomies_operator"),
-                        "taxonomies": params.get('taxonomies'),
-                        "app_id": params.get("app"),
-                        "related_operator": params.get("related_operator"),
-                        "post_related": params.get("post_related"),
-                        "meta": params.get("meta")
-                    }), schemas, None)
-            new_path = path
-            if "&force=true" in path:
-                new_path = path.replace("&force=true", "")
-            elif "?force=true" in path:
-                new_path = path.replace("?force=true", "")
-            cache.set(new_path, out, timeout=CACHE_TTL)
-        return Response(out)
-
-
 @api_view(['GET', 'POST'])
 def fetch_taxonomies(request, app_id):
     if request.method == "GET":
@@ -370,6 +312,47 @@ def push_vote(request, app_id, slug):
 # ==========================================================================
 # Init
 @api_view(['POST'])
+def graph(request):
+    hostname = request.GET.get("host", None)
+    if hostname is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    if request.method == "POST":
+        out = {}
+        query = request.data.get("query")
+        force = request.GET.get("force", False)
+        for q in query:
+            params = q.get("p") or {}
+            schemas = q.get("s") or ["id"]
+            if q.get("q") == "post_detail":
+                out[q.get("o")] = clone_dict(caching.make_post(force, hostname, params.get("slug"), {
+                    "master": True
+                }), schemas, None)
+            if q.get("q") == "post_list":
+                page_size = params.get('page_size', 10)
+                page = params.get('page', 1)
+                out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
+                    "page_size": page_size,
+                    "offset": page_size * page - page_size,
+                    "post_type": params.get("post_type"),
+                    "post_related": params.get("post_related")
+                }), schemas, None)
+            if q.get("q") == "archive":
+                page_size = params.get('page_size', 10)
+                page = params.get('page', 1)
+                out[q.get("o")] = caching.make_page(force, hostname, query={
+                    "post_related": params.get("post_related"),
+                    "term": params.get("term"),
+                    "taxonomy": params.get("taxonomy"),
+                    "post_type": params.get("post_type"),
+                    "page_size": page_size,
+                    "offset": page_size * page - page_size,
+                    "order": params.get("order", "popular"),
+                    "full": params.get("full", None)
+                })
+        return Response(out)
+
+
+@api_view(['POST'])
 def public_init(request, app_host):
     schema = request.data.get("schema") if request.data.get("schema") else ["id"]
     out = clone_dict({
@@ -389,6 +372,7 @@ def public_page(request, app_host):
     out = caching.make_page(request.GET.get("force") == "true", app_host, query={
         "term": params.get("term"),
         "taxonomy": params.get("taxonomy"),
+        "post_type": params.get("post_type"),
         "page_size": page_size,
         "offset": page_size * page - page_size,
         "order": params.get("order", "popular"),
