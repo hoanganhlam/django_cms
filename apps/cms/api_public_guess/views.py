@@ -403,6 +403,7 @@ def public_post(request, app_host, slug):
     schema = request.data.get("schema") if request.data.get("schema") else ["id"]
     out = caching.make_post(request.GET.get("force") == "true", host_name=app_host, index=slug, query={
         "show_cms": True,
-        "master": True
+        "master": True,
+        "uid": request.GET.get("uid", False)
     })
     return Response(clone_dict(out, schemas=schema, out=None))

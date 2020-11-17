@@ -74,16 +74,25 @@ def make_page(force, host_name, query, **kwargs):
 
 
 def make_post(force, host_name, index, query):
+    if index is None or type(index) != str:
+        return None
     key_path = "{}_{}".format("post", index)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
-    print(index)
-    print(data)
     if query.get("master", False) is True:
         data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
         data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
             data.get("previous")) is int else None
+        print(data["related"])
+        data["related"] = list(
+            filter(lambda x: x,
+                   map(
+                       lambda x: make_post(force, "", str(x.get("id")) if x else None, {}),
+                       data.get("related") if data.get("related") else []
+                   )
+                   )
+        )
     return data
