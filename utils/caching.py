@@ -86,7 +86,6 @@ def make_post(force, host_name, index, query):
         data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
         data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
             data.get("previous")) is int else None
-        print(data["related"])
         data["related"] = list(
             filter(lambda x: x,
                    map(
