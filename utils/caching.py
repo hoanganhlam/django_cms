@@ -81,11 +81,22 @@ def make_page(force, host_name, query, **kwargs):
 def make_post(force, host_name, index, query):
     if index is None or type(index) != str:
         return None
+    q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
+    q_general = q_general & Q(show_cms=True, status="POSTED")
     key_path = "{}_{}".format("post", index)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
         data["post_related"] = list(map(lambda x: x.get("id"), data.get("post_related"))) if data.get(
             "post_related") else []
+        n = Post.objects.filter(q_general, id__gt=int(index)).first()
+        p = Post.objects.filter(q_general, id__lt=int(index)).first()
+        q_r = q_general & Q(post_type=data.get("post_type"))
+        if data.get("terms") and len(data.get("terms")):
+            q_r = q_r & Q(terms__posts=index)
+        r = Post.objects.filter(q_r)[:6]
+        data["next"] = n.id if n is not None else None
+        data["previous"] = p.id if p is not None else None
+        data["related"] = list(map(lambda x: x.id, r)) if r else []
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
@@ -95,7 +106,7 @@ def make_post(force, host_name, index, query):
             data.get("previous")) is int else None
         data["related"] = list(
             filter(lambda x: x,
-                   map(lambda x: make_post(force, host_name, str(x.get("id")) if x else None, {}),
+                   map(lambda x: make_post(force, host_name, str(x) if x else None, {}),
                        data.get("related") if data.get("related") else []
                        )
                    )
