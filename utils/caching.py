@@ -93,7 +93,7 @@ def make_post(force, host_name, index, query):
         q_r = q_general & Q(post_type=data.get("post_type"))
         if data.get("terms") and len(data.get("terms")):
             q_r = q_r & Q(terms__posts=index)
-        r = Post.objects.filter(q_r)[:6]
+        r = Post.objects.filter(q_r).order_by('-id').distinct()[:6]
         data["next"] = n.id if n is not None else None
         data["previous"] = p.id if p is not None else None
         data["related"] = list(map(lambda x: x.id, r)) if r else []
@@ -112,11 +112,18 @@ def make_post(force, host_name, index, query):
                    )
         )
         data["post_related"] = list(
-            filter(lambda x: x,
-                   map(lambda x: make_post(force, host_name, str(x) if x else None, {}),
-                       data.get("post_related") if data.get("post_related") else []
-                       )
-                   )
+            filter(
+                lambda x: x is not None,
+                map(
+                    lambda x: make_post(
+                        force,
+                        host_name,
+                        str(x) if x else None,
+                        {}
+                    ),
+                    data.get("post_related") if data.get("post_related") else []
+                )
+            )
         )
     return data
 
@@ -141,6 +148,6 @@ def make_post_list(force, host_name, query):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_post(force, host_name, str(x), {}), posts[start: end])),
+        "results": list(map(lambda x: make_post(force, host_name, str(x), {"master": True}), posts[start: end])),
         "count": len(posts)
     }

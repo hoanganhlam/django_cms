@@ -334,7 +334,8 @@ def graph(request):
                     "page_size": page_size,
                     "offset": page_size * page - page_size,
                     "post_type": params.get("post_type"),
-                    "post_related": params.get("post_related")
+                    "post_related": params.get("post_related"),
+                    "master": True
                 }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
