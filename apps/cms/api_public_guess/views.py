@@ -8,10 +8,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from apps.activity import verbs, action
-from apps.cms.models import Post, Publication, Term
+from apps.cms.models import Post, Publication, Term, PublicationTerm
 from apps.cms.api import serializers
 from apps.authentication.api.serializers import UserSerializer
 from apps.cms import models
+from apps.activity import actions
 from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
 from utils.other import get_paginator, clone_dict
@@ -30,22 +31,22 @@ def get_action_id(app_id, slug, flag):
         else:
             q = Q(slug=slug)
     post = models.Post.objects.filter(q).first()
-    action_id = None
     if post is not None:
         if post.options is None:
             post.options = {}
-        action_id = post.options.get("action_post")
-        if action_id is None and post.status == "POSTED":
+        old_action = Action.objects.filter(id=post.options.get("action_post", 0)).first()
+        if old_action is None and post.status == "POSTED":
             new_action = action.send(
                 post.user,
                 verb=verbs.POST_CREATED,
                 action_object=post,
                 target=post.primary_publication if post.primary_publication is not None else None
             )
-            action_id = new_action[0][1].id
-            post.options['action_post'] = action_id
+            old_action = new_action[0][1]
+            post.options['action_post'] = old_action.id
             post.save()
-    return action_id
+        return old_action.id
+    return None
 
 
 # ==========================================================================
@@ -201,12 +202,12 @@ def fetch_posts(request, app_id):
             meta = request.data.get("meta", {})
             meta["price"] = request.data.get("price", 0)
             post = Post.objects.create(
-                title=request.data.get("title"),
+                title=request.data.get("title", "Untitled"),
                 description=request.data.get("description"),
                 content=request.data.get("content"),
                 primary_publication=pub,
                 status="POSTED",
-                post_type=request.data.get("post_type"),
+                post_type=request.data.get("post_type", "article"),
                 user=request.user if request.user.is_authenticated else None,
                 meta=meta,
                 show_cms=pub.options.get("auto_guess_public", False),
@@ -216,12 +217,17 @@ def fetch_posts(request, app_id):
                 for p in request.data.get("post_related", None):
                     pr = Post.objects.get(pk=p)
                     post.post_related.add(pr)
+            if request.data.get("terms", None) is not None:
+                prs = PublicationTerm.objects.filter(id__in=request.data.get("terms", []))
+                for p in prs:
+                    post.terms.add(p)
             with connection.cursor() as cursor:
-                cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
+                cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s, %s)", [
                     post.id,
                     request.GET.get("uid") is not None,
                     None,
-                    None
+                    None,
+                    request.user.id
                 ])
                 result = cursor.fetchone()[0]
                 cursor.close()
@@ -238,6 +244,24 @@ def fetch_post(request, app_id, slug):
             "is_guess_post": request.GET.get("is_guess_post"),
             "show_cms": request.GET.get("show_cms")
         }))
+
+
+@api_view(['GET'])
+def fetch_post_init(request, app_id, slug):
+    action_id = get_action_id(app_id, slug, request.GET.get("uid") is not None)
+    if action_id is not None:
+        pass
+    return Response(status=status.HTTP_200_OK, data={
+        "like": {
+            "is_like": False,
+            "count": 0
+        },
+        "comment": {
+            "results": [],
+            "count": 0
+        },
+        "following": False
+    })
 
 
 @api_view(['GET', 'POST'])
@@ -303,10 +327,22 @@ def push_vote(request, app_id, slug):
             else:
                 old_action.voters.add(request.user)
                 data = True
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
+            return Response(status=status.HTTP_202_ACCEPTED, data=data)
         return Response(status=status.HTTP_400_BAD_REQUEST, data=msg)
     else:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['POST'])
+def follow(request, app_id, slug):
+    instance = Post.objects.get(pk=slug)
+    if actions.is_following(request.user, instance):
+        actions.un_follow(request.user, instance)
+        flag = False
+    else:
+        actions.follow(request.user, instance)
+        flag = True
+    return Response(flag)
 
 
 # ==========================================================================
@@ -314,6 +350,8 @@ def push_vote(request, app_id, slug):
 @api_view(['POST'])
 def graph(request):
     hostname = request.GET.get("host", None)
+    user = request.user.id if request.user.is_authenticated else None
+    pub = Publication.objects.get(host=hostname) if user else None
     if hostname is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     if request.method == "POST":
@@ -324,19 +362,45 @@ def graph(request):
             params = q.get("p") or {}
             schemas = q.get("s") or ["id"]
             if q.get("q") == "post_detail":
-                out[q.get("o")] = clone_dict(caching.make_post(force, hostname, params.get("slug"), {
-                    "master": True
-                }), schemas, None)
+                if user:
+                    out[q.get("o")] = clone_dict(query_post(params.get("slug"), {
+                        "user": user
+                    }), schemas, None)
+                else:
+                    out[q.get("o")] = clone_dict(caching.make_post(force, hostname, params.get("slug"), {
+                        "master": True
+                    }), schemas, None)
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
-                    "page_size": page_size,
-                    "offset": page_size * page - page_size,
-                    "post_type": params.get("post_type"),
-                    "post_related": params.get("post_related"),
-                    "master": True
-                }), schemas, None)
+                if user:
+                    out[q.get("o")] = clone_dict(query_posts({
+                        "page_size": page_size,
+                        "offs3t": page_size * page - page_size,
+                        "search": params.get("search"),
+                        "order_by": params.get("order_by"),
+                        "user_id": user,
+                        "type": params.get("type"),
+                        "status": "POSTED",
+                        "is_guess_post": params.get("is_guess_post"),
+                        "show_cms": params.get("show_cms", None),
+                        "taxonomies_operator": params.get("taxonomies_operator"),
+                        "taxonomies": None,
+                        "app_id": str(pub.id),
+                        "related_operator": params.get("related_operator"),
+                        "post_related": params.get('post_related'),
+                        "related": params.get("related"),
+                        "meta": params.get("meta")
+                    }), schemas, None)
+                else:
+                    out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
+                        "page_size": page_size,
+                        "offset": page_size * page - page_size,
+                        "post_type": params.get("post_type"),
+                        "post_related": params.get("post_related"),
+                        "master": True,
+                        "related": params.get("related")
+                    }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)

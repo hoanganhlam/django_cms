@@ -30,7 +30,7 @@ class PostViewSet(viewsets.ModelViewSet):
             user_id = request.user.id if request.user.is_authenticated else None
             with connection.cursor() as cursor:
                 meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
-                cursor.execute("SELECT FETCH_POSTS(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                cursor.execute("SELECT FETCH_POSTS_X(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                                [
                                    p.get("page_size"),
                                    p.get("offs3t"),
@@ -48,6 +48,7 @@ class PostViewSet(viewsets.ModelViewSet):
                                    request.GET.get("related_operator", "OR"),
                                    '{' + request.GET.get('post_related') + '}' if request.GET.get(
                                        'post_related') else None,
+                                   request.GET.get("related", None),
                                    json.dumps(meta) if meta else None
                                ])
                 result = cursor.fetchone()[0]
@@ -63,11 +64,12 @@ class PostViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         with connection.cursor() as cursor:
             slug = kwargs['pk']
-            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s)", [
+            cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s, %s)", [
                 int(slug) if slug.isnumeric() else slug,
                 request.GET.get("uid") is not None,
                 request.GET.get("is_guess_post"),
-                request.GET.get("show_cms")
+                request.GET.get("show_cms"),
+                request.user.id
             ])
             result = cursor.fetchone()[0]
             cursor.close()

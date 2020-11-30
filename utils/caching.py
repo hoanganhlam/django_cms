@@ -104,13 +104,7 @@ def make_post(force, host_name, index, query):
         data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
         data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
             data.get("previous")) is int else None
-        data["related"] = list(
-            filter(lambda x: x,
-                   map(lambda x: make_post(force, host_name, str(x) if x else None, {}),
-                       data.get("related") if data.get("related") else []
-                       )
-                   )
-        )
+        data["related"] = []
         data["post_related"] = list(
             filter(
                 lambda x: x is not None,
@@ -131,9 +125,20 @@ def make_post(force, host_name, index, query):
 def make_post_list(force, host_name, query):
     key_path = host_name + "list"
     post_type = query.get("post_type")
+    related = query.get("related")
     post_related = query.get("post_related")
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
+    if related is not None:
+        related_instance = Post.objects.get(pk=related)
+        q_related = Q(
+            post_type=related_instance.post_type,
+            primary_publication=related_instance.primary_publication,
+        )
+        q_related = q_related & ~Q(id=related)
+        q_related = q_related | Q(terms__posts__id=related, )
+        q = q & q_related
+        key_path = "{}_related-{}".format(key_path, related)
     if post_type is not None:
         q = q & Q(post_type=post_type)
         key_path = "{}_post_type-{}".format(key_path, post_type)
@@ -148,6 +153,9 @@ def make_post_list(force, host_name, query):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_post(force, host_name, str(x), {"master": True}), posts[start: end])),
+        "results": list(map(lambda x: make_post(force, host_name, str(x), {
+            "master": True,
+            "user": query.get("user")
+        }), posts[start: end])),
         "count": len(posts)
     }

@@ -6,3 +6,6 @@ class GeneralConfig(AppConfig):
 
     def ready(self):
         from apps.general import signals
+        from apps.activity import registry
+        from apps.activity.models import Action
+        registry.register(Action)

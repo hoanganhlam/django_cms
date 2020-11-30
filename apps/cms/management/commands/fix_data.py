@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.cms.models import Post, Term, SearchKeyword
+from apps.cms.models import Post, Term, SearchKeyword, Publication
 from utils.web_checker import get_keyword_suggestion
 import requests
 
@@ -29,8 +29,7 @@ class Command(BaseCommand):
         #     post.meta['media'] = post.options.get("media")
         #     post.save()
         #     print(post.id)
-
-        posts = Post.objects.filter(primary_publication__id=5, post_type="post")
+        p = Publication.objects.get(pk=15)
+        posts = Post.objects.filter(primary_publication__id=7, post_type="post")
         for post in posts:
-            post.show_cms = True
-            post.save()
+            post.publications.add(p)
