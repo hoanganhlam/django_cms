@@ -123,10 +123,12 @@ def make_post(force, host_name, index, query):
 
 
 def make_post_list(force, host_name, query):
-    key_path = host_name + "list"
+    order = query.get("order", "popular")
+    key_path = host_name + "_list_" + order
     post_type = query.get("post_type")
     related = query.get("related")
     post_related = query.get("post_related")
+
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
     if related is not None:
@@ -145,8 +147,12 @@ def make_post_list(force, host_name, query):
     if post_related is not None:
         q = q & Q(post_related__id=post_related)
         key_path = "{}_post_related-{}".format(key_path, post_related)
+
     if force or key_path not in cache:
-        posts = list(Post.objects.filter(q).order_by("id").values_list('id', flat=True))
+        if order == "newest":
+            posts = list(Post.objects.filter(q).order_by("-id").distinct().values_list('id', flat=True))
+        else:
+            posts = list(Post.objects.filter(q).order_by("id").distinct().values_list('id', flat=True))
         cache.set(key_path, posts, timeout=60 * 60 * 24)
     else:
         posts = cache.get(key_path)

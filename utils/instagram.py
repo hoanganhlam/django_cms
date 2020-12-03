@@ -121,9 +121,11 @@ def extract_item(item):
         "ig_id": user_raw.get("pk"),
         "full_name": user_raw.get("full_name"),
         "username": user_raw.get("username"),
+        "profile_pic_id": user_raw.get("profile_pic_id")
     }
-
-    tags = [word.replace('#', '') for word in caption.split() if word.startswith('#')]
+    tags = []
+    if caption:
+        tags = [word.replace('#', '') for word in caption.split() if word.startswith('#')]
     return {
         "ig_id": item.get("pk"),
         "tags": tags,
@@ -131,7 +133,9 @@ def extract_item(item):
         "caption": caption,
         "coordinate": location,
         "time_posted": datetime.fromtimestamp(item.get("taken_at")),
-        "images": images
+        "images": images,
+        "comment_count": item.get("comment_count"),
+        "profile_pic_id": item.get("profile_pic_id")
     }
 
 
@@ -142,3 +146,16 @@ def extract_media(item):
     if item.get("image"):
         image = item.get("image").get("candidates")[0].get("url")
     return image
+
+
+def get_comment(item_id):
+    return api.media_comments(item_id)
+
+
+def fetch_avatar(item_id):
+    if item_id is None:
+        return None
+    test = api.media_info(item_id)
+    if test and len(test.get("items", [])) > 0:
+        return extract_media(test.get("items")[0])
+    return None

@@ -10,9 +10,9 @@ from utils.other import get_paginator
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
-from utils.instagram import fetch_by_hash_tag
+from utils.instagram import fetch_by_hash_tag, get_comment, fetch_avatar
 import json
-from apps.cms.tasks import task_sync_drive
+from apps.cms.tasks import task_sync_drive, sync_plant_universe
 
 
 class PostViewSet(viewsets.ModelViewSet):

@@ -21,7 +21,6 @@ app.conf.beat_schedule = {
     'add-every-30-seconds': {
         'task': 'apps.cms.tasks.add',
         'schedule': crontab(minute=0, hour=0)
-
     }
 }
 app.conf.timezone = 'UTC'

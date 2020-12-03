@@ -2,6 +2,8 @@ from django.core.management.base import BaseCommand
 from apps.cms.models import Post, Term, SearchKeyword, Publication
 from utils.web_checker import get_keyword_suggestion
 import requests
+from django.contrib.auth.models import User
+from utils.instagram import get_comment, fetch_avatar
 
 
 class Command(BaseCommand):
@@ -29,7 +31,9 @@ class Command(BaseCommand):
         #     post.meta['media'] = post.options.get("media")
         #     post.save()
         #     print(post.id)
-        p = Publication.objects.get(pk=15)
-        posts = Post.objects.filter(primary_publication__id=7, post_type="post")
-        for post in posts:
-            post.publications.add(p)
+        # p = Publication.objects.get(pk=15)
+        # posts = Post.objects.filter(primary_publication__id=7, post_type="post")
+        # for post in posts:
+        #     post.publications.add(p)
+        user = fetch_avatar("2308706217630149191_34929300621")
+        print(user)

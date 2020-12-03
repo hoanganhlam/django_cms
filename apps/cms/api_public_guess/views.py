@@ -62,6 +62,7 @@ def init(request):
                 ])
                 user = cursor.fetchone()[0]
         with connection.cursor() as cursor:
+            print(request.GET.get("host"))
             cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
                 request.GET.get("host"),
                 request.user.id if request.user.is_authenticated else None
