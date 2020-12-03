@@ -400,7 +400,8 @@ def graph(request):
                         "post_type": params.get("post_type"),
                         "post_related": params.get("post_related"),
                         "master": True,
-                        "related": params.get("related")
+                        "related": params.get("related"),
+                        "order": params.get("order"),
                     }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
