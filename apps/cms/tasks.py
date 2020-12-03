@@ -247,6 +247,7 @@ def plant_universe_worker(k, n):
                         pass
             # if item.get("comment_count"):
             #     print(get_comment(item.get("ig_id")))
+    print(out.get("next_id"))
     if out.get("next_id"):
         plant_universe_worker(k, out.get("next_id"))
 

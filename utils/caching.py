@@ -123,7 +123,7 @@ def make_post(force, host_name, index, query):
 
 
 def make_post_list(force, host_name, query):
-    order = query.get("order", "popular")
+    order = query.get("order")
     key_path = host_name + "_list_" + order
     post_type = query.get("post_type")
     related = query.get("related")
