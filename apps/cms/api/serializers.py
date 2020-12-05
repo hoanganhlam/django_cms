@@ -68,3 +68,7 @@ class PubTermSerializer(serializers.ModelSerializer):
             'created': {'read_only': True},
             'updated': {'read_only': True},
         }
+
+    def to_representation(self, instance):
+        self.fields['term'] = TermSerializer(read_only=True)
+        return super(PubTermSerializer, self).to_representation(instance)

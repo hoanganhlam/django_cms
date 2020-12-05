@@ -3,8 +3,8 @@ from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db.models import Q
 from . import query as query_maker
-from apps.cms.models import Term, Post
-from apps.cms.api.serializers import TermSerializer
+from apps.cms.models import Term, Post, PublicationTerm
+from apps.cms.api.serializers import TermSerializer, PubTermSerializer
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -19,20 +19,29 @@ def make_init(force, host_name):
 
 
 def make_page(force, host_name, query, **kwargs):
+    term_term = None
+    term_taxonomy = None
     key_path = host_name + "_page"
+    # ====================================================================================
+    q_term = Q(publication__host=host_name)
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
-    taxonomy = query.get("taxonomy")
-    post_type = query.get("post_type")
-    term = query.get("term")
-    post_related = query.get("post_related")
     # ====================================================================================
-    if taxonomy is not None:
-        q = q & Q(terms__taxonomy=taxonomy)
-        key_path = "{}_{}".format(key_path, taxonomy)
-    if term is not None:
-        q = q & Q(terms__term__slug=term)
-        key_path = "{}_{}".format(key_path, term)
+    post_type = query.get("post_type")
+    post_related = query.get("post_related")
+    post_terms = query.get("terms", {})
+    post_terms_keys = list(post_terms.keys())
+    if len(post_terms_keys) == 1:
+        term_taxonomy = post_terms_keys[0]
+        term_term = post_terms.get(term_taxonomy, None)
+    # ====================================================================================
+    if term_taxonomy is not None:
+        q_term = q_term & Q(taxonomy=term_taxonomy)
+        q = q & Q(terms__taxonomy=term_taxonomy)
+        key_path = "{}_{}".format(key_path, term_taxonomy)
+    if term_term is not None:
+        q = q & Q(terms__term__slug=term_term)
+        key_path = "{}_{}".format(key_path, term_term)
     if post_type is not None:
         q = q & Q(post_type=post_type)
         key_path = "{}_{}".format(key_path, post_type)
@@ -41,12 +50,13 @@ def make_page(force, host_name, query, **kwargs):
         key_path = "{}_post_related-{}".format(key_path, post_related)
     # ====================================================================================
     if key_path not in cache or force:
-        term_object = Term.objects.filter(slug=term).first() if term is not None else None
+        term_object = PublicationTerm.objects.filter(
+            q_term & Q(term__slug=term_term)).first() if term_term is not None else None
         newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
         popular = list(Post.objects.filter(q).order_by("id").values_list('id', flat=True))
-        terms = Term.objects.filter(pub_terms__publication__host=host_name)[:10]
+        terms = PublicationTerm.objects.filter(q_term)[:10].values_list("id", flat=True)
         out = {
-            "term": TermSerializer(term_object).data,  # const
+            "term": term_object.id if term_object is not None else None,
             "newest": {
                 "results": newest,
                 "count": len(newest)
@@ -55,7 +65,7 @@ def make_page(force, host_name, query, **kwargs):
                 "results": popular,
                 "count": len(popular)
             },
-            "terms": TermSerializer(terms, many=True).data  # const
+            "terms": terms
         }
         cache.set(key_path, out, timeout=60 * 60 * 24)
     else:
@@ -64,7 +74,7 @@ def make_page(force, host_name, query, **kwargs):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     order = query.get("order", "popular")
-    out[order]["results"] = list(map(lambda x: make_post(force, "", str(x), {
+    out[order]["results"] = list(map(lambda x: make_post(force, host_name, str(x), {
         "master": True
     }), out[order]["results"][start: end]))
     for flag in ["newest", "popular"]:
@@ -74,6 +84,9 @@ def make_page(force, host_name, query, **kwargs):
                     map(lambda x: make_post(force, "", str(x), {"master": True}), out[flag]["results"][: 5]))
             else:
                 out[flag]["results"] = []
+    if out.get("term", None) is not None:
+        out["term"] = make_term(force, out["term"])
+    out["terms"] = list(map(lambda x: make_term(force, x), out["terms"]))
     # ====================================================================================
     return out
 
@@ -128,6 +141,7 @@ def make_post_list(force, host_name, query):
     post_type = query.get("post_type")
     related = query.get("related")
     post_related = query.get("post_related")
+    term = query.get("term")
 
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
@@ -147,6 +161,9 @@ def make_post_list(force, host_name, query):
     if post_related is not None:
         q = q & Q(post_related__id=post_related)
         key_path = "{}_post_related-{}".format(key_path, post_related)
+    if term is not None:
+        q = q & Q(terms__term__slug=term)
+        key_path = "{}_post_related-{}".format(key_path, term)
 
     if force or key_path not in cache:
         if order == "newest":
@@ -165,3 +182,38 @@ def make_post_list(force, host_name, query):
         }), posts[start: end])),
         "count": len(posts)
     }
+
+
+def make_term_list(force, host_name, query):
+    order = query.get("order")
+    key_path = host_name + "_list_term" + order
+    taxonomy = query.get("taxonomy")
+    q = Q(publication__host=host_name)
+    if taxonomy:
+        key_path = "{}_taxonomy-{}".format(key_path, taxonomy)
+        q = q & Q(taxonomy=taxonomy)
+    if force or key_path not in cache:
+        if order == "newest":
+            terms = PublicationTerm.objects.filter(q).values_list("id", flat=True)
+        else:
+            terms = PublicationTerm.objects.filter(q).values_list("id", flat=True)
+        cache.set(key_path, terms, timeout=60 * 60 * 24)
+    else:
+        terms = cache.get(key_path)
+    start = query.get("offset", 0)
+    end = query.get("offset", 0) + query.get("page_size", 10)
+    return {
+        "results": list(map(lambda x: make_term(force, x), terms[start: end])),
+        "count": len(terms)
+    }
+
+
+def make_term(force, term_id):
+    if term_id is None:
+        return None
+    key_path = "{}_{}".format("term", term_id)
+    if force or key_path not in cache:
+        term = PubTermSerializer(PublicationTerm.objects.get(pk=term_id)).data
+    else:
+        term = cache.get(key_path)
+    return term

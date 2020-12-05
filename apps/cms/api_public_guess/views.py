@@ -391,7 +391,8 @@ def graph(request):
                         "related_operator": params.get("related_operator"),
                         "post_related": params.get('post_related'),
                         "related": params.get("related"),
-                        "meta": params.get("meta")
+                        "meta": params.get("meta"),
+                        "term": params.get("term"),
                     }), schemas, None)
                 else:
                     out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
@@ -402,20 +403,29 @@ def graph(request):
                         "master": True,
                         "related": params.get("related"),
                         "order": params.get("order", "newest"),
+                        "term": params.get("term"),
                     }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                out[q.get("o")] = caching.make_page(force, hostname, query={
+                out[q.get("o")] = clone_dict(caching.make_page(force, hostname, query={
                     "post_related": params.get("post_related"),
-                    "term": params.get("term"),
-                    "taxonomy": params.get("taxonomy"),
+                    "terms": params.get("terms"),
                     "post_type": params.get("post_type"),
                     "page_size": page_size,
                     "offset": page_size * page - page_size,
                     "order": params.get("order", "popular"),
                     "full": params.get("full", None)
-                })
+                }), schemas, None)
+            if q.get("q") == "term_list":
+                page_size = params.get('page_size', 10)
+                page = params.get('page', 1)
+                out[q.get("o")] = clone_dict(caching.make_term_list(force, hostname, query={
+                    "taxonomy": params.get("taxonomy"),
+                    "page_size": page_size,
+                    "offset": page_size * page - page_size,
+                    "order": params.get("order", "popular")
+                }), schemas, None)
         return Response(out)
 
 
