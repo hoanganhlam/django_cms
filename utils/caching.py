@@ -213,7 +213,7 @@ def make_term(force, term_id):
         return None
     key_path = "{}_{}".format("term", term_id)
     if force or key_path not in cache:
-        term = PubTermSerializer(PublicationTerm.objects.get(pk=term_id)).data
+        term = dict(PubTermSerializer(PublicationTerm.objects.get(pk=term_id)).data)
     else:
         term = cache.get(key_path)
     return term
