@@ -41,8 +41,28 @@ class PublicationTerm(BaseModel):
     taxonomy = models.CharField(max_length=50)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
     description = models.TextField(max_length=256, null=True, blank=True)
+    media = models.ForeignKey(Media, related_name="publication_terms", blank=True, null=True, on_delete=models.SET_NULL)
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
+
+    def children(self):
+        out = []
+        if self.post_term_child.all().count() > 0:
+            children = self.post_term_child.all()
+            out = out + children
+            for child in children:
+                out = out + child.children()
+        return out
+
+    def parents(self):
+        out = []
+        if self.parent:
+            out.append(self.parent)
+            out = out + self.parent.parents()
+        return out
+
+    def entities(self):
+        return self.children() + self.parents()
 
 
 class Post(BaseModel, Taxonomy):
