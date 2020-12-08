@@ -40,7 +40,7 @@ class PublicationTerm(BaseModel):
     term = models.ForeignKey(Term, related_name="pub_terms", on_delete=models.CASCADE)
     taxonomy = models.CharField(max_length=50)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
-    related = models.ManyToManyField("self", related_name="related_reverse", blank=True, symmetrical=False)
+    related = models.ManyToManyField("self", related_name="related_reverse", blank=True, symmetrical=False, null=True)
     description = models.TextField(max_length=256, null=True, blank=True)
     media = models.ForeignKey(Media, related_name="publication_terms", blank=True, null=True, on_delete=models.SET_NULL)
     options = JSONField(null=True, blank=True)
