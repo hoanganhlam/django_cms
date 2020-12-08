@@ -3,7 +3,7 @@ from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db.models import Q
 from . import query as query_maker
-from apps.cms.models import Term, Post, PublicationTerm
+from apps.cms.models import Term, Post, PublicationTerm, Publication
 from apps.cms.api.serializers import TermSerializer, PubTermSerializer
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -188,22 +188,26 @@ def make_term_list(force, host_name, query):
     order = query.get("order")
     key_path = host_name + "_list_term" + order
     taxonomy = query.get("taxonomy")
+    related = query.get("related")
     q = Q(publication__host=host_name)
     if taxonomy:
         key_path = "{}_taxonomy-{}".format(key_path, taxonomy)
         q = q & Q(taxonomy=taxonomy)
+    if related:
+        key_path = "{}_related-{}".format(key_path, related)
+        q = q & (Q(related_reverse__id=related) | Q(related__id=related))
     if force or key_path not in cache:
         if order == "newest":
-            terms = PublicationTerm.objects.filter(q).values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
         cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:
         terms = cache.get(key_path)
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_term(force, x, False), terms[start: end])),
+        "results": list(map(lambda x: make_term(False, x, False), terms[start: end])),
         "count": len(terms)
     }
 
@@ -217,6 +221,4 @@ def make_term(force, term_id, master=False):
         cache.set(key_path, term)
     else:
         term = cache.get(key_path)
-    if term.get("entities", None) is not None and master:
-        term["entities"] = list(map(lambda x: make_term(force, x, False), term.get("entities")))
     return term

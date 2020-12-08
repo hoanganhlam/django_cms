@@ -418,13 +418,23 @@ def graph(request):
                     "full": params.get("full", None)
                 }), schemas, None)
             if q.get("q") == "term_list":
+                related = params.get("related", None)
+                if related is None and params.get("related_term") and params.get("related_taxonomy"):
+                    test = PublicationTerm.objects.filter(
+                        publication__host=hostname,
+                        term__slug=params.get("related_term"),
+                        taxonomy=params.get("related_taxonomy")
+                    ).first()
+                    if test:
+                        related = test.id
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 out[q.get("o")] = clone_dict(caching.make_term_list(force, hostname, query={
                     "taxonomy": params.get("taxonomy"),
                     "page_size": page_size,
                     "offset": page_size * page - page_size,
-                    "order": params.get("order", "popular")
+                    "order": params.get("order", "popular"),
+                    "related": related
                 }), schemas, None)
             if q.get("q") == "term_detail":
                 pub_term_id = params.get("id", None)
