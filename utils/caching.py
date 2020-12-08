@@ -194,8 +194,12 @@ def make_term_list(force, host_name, query):
         key_path = "{}_taxonomy-{}".format(key_path, taxonomy)
         q = q & Q(taxonomy=taxonomy)
     if related:
-        key_path = "{}_related-{}".format(key_path, related)
-        q = q & (Q(related_reverse__id=related) | Q(related__id=related))
+        if query.get("reverse"):
+            key_path = "{}_related__reverse-{}".format(key_path, related)
+            q = q & Q(related_reverse__id=related)
+        else:
+            key_path = "{}_related-{}".format(key_path, related)
+            q = q & Q(related__id=related)
     if force or key_path not in cache:
         if order == "newest":
             terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)

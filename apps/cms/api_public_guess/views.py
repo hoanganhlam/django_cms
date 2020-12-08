@@ -434,7 +434,8 @@ def graph(request):
                     "page_size": page_size,
                     "offset": page_size * page - page_size,
                     "order": params.get("order", "popular"),
-                    "related": related
+                    "related": related,
+                    "reverse": params.get("reverse", False)
                 }), schemas, None)
             if q.get("q") == "term_detail":
                 pub_term_id = params.get("id", None)
