@@ -8,5 +8,5 @@ from utils.instagram import get_comment, fetch_avatar
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        pt = PublicationTerm.objects.get(pk=123)
+        pt = PublicationTerm.objects.get(pk=13909)
         print(pt.entities())

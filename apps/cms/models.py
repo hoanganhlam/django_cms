@@ -40,6 +40,7 @@ class PublicationTerm(BaseModel):
     term = models.ForeignKey(Term, related_name="pub_terms", on_delete=models.CASCADE)
     taxonomy = models.CharField(max_length=50)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="post_term_child", null=True, blank=True)
+    related = models.ManyToManyField("self", related_name="related_reverse", blank=True)
     description = models.TextField(max_length=256, null=True, blank=True)
     media = models.ForeignKey(Media, related_name="publication_terms", blank=True, null=True, on_delete=models.SET_NULL)
     options = JSONField(null=True, blank=True)
@@ -49,7 +50,7 @@ class PublicationTerm(BaseModel):
         out = []
         if self.post_term_child.all().count() > 0:
             children = self.post_term_child.all()
-            out = out + children
+            out = out + list(children.values_list("id", flat=True))
             for child in children:
                 out = out + child.children()
         return out
@@ -57,8 +58,8 @@ class PublicationTerm(BaseModel):
     def parents(self):
         out = []
         if self.parent:
-            out.append(self.parent)
-            out = out + self.parent.parents()
+            out.append(self.parent.id)
+            out = out + list(self.parent.parents())
         return out
 
     def entities(self):

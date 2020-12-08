@@ -85,7 +85,7 @@ def make_page(force, host_name, query, **kwargs):
             else:
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
-        out["term"] = make_term(force, out["term"])
+        out["term"] = make_term(force, out["term"], False)
     out["terms"] = list(map(lambda x: make_term(force, x), out["terms"]))
     # ====================================================================================
     return out
@@ -203,17 +203,20 @@ def make_term_list(force, host_name, query):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_term(force, x), terms[start: end])),
+        "results": list(map(lambda x: make_term(force, x, False), terms[start: end])),
         "count": len(terms)
     }
 
 
-def make_term(force, term_id):
+def make_term(force, term_id, master=False):
     if term_id is None:
         return None
     key_path = "{}_{}".format("term", term_id)
     if force or key_path not in cache:
         term = dict(PubTermSerializer(PublicationTerm.objects.get(pk=term_id)).data)
+        cache.set(key_path, term)
     else:
         term = cache.get(key_path)
+    if term.get("entities", None) is not None and master:
+        term["entities"] = list(map(lambda x: make_term(force, x, False), term.get("entities")))
     return term

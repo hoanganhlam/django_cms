@@ -61,6 +61,8 @@ class TermSerializer(serializers.ModelSerializer):
 
 
 class PubTermSerializer(serializers.ModelSerializer):
+    entities = serializers.SerializerMethodField()
+
     class Meta:
         model = models.PublicationTerm
         fields = '__all__'
@@ -68,7 +70,19 @@ class PubTermSerializer(serializers.ModelSerializer):
             'created': {'read_only': True},
             'updated': {'read_only': True},
         }
+        extra_fields = ['entities'],
+
+    def get_field_names(self, declared_fields, info):
+        expanded_fields = super(PubTermSerializer, self).get_field_names(declared_fields, info)
+        if getattr(self.Meta, 'extra_fields', None) and len(self.Meta.extra_fields) > 0:
+            return expanded_fields + list(self.Meta.extra_fields[0])
+        else:
+            return expanded_fields
+
+    def get_entities(self, instance):
+        return instance.entities()
 
     def to_representation(self, instance):
         self.fields['term'] = TermSerializer(read_only=True)
+        self.fields['media'] = MediaSerializer()
         return super(PubTermSerializer, self).to_representation(instance)

@@ -426,6 +426,17 @@ def graph(request):
                     "offset": page_size * page - page_size,
                     "order": params.get("order", "popular")
                 }), schemas, None)
+            if q.get("q") == "term_detail":
+                pub_term_id = params.get("id", None)
+                if pub_term_id is None:
+                    if params.get("taxonomy") and params.get("term"):
+                        pt = PublicationTerm.objects.filter(
+                            publication__host=hostname,
+                            taxonomy=params.get("taxonomy"),
+                            term__slug=params.get("term")).first()
+                        if pt is not None:
+                            pub_term_id = pt.id
+                out[q.get("o")] = clone_dict(caching.make_term(force, pub_term_id, True), schemas, None)
         return Response(out)
 
 
