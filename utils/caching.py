@@ -74,7 +74,7 @@ def make_page(force, host_name, query, **kwargs):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     order = query.get("order", "popular")
-    out[order]["results"] = list(map(lambda x: make_post(force, host_name, str(x), {
+    out[order]["results"] = list(map(lambda x: make_post(False, host_name, str(x), {
         "master": True
     }), out[order]["results"][start: end]))
     for flag in ["newest", "popular"]:
@@ -114,8 +114,8 @@ def make_post(force, host_name, index, query):
     else:
         data = cache.get(key_path)
     if query.get("master", False) is True:
-        data["next"] = make_post(force, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
-        data["previous"] = make_post(force, host_name, str(data.get("previous")), {}) if type(
+        data["next"] = make_post(False, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
+        data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type(
             data.get("previous")) is int else None
         data["related"] = []
         data["post_related"] = list(
@@ -123,7 +123,7 @@ def make_post(force, host_name, index, query):
                 lambda x: x is not None,
                 map(
                     lambda x: make_post(
-                        force,
+                        False,
                         host_name,
                         str(x) if x else None,
                         {}

@@ -469,8 +469,7 @@ def public_page(request, app_host):
     page_size = params.get('page_size', 10)
     page = params.get('page', 1)
     out = caching.make_page(request.GET.get("force") == "true", app_host, query={
-        "term": params.get("term"),
-        "taxonomy": params.get("taxonomy"),
+        "terms": params.get("terms"),
         "post_type": params.get("post_type"),
         "page_size": page_size,
         "offset": page_size * page - page_size,
