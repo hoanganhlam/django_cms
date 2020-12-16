@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from django.conf.urls import include, url
 from rest_auth.registration.views import VerifyEmailView
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,4 +34,8 @@ urlpatterns = [
     url(r'^v1/commerce/', include(('apps.commerce.api.urls', 'api_commerce'))),
 
     url(r'^v1/', include(('apps.cms.api_public_guess.urls', 'api_public_cms_v2'))),
+
+    re_path(r'^main-sitemap.xsl', views.sitemap_style),
+    re_path(r'^sitemap_index.xml', views.sitemap_index),
+    url(r'(?P<flag>[-\w.]+)-sitemap.xml$', views.sitemap_detail),
 ]

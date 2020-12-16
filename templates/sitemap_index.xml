@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/main-sitemap.xsl"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {% for location in sitemaps %}
+        <sitemap>
+            <loc>{{ location }}</loc>
+            <lastmod>2020-10-30T01:41:21-07:00</lastmod>
+        </sitemap>
+    {% endfor %}
+</sitemapindex>
