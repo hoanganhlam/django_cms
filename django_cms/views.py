@@ -55,7 +55,8 @@ def sitemap_detail(request, flag):
                         post_type=flag,
                         primary_publication=pub,
                         db_status=1,
-                        status="POSTED"
+                        status="POSTED",
+                        show_cms=True
                     )))
     return HttpResponse(template.render({
         "dataset": ds
