@@ -11,8 +11,9 @@ def sitemap_style(request):
 def sitemap_index(request):
     sm = []
     template = loader.get_template('./sitemap_index.xml')
-    if request.GET.get("host"):
-        pub = Publication.objects.get(host=request.GET.get("host"))
+    if request.GET.get("host") or request.headers.get("Host-Domain"):
+        host = request.GET.get("host") if request.GET.get("host") else request.headers.get("Host-Domain")
+        pub = Publication.objects.get(host=host)
         sm = sm + list(map(
             lambda x: "https://{0}/{1}-sitemap.xml".format(pub.host, x.get("label")),
             filter(lambda x: x.get("sitemap", False), pub.options.get("post_types"))
@@ -29,8 +30,9 @@ def sitemap_index(request):
 def sitemap_detail(request, flag):
     ds = []
     template = loader.get_template('./sitemap.xml')
-    if request.GET.get("host"):
-        pub = Publication.objects.get(host=request.GET.get("host"))
+    if request.GET.get("host") or request.headers.get("Host-Domain"):
+        host = request.GET.get("host") if request.GET.get("host") else request.headers.get("Host-Domain")
+        pub = Publication.objects.get(host=host)
         flat_taxonomies = list(map(lambda x: x.get("label"), pub.options.get("taxonomies")))
         flat_post_types = list(map(lambda x: x.get("label"), pub.options.get("post_types")))
         if flag in flat_taxonomies:
