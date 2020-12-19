@@ -374,7 +374,7 @@ def graph(request):
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                if user:
+                if user or params.get("search"):
                     out[q.get("o")] = clone_dict(query_posts({
                         "page_size": page_size,
                         "offs3t": page_size * page - page_size,
