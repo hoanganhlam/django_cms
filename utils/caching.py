@@ -200,12 +200,15 @@ def make_term_list(force, host_name, query):
         else:
             key_path = "{}_related-{}".format(key_path, related)
             q = q & Q(related__id=related)
-    if force or key_path not in cache:
+    if query.get("search"):
+        q = q & Q(term__title__icontains=query.get("search"))
+    if (force or key_path not in cache) or query.get("search"):
         if order == "newest":
             terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
         else:
             terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
-        cache.set(key_path, terms, timeout=60 * 60 * 24)
+        if not query.get("search"):
+            cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:
         terms = cache.get(key_path)
     start = query.get("offset", 0)

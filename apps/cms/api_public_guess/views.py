@@ -62,7 +62,6 @@ def init(request):
                 ])
                 user = cursor.fetchone()[0]
         with connection.cursor() as cursor:
-            print(request.GET.get("host"))
             cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
                 request.GET.get("host"),
                 request.user.id if request.user.is_authenticated else None
@@ -157,7 +156,6 @@ def fetch_taxonomy(request, app_id, slug):
 @api_view(['GET', 'POST'])
 def fetch_posts(request, app_id):
     if request.method == "GET":
-        # print(request.META['QUERY_STRING'])
         app = models.Publication.objects.get(pk=app_id)
         if app.options is None:
             app.options = {}
@@ -430,6 +428,7 @@ def graph(request):
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 out[q.get("o")] = clone_dict(caching.make_term_list(force, hostname, query={
+                    "search": params.get("search"),
                     "taxonomy": params.get("taxonomy"),
                     "page_size": page_size,
                     "offset": page_size * page - page_size,
