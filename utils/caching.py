@@ -176,7 +176,7 @@ def make_post_list(force, host_name, query):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_post(force, host_name, str(x), {
+        "results": list(map(lambda x: make_post(False, host_name, str(x), {
             "master": True,
             "user": query.get("user")
         }), posts[start: end])),

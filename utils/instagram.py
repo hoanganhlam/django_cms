@@ -42,7 +42,7 @@ def on_login_callback(api, new_settings_file):
 
 
 user_name = 'hoanglamyeah'
-password = 'Hoanganhlam@no1'
+password = 'Hoanganhlam@no99'
 settings_file = "test_credentials.json"
 device_id = None
 try:
@@ -55,7 +55,6 @@ try:
         with open(settings_file) as file_data:
             cached_settings = json.load(file_data, object_hook=from_json)
         print('Reusing settings: {0!s}'.format(settings_file))
-
         device_id = cached_settings.get('device_id')
         # reuse auth settings
         api = Client(
