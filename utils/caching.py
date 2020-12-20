@@ -99,39 +99,20 @@ def make_post(force, host_name, index, query):
     key_path = "{}_{}".format("post", index)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
-        data["post_related"] = list(map(lambda x: x.get("id"), data.get("post_related"))) if data.get(
-            "post_related") else []
         n = Post.objects.filter(q_general, id__gt=int(index)).first()
         p = Post.objects.filter(q_general, id__lt=int(index)).first()
-        q_r = q_general & Q(post_type=data.get("post_type"))
-        if data.get("terms") and len(data.get("terms")):
-            q_r = q_r & Q(terms__posts=index)
-        r = Post.objects.filter(q_r).order_by('-id').distinct()[:6]
         data["next"] = n.id if n is not None else None
         data["previous"] = p.id if p is not None else None
-        data["related"] = list(map(lambda x: x.id, r)) if r else []
+        data["related"] = []
+        data["post_related"] = []
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
     if query.get("master", False) is True:
         data["next"] = make_post(False, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
-        data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type(
-            data.get("previous")) is int else None
+        data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type( data.get("previous")) is int else None
         data["related"] = []
-        data["post_related"] = list(
-            filter(
-                lambda x: x is not None,
-                map(
-                    lambda x: make_post(
-                        False,
-                        host_name,
-                        str(x) if x else None,
-                        {}
-                    ),
-                    data.get("post_related") if data.get("post_related") else []
-                )
-            )
-        )
+        data["post_related"] = []
     return data
 
 
@@ -177,7 +158,7 @@ def make_post_list(force, host_name, query):
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
         "results": list(map(lambda x: make_post(False, host_name, str(x), {
-            "master": True,
+            "master": False,
             "user": query.get("user")
         }), posts[start: end])),
         "count": len(posts)
