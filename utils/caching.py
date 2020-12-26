@@ -86,7 +86,7 @@ def make_page(force, host_name, query, **kwargs):
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
         out["term"] = make_term(force, out["term"], False)
-    out["terms"] = list(map(lambda x: make_term(force, x), out["terms"]))
+    out["terms"] = list(map(lambda x: make_term(force, x), out["terms"]))[:query.get("term_page_size", 10)]
     # ====================================================================================
     return out
 

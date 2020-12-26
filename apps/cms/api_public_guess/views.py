@@ -411,6 +411,7 @@ def graph(request):
                     "terms": params.get("terms"),
                     "post_type": params.get("post_type"),
                     "page_size": page_size,
+                    "term_page_size": params.get("term_page_size"),
                     "offset": page_size * page - page_size,
                     "order": params.get("order", "popular"),
                     "full": params.get("full", None)
