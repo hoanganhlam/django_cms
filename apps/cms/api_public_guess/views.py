@@ -373,16 +373,20 @@ def graph(request):
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 if user or params.get("search") or params.get("terms"):
-                    sub_pub = pub.id
-                    if params.get("pub"):
-                        sub_pub = params.get("pub")
                     tag_ids = []
                     if params.get("terms"):
-                        qs = models.PublicationTerm.objects.filter(
-                            publication__id=sub_pub,
-                            taxonomy="tag",
-                            term__slug__in=params.get("terms")
-                        )
+                        if params.get("pub"):
+                            qs = models.PublicationTerm.objects.filter(
+                                publication__id=params.get("pub"),
+                                taxonomy="tag",
+                                term__slug__in=params.get("terms")
+                            )
+                        else:
+                            qs = models.PublicationTerm.objects.filter(
+                                publication__host=hostname,
+                                taxonomy="tag",
+                                term__slug__in=params.get("terms")
+                            )
                         if qs.count() == 0:
                             tag_ids = ["0"]
                         else:
