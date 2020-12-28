@@ -48,8 +48,6 @@ def sitemap_detail(request, flag):
         pub = Publication.objects.get(host=host_source)
         flat_taxonomies = list(map(lambda x: x.get("label"), pub.options.get("taxonomies")))
         flat_post_types = list(map(lambda x: x.get("label"), pub.options.get("post_types")))
-        print(flat_taxonomies)
-        print(flat_post_types)
         if flag in flat_taxonomies:
             options = pub.options.get("taxonomies")[flat_taxonomies.index(flag)]
             ds = list(
@@ -92,7 +90,7 @@ def make_url(instance, options, hostname):
         else:
             location = location + elm
     if type(instance) == Post:
-        setattr(instance, "location", location.format(slug=instance.slug, post_type=instance.post_type))
+        setattr(instance, "location", location.format(slug=instance.slug, post_type=instance.post_type, id=instance.id))
     else:
-        setattr(instance, "location", location.format(slug=instance.term.slug, taxonomy=instance.taxonomy))
+        setattr(instance, "location", location.format(slug=instance.term.slug, taxonomy=instance.taxonomy, id=instance.id))
     return instance
