@@ -350,7 +350,7 @@ def follow(request, app_id, slug):
 def graph(request):
     hostname = request.GET.get("host", None)
     user = request.user.id if request.user.is_authenticated else None
-    pub = Publication.objects.get(host=hostname) if user else None
+    pub = Publication.objects.get(host=hostname)
     if hostname is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     if request.method == "POST":
@@ -373,20 +373,16 @@ def graph(request):
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 if user or params.get("search") or params.get("terms"):
+                    sub_pub = pub.id
+                    if params.get("pub"):
+                        sub_pub = params.get("pub")
                     tag_ids = []
                     if params.get("terms"):
-                        if params.get("pub"):
-                            qs = models.PublicationTerm.objects.filter(
-                                publication__id=params.get("pub"),
-                                taxonomy="tag",
-                                term__slug__in=params.get("terms")
-                            )
-                        else:
-                            qs = models.PublicationTerm.objects.filter(
-                                publication__host=hostname,
-                                taxonomy="tag",
-                                term__slug__in=params.get("terms")
-                            )
+                        qs = models.PublicationTerm.objects.filter(
+                            publication__id=sub_pub,
+                            taxonomy="tag",
+                            term__slug__in=params.get("terms")
+                        )
                         if qs.count() == 0:
                             tag_ids = ["0"]
                         else:
