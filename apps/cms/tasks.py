@@ -254,7 +254,7 @@ def plant_universe_worker(k, n):
 
 @shared_task
 def sync_plant_universe():
-    tags = ["urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
+    tags = ["plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
             "indoorplants", "instaplants", "plantlover", "botanicalwomen"]
     for tag in tags:
         plant_universe_worker(tag, None)

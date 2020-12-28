@@ -167,7 +167,7 @@ def fetch_posts(request, app_id):
                     qs = models.PublicationTerm.objects.filter(
                         publication=app,
                         taxonomy=tax.get("label"),
-                        term__slug=request.GET.get(tax.get("label"))
+                        term__slug__in=request.GET.get(tax.get("label")).split(",")
                     )
                     for s in qs:
                         term_ids.append(str(s.id))
@@ -372,7 +372,22 @@ def graph(request):
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                if user or params.get("search"):
+                if user or params.get("search") or params.get("terms"):
+                    sub_pub = pub.id
+                    if params.get("pub"):
+                        sub_pub = params.get("pub")
+                    tag_ids = []
+                    if params.get("terms"):
+                        qs = models.PublicationTerm.objects.filter(
+                            publication__id=sub_pub,
+                            taxonomy="tag",
+                            term__slug__in=params.get("terms")
+                        )
+                        if qs.count() == 0:
+                            tag_ids = ["0"]
+                        else:
+                            for s in qs:
+                                tag_ids.append(str(s.id))
                     out[q.get("o")] = clone_dict(query_posts({
                         "page_size": page_size,
                         "offs3t": page_size * page - page_size,
@@ -384,13 +399,12 @@ def graph(request):
                         "is_guess_post": params.get("is_guess_post"),
                         "show_cms": params.get("show_cms", None),
                         "taxonomies_operator": params.get("taxonomies_operator"),
-                        "taxonomies": None,
-                        "app_id": str(pub.id),
+                        "taxonomies": ",".join(tag_ids) if len(tag_ids) > 0 else None,
+                        "app_id": str(sub_pub),
                         "related_operator": params.get("related_operator"),
                         "post_related": params.get('post_related'),
                         "related": params.get("related"),
-                        "meta": params.get("meta"),
-                        "term": params.get("term"),
+                        "meta": params.get("meta")
                     }), schemas, None)
                 else:
                     out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {

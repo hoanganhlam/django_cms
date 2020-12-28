@@ -81,12 +81,12 @@ def make_page(force, host_name, query, **kwargs):
         if flag != order:
             if query.get("full"):
                 out[flag]["results"] = list(
-                    map(lambda x: make_post(force, "", str(x), {"master": True}), out[flag]["results"][: 5]))
+                    map(lambda x: make_post(False, "", str(x), {"master": True}), out[flag]["results"][: 5]))
             else:
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
-        out["term"] = make_term(force, out["term"], False)
-    out["terms"] = list(map(lambda x: make_term(force, x), out["terms"]))[:query.get("term_page_size", 10)]
+        out["term"] = make_term(False, out["term"], False)
+    out["terms"] = list(map(lambda x: make_term(False, x), out["terms"]))[:query.get("term_page_size", 10)]
     # ====================================================================================
     return out
 
