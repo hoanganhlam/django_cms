@@ -12,14 +12,21 @@ def sitemap_index(request):
     sm = []
     template = loader.get_template('./sitemap_index.xml')
     if request.GET.get("host") or request.headers.get("Host-Domain"):
-        host = request.GET.get("host") if request.GET.get("host") else request.headers.get("Host-Domain")
-        pub = Publication.objects.get(host=host)
+        host_source = request.GET.get("host")
+        host_domain = request.GET.get("host")
+        if request.headers.get("Host-Domain"):
+            host_domain = request.headers.get("Host-Domain")
+            host_source = request.headers.get("Host-Domain")
+        if request.GET.get("Source-Domain"):
+            host_source = request.GET.get("Source-Domain")
+
+        pub = Publication.objects.get(host=host_source)
         sm = sm + list(map(
-            lambda x: "https://{0}/{1}-sitemap.xml".format(pub.host, x.get("label")),
+            lambda x: "https://{0}/{1}-sitemap.xml".format(host_domain, x.get("label")),
             filter(lambda x: x.get("sitemap", False), pub.options.get("post_types"))
         ))
         sm = sm + list(map(
-            lambda x: "https://{0}/{1}-sitemap.xml".format(pub.host, x.get("label")),
+            lambda x: "https://{0}/{1}-sitemap.xml".format(host_domain, x.get("label")),
             filter(lambda x: x.get("sitemap", False), pub.options.get("taxonomies"))
         ))
     return HttpResponse(template.render({
@@ -31,10 +38,18 @@ def sitemap_detail(request, flag):
     ds = []
     template = loader.get_template('./sitemap.xml')
     if request.GET.get("host") or request.headers.get("Host-Domain"):
-        host = request.GET.get("host") if request.GET.get("host") else request.headers.get("Host-Domain")
-        pub = Publication.objects.get(host=host)
+        host_domain = request.GET.get("host")
+        host_source = request.GET.get("host")
+        if request.headers.get("Host-Domain"):
+            host_domain = request.headers.get("Host-Domain")
+            host_source = request.headers.get("Host-Domain")
+        if request.GET.get("Source-Domain"):
+            host_source = request.GET.get("Source-Domain")
+        pub = Publication.objects.get(host=host_source)
         flat_taxonomies = list(map(lambda x: x.get("label"), pub.options.get("taxonomies")))
         flat_post_types = list(map(lambda x: x.get("label"), pub.options.get("post_types")))
+        print(flat_taxonomies)
+        print(flat_post_types)
         if flag in flat_taxonomies:
             options = pub.options.get("taxonomies")[flat_taxonomies.index(flag)]
             ds = list(
@@ -50,7 +65,7 @@ def sitemap_detail(request, flag):
             options = pub.options.get("post_types")[flat_post_types.index(flag)]
             ds = list(
                 map(
-                    lambda x: make_url(x, options, pub.host),
+                    lambda x: make_url(x, options, host_domain),
                     Post.objects.filter(
                         post_type=flag,
                         primary_publication=pub,
@@ -76,7 +91,7 @@ def make_url(instance, options, hostname):
             location = location + "{" + elm + "}"
         else:
             location = location + elm
-    if "taxonomies" in options:
+    if type(instance) == Post:
         setattr(instance, "location", location.format(slug=instance.slug, post_type=instance.post_type))
     else:
         setattr(instance, "location", location.format(slug=instance.term.slug, taxonomy=instance.taxonomy))
