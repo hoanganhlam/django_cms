@@ -32,7 +32,7 @@ def re_path(instance, filename, bucket):
 
 
 def path_and_rename(instance, filename):
-    return re_path(instance, filename, 'favdes/images')
+    return re_path(instance, filename, '')
 
 
 class MediaManager(models.Manager):
