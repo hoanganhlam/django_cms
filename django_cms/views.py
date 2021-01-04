@@ -40,17 +40,17 @@ def sitemap_detail(request, flag):
             host_source = request.headers.get("Source-Domain")
         else:
             host_source = host_domain
-        pub = Publication.objects.get(host=host_source)
+        pub = Publication.objects.get(host=host_domain)
         flat_taxonomies = list(map(lambda x: x.get("label"), pub.options.get("taxonomies")))
         flat_post_types = list(map(lambda x: x.get("label"), pub.options.get("post_types")))
         if flag in flat_taxonomies:
             options = pub.options.get("taxonomies")[flat_taxonomies.index(flag)]
             ds = list(
                 map(
-                    lambda x: make_url(x, options, pub.host),
+                    lambda x: make_url(x, options, host_domain),
                     PublicationTerm.objects.filter(
                         taxonomy=flag,
-                        publication__host=host_domain,
+                        publication__host=host_source,
                         db_status=1
                     ).prefetch_related("term")
                 ))
@@ -58,10 +58,10 @@ def sitemap_detail(request, flag):
             options = pub.options.get("post_types")[flat_post_types.index(flag)]
             ds = list(
                 map(
-                    lambda x: make_url(x, options, pub.host),
+                    lambda x: make_url(x, options, host_domain),
                     Post.objects.filter(
                         post_type=flag,
-                        primary__host=host_domain,
+                        primary__host=host_source,
                         db_status=1,
                         status="POSTED",
                         show_cms=True
