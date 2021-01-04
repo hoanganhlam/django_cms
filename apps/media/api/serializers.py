@@ -49,9 +49,9 @@ class MediaSerializer(serializers.ModelSerializer):
     def get_sizes(self, instance):
         if instance.path:
             return {
-                "full_size": "https://fournalist.s3-ap-southeast-1.amazonaws.com/images/" + instance.path.name,
-                "thumb_247_247": get_thumbnail(instance.path, '247x247', crop='center', quality=100).url,
-                "thumb_24_24": get_thumbnail(instance.path, '24x24', crop='center', quality=100).url
+                "full_size": "https://cdn.fournalist.com/images/" + instance.path.name,
+                "thumb_247_247": "https://cdn.fournalist.com/247x247/images/" + instance.path.name,
+                "thumb_24_24": "https://cdn.fournalist.com/24x24/images/" + instance.path.name,
             }
         else:
             return {}
