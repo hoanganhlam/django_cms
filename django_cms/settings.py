@@ -149,13 +149,13 @@ USE_TZ = True
 if os.getenv('STORAGE_TYPE') == "AWS":
     DEFAULT_FILE_STORAGE = os.getenv('DEFAULT_FILE_STORAGE')
     # STATICFILES_STORAGE = os.getenv('STATICFILES_STORAGE')
-    AWS_STORAGE_BUCKET_NAME = "images"
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
     AWS_BUCKET_ACL = 'public-read'
     AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_REGION_NAME = "ap-southeast-1"
-    AWS_S3_ENDPOINT_URL = "https://fournalist.s3-ap-southeast-1.amazonaws.com"
-    AWS_ACCESS_KEY_ID = "AKIAJQHMU437SLYJ7BFA"
-    AWS_SECRET_ACCESS_KEY = "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"
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     AWS_QUERYSTRING_AUTH=False
 
 STATIC_URL = '/static/'
