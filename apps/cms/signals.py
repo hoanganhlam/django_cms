@@ -9,7 +9,6 @@ from apps.activity import verbs, action
 @receiver(post_save, sender=Post)
 def on_post_save(sender, instance, created, *args, **kwargs):
     if created and instance.id and str(instance.id) not in instance.slug:
-        instance.slug = instance.slug + "-" + str(instance.id)
         if instance.status == "POSTED" and hasattr(instance, "id"):
             if instance.options is None:
                 instance.options = {}

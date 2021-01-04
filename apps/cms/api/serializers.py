@@ -28,7 +28,6 @@ class PostSerializer(serializers.ModelSerializer):
         extra_fields = ['media'],
         extra_kwargs = {
             'user': {'read_only': True},
-            'slug': {'read_only': True},
             'created': {'read_only': True},
             'updated': {'read_only': True},
             'post_related': {'read_only': True},

@@ -1,6 +1,5 @@
 from apps.media import models
 from rest_framework import serializers
-from sorl.thumbnail import get_thumbnail
 from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 
