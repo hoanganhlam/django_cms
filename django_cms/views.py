@@ -17,8 +17,8 @@ def sitemap_index(request):
         if request.headers.get("Host-Domain"):
             host_domain = request.headers.get("Host-Domain")
             host_source = request.headers.get("Host-Domain")
-        if request.GET.get("Source-Domain"):
-            host_source = request.GET.get("Source-Domain")
+        if request.headers.get("Source-Domain"):
+            host_source = request.headers.get("Source-Domain")
 
         pub = Publication.objects.get(host=host_source)
         sm = sm + list(map(
@@ -43,8 +43,8 @@ def sitemap_detail(request, flag):
         if request.headers.get("Host-Domain"):
             host_domain = request.headers.get("Host-Domain")
             host_source = request.headers.get("Host-Domain")
-        if request.GET.get("Source-Domain"):
-            host_source = request.GET.get("Source-Domain")
+        if request.headers.get("Source-Domain"):
+            host_source = request.headers.get("Source-Domain")
         pub = Publication.objects.get(host=host_source)
         flat_taxonomies = list(map(lambda x: x.get("label"), pub.options.get("taxonomies")))
         flat_post_types = list(map(lambda x: x.get("label"), pub.options.get("post_types")))
