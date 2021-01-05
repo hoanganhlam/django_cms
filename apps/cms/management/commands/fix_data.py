@@ -4,36 +4,12 @@ from utils.web_checker import get_keyword_suggestion
 import requests
 from django.contrib.auth.models import User
 from utils.instagram import get_comment, fetch_avatar
+from apps.media.models import Media
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        # terms = Term.objects.filter(suggestions__isnull=True, pub_terms__publication__id=7)
-        # for term in terms:
-        #     old = term.suggestions.all()
-        #     suggestions = get_keyword_suggestion(term.title)
-        #     print(term)
-        #     if len(old) == 0 and len(suggestions) > 0:
-        #         for s in suggestions:
-        #             kw, created = SearchKeyword.objects.get_or_create(title=s)
-        #             print(kw)
-        #             if kw not in old:
-        #                 term.suggestions.add(kw)
-
-        # posts = Post.objects.filter(primary_publication__id=7, id__gte=10629, post_type="post")
-        # plant = Post.objects.get(pk=10579)
-        # print(plant)
-        # for post in posts:
-        #     if post.post_related.filter(post_type="plant").count() == 0:
-        #         post.post_related.add(plant)
-        #         print(post.id)
-        # if post.options and post.meta and post.meta.get("media") is None:
-        #     post.meta['media'] = post.options.get("media")
-        #     post.save()
-        #     print(post.id)
-        # p = Publication.objects.get(pk=15)
-        # posts = Post.objects.filter(primary_publication__id=7, post_type="post")
-        # for post in posts:
-        #     post.publications.add(p)
-        user = fetch_avatar("2308706217630149191_34929300621")
-        print(user)
+        medias = Media.objects.filter(path__istartswith="guess").order_by("-id")
+        for media in medias:
+            media.path.name = "/" + media.path.name
+            media.save()
