@@ -10,6 +10,8 @@ from apps.media.models import Media
 class Command(BaseCommand):
     def handle(self, *args, **options):
         medias = Media.objects.filter(path__istartswith="guess").order_by("-id")
+        print(medias.count())
         for media in medias:
             media.path.name = "/" + media.path.name
             media.save()
+            print(media.id)
