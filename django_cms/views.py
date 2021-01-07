@@ -61,7 +61,7 @@ def sitemap_detail(request, flag):
                     lambda x: make_url(x, options, host_domain),
                     Post.objects.filter(
                         post_type=flag,
-                        primary__host=host_source,
+                        primary_publication__host=host_source,
                         db_status=1,
                         status="POSTED",
                         show_cms=True
