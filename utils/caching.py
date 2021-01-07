@@ -94,6 +94,9 @@ def make_page(force, host_name, query, **kwargs):
 def make_post(force, host_name, index, query):
     if index is None or type(index) != str:
         return None
+    if not index.isnumeric():
+        post = Post.objects.get(slug=index)
+        index = str(post.id)
     q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q_general = q_general & Q(show_cms=True, status="POSTED")
     key_path = "{}_{}".format("post", index)
