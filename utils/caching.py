@@ -99,8 +99,8 @@ def make_post(force, host_name, index, query):
     key_path = "{}_{}".format("post", index)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
-        n = Post.objects.filter(q_general, id__gt=int(index)).first()
-        p = Post.objects.filter(q_general, id__lt=int(index)).first()
+        n = Post.objects.filter(q_general, id__gt=data.get("id")).first()
+        p = Post.objects.filter(q_general, id__lt=data.get("id")).first()
         data["next"] = n.id if n is not None else None
         data["previous"] = p.id if p is not None else None
         data["related"] = []
