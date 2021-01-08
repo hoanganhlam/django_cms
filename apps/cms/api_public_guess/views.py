@@ -364,12 +364,12 @@ def graph(request):
                 if user:
                     out[q.get("o")] = clone_dict(query_post(params.get("slug"), {
                         "user": user,
-                        "uid": params.get("uid")
+                        "pid": params.get("pid")
                     }), schemas, None)
                 else:
                     out[q.get("o")] = clone_dict(caching.make_post(force, hostname, params.get("slug"), {
                         "master": True,
-                        "uid": params.get("uid")
+                        "pid": params.get("pid")
                     }), schemas, None)
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)

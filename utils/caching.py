@@ -92,14 +92,18 @@ def make_page(force, host_name, query, **kwargs):
 
 
 def make_post(force, host_name, index, query):
+    pk_field = "id"
     if index is None or type(index) != str:
         return None
     if not index.isnumeric():
         post = Post.objects.get(slug=index)
         index = str(post.id)
+        pk_field = "slug"
+    elif query.get("pid"):
+        pk_field = "pid"
     q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q_general = q_general & Q(show_cms=True, status="POSTED")
-    key_path = "{}_{}".format("post", index)
+    key_path = "{post_type}_{pk_field}-{id}".format(post_type="post", pk_field=pk_field, id=index)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
         n = Post.objects.filter(q_general, id__gt=data.get("id")).first()
@@ -113,7 +117,8 @@ def make_post(force, host_name, index, query):
         data = cache.get(key_path)
     if query.get("master", False) is True:
         data["next"] = make_post(False, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
-        data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type( data.get("previous")) is int else None
+        data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type(
+            data.get("previous")) is int else None
         data["related"] = []
         data["post_related"] = []
     return data
