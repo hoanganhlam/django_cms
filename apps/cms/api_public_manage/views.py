@@ -218,12 +218,6 @@ class PubTermViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.db_status = -1
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 @api_view(['GET'])
 def fetch_ig_post(request):
