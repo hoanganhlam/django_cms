@@ -45,6 +45,7 @@ class PublicationTerm(BaseModel):
     media = models.ForeignKey(Media, related_name="publication_terms", blank=True, null=True, on_delete=models.SET_NULL)
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
+    meta = JSONField(null=True, blank=True)
 
     def children(self):
         out = []

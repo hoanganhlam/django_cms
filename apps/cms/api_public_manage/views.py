@@ -13,6 +13,7 @@ from base import pagination
 from utils.instagram import fetch_by_hash_tag
 import json
 from apps.cms.tasks import task_sync_drive
+from django.template.defaultfilters import slugify
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -152,7 +153,12 @@ class PubTermViewSet(viewsets.ModelViewSet):
                 term = None
         else:
             if request.data.get("term_title"):
-                term, is_created = models.Term.objects.get_or_create(title=request.data.get("term_title"))
+                term, is_created = models.Term.objects.get_or_create(
+                    slug=slugify(request.data.get("term_title")),
+                    defaults={
+                        "title": request.data.get("term_title")
+                    }
+                )
         try:
             pub = models.Publication.objects.get(pk=int(request.data.get("publication")))
         except models.Publication.DoesNotExist:
