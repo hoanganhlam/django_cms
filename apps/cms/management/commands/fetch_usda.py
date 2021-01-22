@@ -48,7 +48,7 @@ def get_item(contents):
     return field, {
         "link": safe_list_get(arr, 1),
         "name": safe_list_get(arr, 2),
-        "other_name": safe_list_get(arr, 3)
+        "other_name": safe_list_get(arr, 3, "").capitalize()
     }
 
 
@@ -72,7 +72,7 @@ def usda(start, url, related):
         copy_related = related
         for elm in temp_elms:
             field, item = get_item(elm.contents)
-            if field not in ["Variety", "Subspecies"]:
+            if field not in ["Variety", "Subspecies"] and field is not None and item.get("name"):
                 term, is_created = Term.objects.get_or_create(slug=slugify(item.get("name")), defaults={
                     "title": item.get("name")
                 })
