@@ -95,7 +95,6 @@ def usda(start, url, related):
                     instance_same = None
 
                 for r in related:
-                    print(r.term.title)
                     term_related = instance.related.all()
                     if r not in term_related:
                         instance.related.add(r)
@@ -114,6 +113,6 @@ def usda(start, url, related):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        related = PublicationTerm.objects.filter(publication=publication, term__title__in=["Tracheophyta", "Pteridophyta"])
-        url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Pteridophyta"
+        related = PublicationTerm.objects.filter(publication=publication, term__title__in=["Tracheophyta", "Anthocerotophyta"])
+        url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Anthocerotophyta"
         usda(0, url, list(related))
