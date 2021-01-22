@@ -12,7 +12,7 @@ mapping = {
     "Subkingdom": "kingdom",
     "Superdivision": "phylum",
     "Division": "phylum",
-    "Subdivision": "phylumn",
+    "Subdivision": "phylum",
     "Class": "class",
     "Subclass": "class",
     "Order": "order",
@@ -95,6 +95,7 @@ def usda(start, url, related):
                     instance_same = None
 
                 for r in related:
+                    print(r.term.title)
                     term_related = instance.related.all()
                     if r not in term_related:
                         instance.related.add(r)
@@ -113,5 +114,13 @@ def usda(start, url, related):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Plantae"
-        usda(0, url, [])
+        related = PublicationTerm.objects.filter(publication=publication, term__title="Tracheophyta").first()
+        print(related.term.title)
+        olds = PublicationTerm.objects.filter(related__term__title="Spermatophyta")
+        for old in olds:
+            if related not in old.related.all():
+                old.related.add(related)
+            print(old.term.title)
+        # related = PublicationTerm.objects.filter(publication=publication, term__title__in=["Tracheophyta", "Equisetophyta"])
+        # url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Equisetophyta"
+        # usda(0, url, list(related))
