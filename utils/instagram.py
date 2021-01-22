@@ -42,7 +42,7 @@ def on_login_callback(api, new_settings_file):
 
 
 user_name = 'hoanglamyeah'
-password = 'Hoanganhlam@no99'
+password = 'HoangAnhLam@no99a'
 settings_file = "test_credentials.json"
 device_id = None
 try:

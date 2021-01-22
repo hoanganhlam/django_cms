@@ -9,13 +9,13 @@ from bs4.element import Tag, NavigableString
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Calathea"
-        url = "https://en.wikipedia.org/wiki/Calathea"
+        genera = "Homalomena"
+        url = "https://en.wikipedia.org/wiki/Homalomena"
         terms = {
             "phylum": "Monocotyledon",
-            "class": "Commelinids",
-            "order": "Zingiberales",
-            "family": "Marantaceae",
+            "class": "Water Plantains",
+            # "order": "Zingiberales",
+            "family": "Araceae",
             "genera": genera,
         }
         publication = Publication.objects.get(pk=7)
@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 ))
         r = requests.get(url)
         soup = BeautifulSoup(r.content, features="html.parser")
-        elms = soup.select("#mw-content-text > div.mw-parser-output > ul:nth-child(16)")
+        elms = soup.select("#mw-content-text > div.mw-parser-output > ol")
         for elm in elms:
             lis = elm.select("li")
             for li in lis:
@@ -48,20 +48,21 @@ class Command(BaseCommand):
                     "{title} is a species of {genera} found in {origin}.",
                     "{title} is a perennial species in the genus {genera}, belonging to the family Araceae. This species can be found in {origin}."
                 ]
+                print(origins)
                 description = description_patterns[random.randrange(0, 1)].format(
                     title=title, origin=", ".join(origins),
                     genera=genera) if len(origins) > 0 else None
                 pub_term_origins = []
-                # for origin in origins:
-                #     x = Term.objects.filter(title__iexact=origin.title()).first()
-                #     if x is None:
-                #         x = Term.objects.create(title=origin.title())
-                #     y, is_created = PublicationTerm.objects.get_or_create(
-                #         publication=publication,
-                #         term=x,
-                #         taxonomy="origin"
-                #     )
-                #     pub_term_origins.append(y)
+                for origin in origins:
+                    x = Term.objects.filter(title__iexact=origin.title()).first()
+                    if x is None:
+                        x = Term.objects.create(title=origin.title())
+                    y, is_created = PublicationTerm.objects.get_or_create(
+                        publication=publication,
+                        term=x,
+                        taxonomy="origin"
+                    )
+                    pub_term_origins.append(y)
                 term = Term.objects.filter(title__iexact=title.title()).first()
                 if term is None:
                     term = Term.objects.create(title=title.title())

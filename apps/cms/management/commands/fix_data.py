@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.cms.models import Post, Term, SearchKeyword, Publication
+from apps.cms.models import Post, Term, SearchKeyword, Publication, PublicationTerm
 from utils.web_checker import get_keyword_suggestion
 import requests
 from django.contrib.auth.models import User
@@ -9,9 +9,9 @@ from apps.media.models import Media
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        medias = Media.objects.filter(path__istartswith="guess").order_by("-id")
-        print(medias.count())
-        for media in medias:
-            media.path.name = "/" + media.path.name
-            media.save()
-            print(media.id)
+        tax_terms = PublicationTerm.objects.filter(publication__id=7, taxonomy="clade", term__slug="magnoliopsida")
+        print(tax_terms)
+        for term in tax_terms:
+            term.taxonomy = "class"
+            term.save()
+            print(term)
