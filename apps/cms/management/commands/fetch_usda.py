@@ -63,7 +63,6 @@ def usda(start, url, related):
     max_elms = max(list(map(lambda x: int(x.get("class")[0].replace("classind", "")), elms)))
     is_recurse = False
     while start <= max_elms:
-        print(len(related))
         if start == max_elms and not is_recurse:
             break
         temp_elms = soup.find_all("td", {"class": "classind{}".format(start)})
