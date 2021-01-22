@@ -78,7 +78,7 @@ def usda(start, url, related):
                 })
                 instance, is_created = PublicationTerm.objects.get_or_create(
                     term=term,
-                    taxonomy=mapping.get(field),
+                    taxonomy=mapping.get(field, field),
                     publication=publication
                 )
                 if item.get("other_name"):
