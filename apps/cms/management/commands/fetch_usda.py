@@ -86,7 +86,7 @@ def usda(start, url, related):
                     })
                     instance_same, is_created = PublicationTerm.objects.get_or_create(
                         term=term,
-                        taxonomy=mapping.get(field),
+                        taxonomy=mapping.get(field, field),
                         publication=publication
                     )
                     if instance not in instance_same.related.all():
@@ -103,7 +103,7 @@ def usda(start, url, related):
                         if r not in term_related:
                             instance.related.add(r)
 
-                print("{}: {} - {}".format(mapping.get(field), item.get("name"), instance.term.title))
+                print("{}: {} - {}".format(mapping.get(field, field), item.get("name"), instance.term.title))
                 if is_recurse:
                     copy_related.append(instance)
                     usda(start, "https://plants.usda.gov{}".format(item.get("link")), copy_related)
