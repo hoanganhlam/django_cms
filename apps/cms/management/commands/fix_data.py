@@ -16,24 +16,24 @@ class Command(BaseCommand):
         ) & ~Q(related__taxonomy="phylum")
         tax_terms = PublicationTerm.objects.annotate(count_related=Count("related")).filter(q)
         for term in tax_terms:
-            for related in term.related.filter(taxonomy="family"):
-                all_genus_related = related.related.all()
-                for g_related in all_genus_related:
-                    if g_related not in term.related.all():
-                        term.related.add(g_related)
-            if term.options is None:
-                term.options = {}
-            term.options["is_primary"] = True
+            # for related in term.related.filter(taxonomy="family"):
+            #     all_genus_related = related.related.all()
+            #     for g_related in all_genus_related:
+            #         if g_related not in term.related.all():
+            #             term.related.add(g_related)
+            # if term.options is None:
+            #     term.options = {}
+            term.options["is_primary"] = False
             term.save()
 
             # for x in term.parent.related.all():
             #     if x not in term.related.all():
             #         term.related.add(x)
 
-            if term.options is None:
-                term.options = {}
-            term.options["is_subversion"] = True
-            term.save()
+            # if term.options is None:
+            #     term.options = {}
+            # term.options["is_subversion"] = True
+            # term.save()
 
             # for related in term.related.filter(taxonomy="class"):
             #     term.parent = related
