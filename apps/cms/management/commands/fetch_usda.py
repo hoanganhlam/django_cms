@@ -113,6 +113,6 @@ def usda(start, url, related):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        related = PublicationTerm.objects.filter(publication=publication, term__title__in=["Hepaticophyta"])
-        url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Hepaticophyta"
+        related = PublicationTerm.objects.filter(publication=publication, term__title__in=["Rhodophyta"])
+        url = "https://plants.usda.gov/java/ClassificationServlet?source=display&classid=Rhodophyta"
         usda(0, url, list(related))
