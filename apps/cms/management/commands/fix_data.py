@@ -10,19 +10,31 @@ from django.db.models import Count, Q
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        q = ~Q(related__taxonomy="origin")
-        tax_terms = PublicationTerm.objects.filter(
+        q = Q(
             publication__id=7,
-            taxonomy="species",
-            related__taxonomy__in=["genus", "origin"]
-        )
+            taxonomy="family",
+            related__taxonomy="family"
+        ) & Q(count_related=1)
+        tax_terms = PublicationTerm.objects.annotate(count_related=Count("related")).filter(q)
         for term in tax_terms:
-            for related in term.related.all():
-                all_genus_related = related.related.all()
-                for g_related in all_genus_related:
-                    if g_related not in term.related.all():
-                        term.related.add(g_related)
+            # for related in term.related.all():
+            #     all_genus_related = related.related.all()
+            #     for g_related in all_genus_related:
+            #         if g_related not in term.related.all():
+            #             term.related.add(g_related)
+            # if term.options is None:
+            #     term.options = {}
+            # term.options["is_primary"] = True
+            # term.save()
+
             if term.options is None:
                 term.options = {}
-            term.options["is_primary"] = True
+            term.options["is_subversion"] = True
             term.save()
+
+            # for related in term.related.filter(taxonomy="class"):
+            #     term.parent = related
+            #     term.related.remove(related)
+            #     term.save()
+
+            print(term.term.title)
