@@ -5,16 +5,16 @@ import requests
 from django.contrib.auth.models import User
 from utils.instagram import get_comment, fetch_avatar
 from apps.media.models import Media
-from django.db.models import Count
+from django.db.models import Count, Q
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        tax_terms = PublicationTerm.objects.annotate(count_related=Count('related')).filter(
+        q = ~Q(related__taxonomy="origin")
+        tax_terms = PublicationTerm.objects.filter(
             publication__id=7,
-            count_related=1,
             taxonomy="species",
-            related__taxonomy="genus"
+            related__taxonomy__in=["genus", "origin"]
         )
         for term in tax_terms:
             for related in term.related.all():
@@ -26,5 +26,3 @@ class Command(BaseCommand):
                 term.options = {}
             term.options["is_primary"] = True
             term.save()
-            print(term.term.title)
-
