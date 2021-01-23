@@ -12,17 +12,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         q = Q(
             publication__id=7,
-            taxonomy="genus",
-        ) & ~Q(related__taxonomy="phylum")
+            taxonomy="species",
+        ) & Q(related__taxonomy="genus") & ~Q(related__taxonomy="phylum")
         tax_terms = PublicationTerm.objects.annotate(count_related=Count("related")).filter(q)
+        print(tax_terms.count())
         for term in tax_terms:
-            # for related in term.related.filter(taxonomy="family"):
-            #     all_genus_related = related.related.all()
-            #     for g_related in all_genus_related:
-            #         if g_related not in term.related.all():
-            #             term.related.add(g_related)
-            # if term.options is None:
-            #     term.options = {}
+            for related in term.related.filter(taxonomy="genus"):
+                all_genus_related = related.related.all()
+                for g_related in all_genus_related:
+                    if g_related not in term.related.all():
+                        term.related.add(g_related)
+            if term.options is None:
+                term.options = {}
             term.options["is_primary"] = False
             term.save()
 
