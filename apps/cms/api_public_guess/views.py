@@ -430,7 +430,8 @@ def graph(request):
                     "term_page_size": params.get("term_page_size"),
                     "offset": page_size * page - page_size,
                     "order": params.get("order", "popular"),
-                    "full": params.get("full", None)
+                    "full": params.get("full", None),
+                    "is_related_expanded": params.get("expanded_related")
                 }), schemas, None)
             if q.get("q") == "term_list":
                 related = params.get("related", None)

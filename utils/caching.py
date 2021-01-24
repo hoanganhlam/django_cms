@@ -86,6 +86,8 @@ def make_page(force, host_name, query, **kwargs):
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
         out["term"] = make_term(False, out["term"], False)
+        if query.get("is_related_expanded") and out["term"].get("related") is not None:
+            out["term"]["related"] = list(map(lambda x: make_term(False, x, False), out["term"]["related"]))
     out["terms"] = list(map(lambda x: make_term(False, x), out["terms"]))[:query.get("term_page_size", 10)]
     # ====================================================================================
     return out
