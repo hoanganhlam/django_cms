@@ -94,18 +94,18 @@ def make_page(force, host_name, query, **kwargs):
 
 
 def make_post(force, host_name, index, query):
-    pk_field = "id"
     if index is None or type(index) != str:
         return None
-    if not index.isnumeric():
-        post = Post.objects.get(slug=index)
-        index = str(post.id)
-        pk_field = "slug"
-    elif query.get("pid"):
-        pk_field = "pid"
+    if query.get("pid"):
+        post_instance = Post.objects.get(pid=index, primary_publication__host=host_name)
+    else:
+        if not index.isnumeric():
+            post_instance = Post.objects.get(slug=index)
+        else:
+            post_instance = Post.objects.get(pk=index)
     q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q_general = q_general & Q(show_cms=True, status="POSTED")
-    key_path = "{post_type}_{pk_field}-{id}".format(post_type="post", pk_field=pk_field, id=index)
+    key_path = "{post_type}-{id}".format(post_type="post", id=post_instance.id)
     if force or key_path not in cache:
         data = query_maker.query_post(slug=index, query=query)
         n = Post.objects.filter(q_general, id__gt=data.get("id")).first()
@@ -136,22 +136,30 @@ def make_post_list(force, host_name, query):
 
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
+    # Related outer
     if related is not None:
-        related_instance = Post.objects.get(pk=related)
+        if type(related) is int:
+            related_instance = Post.objects.get(pk=related)
+        else:
+            related_instance = Post.objects.get(slug=related)
         q_related = Q(
             post_type=related_instance.post_type,
             primary_publication=related_instance.primary_publication,
         )
-        q_related = q_related & ~Q(id=related)
-        q_related = q_related | Q(terms__posts__id=related, )
+        q_related = q_related & ~Q(id=related_instance.id)
+        q_related = q_related | Q(terms__posts__id=related_instance.id)
         q = q & q_related
-        key_path = "{}_related-{}".format(key_path, related)
+        key_path = "{}_related-{}".format(key_path, related_instance.id)
+    # Related inner
+    if post_related is not None:
+        if type(post_related) is int:
+            q = q & Q(post_related__id=post_related)
+        else:
+            q = q & Q(post_related__slug=post_related)
+        key_path = "{}_post_related-{}".format(key_path, post_related)
     if post_type is not None:
         q = q & Q(post_type=post_type)
         key_path = "{}_post_type-{}".format(key_path, post_type)
-    if post_related is not None:
-        q = q & Q(post_related__id=post_related)
-        key_path = "{}_post_related-{}".format(key_path, post_related)
     if term is not None:
         q = q & Q(terms__term__slug=term)
         key_path = "{}_post_related-{}".format(key_path, term)
