@@ -76,7 +76,7 @@ class Post(BaseModel, Taxonomy):
     publications = models.ManyToManyField(Publication, related_name="posts", blank=True)
 
     post_parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="post_child")
-    post_related = models.ManyToManyField("self", blank=True, related_name="post_related_revert")
+    post_related = models.ManyToManyField("self", blank=True, related_name="post_related_revert", symmetrical=False)
 
     content = models.TextField(null=True, blank=True)  # Use Markdown
     # DRAFT / PENDING / POSTED / DELETED

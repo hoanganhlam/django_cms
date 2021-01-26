@@ -152,18 +152,24 @@ def make_post_list(force, host_name, query):
         key_path = "{}_related-{}".format(key_path, related_instance.id)
     # Related inner
     if post_related is not None:
-        if type(post_related) is int:
-            q = q & Q(post_related__id=post_related)
+        if query.get("reverse"):
+            if type(post_related) is int:
+                q = q & Q(post_related_revert__id=post_related)
+            else:
+                q = q & Q(post_related_revert__slug=post_related)
+            key_path = "{}_post_related_revert-{}".format(key_path, post_related)
         else:
-            q = q & Q(post_related__slug=post_related)
-        key_path = "{}_post_related-{}".format(key_path, post_related)
+            if type(post_related) is int:
+                q = q & Q(post_related__id=post_related)
+            else:
+                q = q & Q(post_related__slug=post_related)
+            key_path = "{}_post_related-{}".format(key_path, post_related)
     if post_type is not None:
         q = q & Q(post_type=post_type)
         key_path = "{}_post_type-{}".format(key_path, post_type)
     if term is not None:
         q = q & Q(terms__term__slug=term)
         key_path = "{}_post_related-{}".format(key_path, term)
-
     if force or key_path not in cache:
         if order == "newest":
             posts = list(Post.objects.filter(q).order_by("-id").distinct().values_list('id', flat=True))
