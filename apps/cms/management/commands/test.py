@@ -17,7 +17,7 @@ class Command(BaseCommand):
                 fact_instance = Post.objects.filter(meta__frid=raw_data.get("id")).first()
                 if fact_instance is None:
                     fact_instance = Post.objects.create(
-                        title=raw_data.get("content").split(".")[0],
+                        title=raw_data.get("content").split(".")[0][:160],
                         description=raw_data.get("content") if len(raw_data.get("content")) < 500 else None,
                         content=raw_data.get("content") if len(raw_data.get("content")) > 500 else None,
                         meta={
