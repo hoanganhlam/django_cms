@@ -192,11 +192,11 @@ def fetch_posts(request, app_id):
         }))
     if request.method == "POST":
         err = []
-        if request.data.get("publications", None) is None or len(request.data.get("publications", None)) == 0:
+        if request.data.get("primary_pub", None) is None:
             err.append("ERR_PUBLICATION")
         if len(err):
             return Response(data=err, status=status.HTTP_400_BAD_REQUEST)
-        pub = Publication.objects.get(pk=request.data.get("publications")[0])
+        pub = Publication.objects.get(pk=request.data.get("primary_pub"))
         if pub.options.get("allow_guess_post", False):
             meta = request.data.get("meta", {})
             meta["price"] = request.data.get("price", 0)
