@@ -133,7 +133,7 @@ def make_post_list(force, host_name, query):
     if related is not None:
         q_related = Q(
             post_type=query.get("type"),
-            primary_publication=host_name,
+            primary_publication__host=host_name,
         )
         q_related = q_related & ~Q(id=related)
         q_related = q_related | Q(terms__posts__id=related)
