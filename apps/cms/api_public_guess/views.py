@@ -396,7 +396,7 @@ def graph(request):
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                if user or params.get("search") or params.get("terms"):
+                if params.get("search") or params.get("terms"):
                     sub_pub = pub.id
                     if params.get("pub"):
                         sub_pub = params.get("pub")
