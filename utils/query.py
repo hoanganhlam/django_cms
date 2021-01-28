@@ -34,7 +34,7 @@ def query_posts(q):
 def query_post(slug, query):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s, %s)", [
-            int(slug) if slug.isnumeric() else slug,
+            int(slug) if type(slug)is int or (type(slug) is str and slug.isnumeric()) else slug,
             query.get("pid"),
             query.get("is_guess_post"),
             query.get("show_cms"),
