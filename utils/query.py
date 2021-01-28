@@ -20,7 +20,7 @@ def query_posts(q):
                            '{' + q.get('taxonomies') + '}' if q.get('taxonomies') else None,
                            '{' + q.get('app_id') + '}' if q.get('app_id') else None,
                            q.get("related_operator", "OR"),
-                           '{' + q.get('post_related') + '}' if q.get('post_related') else None,
+                           '{' + str(q.get('post_related')) + '}' if q.get('post_related') else None,
                            q.get("related"),
                            json.dumps(meta) if meta else None
                        ])
