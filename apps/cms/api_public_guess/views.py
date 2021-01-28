@@ -355,7 +355,7 @@ def fetch_instance(host_name, pk, is_pid):
                 post_instance = Post.objects.get(pk=pk)
     except:
         post_instance = None
-    return post_instance.id if post_instance is not None else None
+    return str(post_instance.id) if post_instance is not None else None
 
 
 # ==========================================================================
