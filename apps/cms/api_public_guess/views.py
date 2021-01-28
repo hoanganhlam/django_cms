@@ -344,6 +344,20 @@ def follow(request, app_id, slug):
     return Response(flag)
 
 
+def fetch_instance(host_name, pk, is_pid):
+    try:
+        if is_pid:
+            post_instance = Post.objects.get(pid=pk, primary_publication__host=host_name)
+        else:
+            if not pk.isnumeric():
+                post_instance = Post.objects.get(slug=pk)
+            else:
+                post_instance = Post.objects.get(pk=pk)
+    except:
+        post_instance = None
+    return post_instance.id if post_instance is not None else None
+
+
 # ==========================================================================
 # Init
 @api_view(['POST'])
@@ -353,6 +367,7 @@ def graph(request):
     pub = Publication.objects.get(host=hostname)
     if hostname is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
     if request.method == "POST":
         out = {}
         query = request.data.get("query")
@@ -360,17 +375,24 @@ def graph(request):
         for q in query:
             params = q.get("p") or {}
             schemas = q.get("s") or ["id"]
+            instance_related = None
+            instance_post_related = None
+
+            if params.get("related"):
+                instance_related = fetch_instance(hostname, params.get("related"), False)
+            if params.get("post_related"):
+                instance_post_related = fetch_instance(hostname, params.get("post_related"), False)
+
             if q.get("q") == "post_detail":
+                instance = None
+                if params.get("slug"):
+                    instance = fetch_instance(hostname, params.get("slug"), params.get("pid"))
                 if user:
-                    out[q.get("o")] = clone_dict(query_post(params.get("slug"), {
-                        "user": user,
-                        "pid": params.get("pid")
-                    }), schemas, None)
+                    out[q.get("o")] = clone_dict(query_post(instance, {"user": user}), schemas, None)
                 else:
-                    out[q.get("o")] = clone_dict(caching.make_post(force, hostname, params.get("slug"), {
-                        "master": True,
-                        "pid": params.get("pid")
-                    }), schemas, None)
+                    out[q.get("o")] = clone_dict(
+                        caching.make_post(force, hostname, instance, {"master": True}),
+                        schemas, None)
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
@@ -404,8 +426,8 @@ def graph(request):
                         "taxonomies": ",".join(tag_ids) if len(tag_ids) > 0 else None,
                         "app_id": str(sub_pub),
                         "related_operator": params.get("related_operator"),
-                        "post_related": params.get('post_related'),
-                        "related": params.get("related"),
+                        "post_related": instance_post_related,
+                        "related": instance_related,
                         "meta": params.get("meta")
                     }), schemas, None)
                 else:
@@ -413,9 +435,9 @@ def graph(request):
                         "page_size": page_size,
                         "offset": page_size * page - page_size,
                         "post_type": params.get("post_type"),
-                        "post_related": params.get("post_related"),
+                        "post_related": instance_post_related,
+                        "related": instance_related,
                         "master": True,
-                        "related": params.get("related"),
                         "order": params.get("order", "newest"),
                         "term": params.get("term"),
                     }), schemas, None)
@@ -423,7 +445,7 @@ def graph(request):
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 out[q.get("o")] = clone_dict(caching.make_page(force, hostname, query={
-                    "post_related": params.get("post_related"),
+                    "post_related": instance_post_related,
                     "terms": params.get("terms"),
                     "post_type": params.get("post_type"),
                     "page_size": page_size,
