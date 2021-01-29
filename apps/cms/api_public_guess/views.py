@@ -237,12 +237,34 @@ def fetch_posts(request, app_id):
 
 @api_view(['GET', 'DELETE', 'PUT'])
 def fetch_post(request, app_id, slug):
-    if request.method == "GET":
+    publication = Publication.objects.get(pk=app_id)
+    if request.method == "PUT":
+        instance = Post.objects.get(pk=slug)
+        if request.data.get("title"):
+            instance.title = request.data.get("title")
+        if request.data.get("description"):
+            instance.description = request.data.get("description")
+        if request.data.get("meta"):
+            instance.meta = request.data.get("meta")
+        if request.data.get("post_related_deleted"):
+            for p in request.data.get("post_related_deleted"):
+                pr = Post.objects.get(pk=p)
+                instance.post_related.remove(pr)
+        if request.data.get("post_related"):
+            for p in request.data.get("post_related"):
+                pr = Post.objects.get(pk=p)
+                instance.post_related.add(pr)
+        instance.save()
+        return Response(status=status.HTTP_200_OK,
+                        data=caching.make_post(True, publication.host, str(instance.id), {"master": True}))
+
+    if request.method in ["GET"]:
         return Response(status=status.HTTP_200_OK, data=query_post(slug, {
             "uid": request.GET.get("uid") is not None,
             "is_guess_post": request.GET.get("is_guess_post"),
             "show_cms": request.GET.get("show_cms")
         }))
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
@@ -440,6 +462,7 @@ def graph(request):
                         "master": True,
                         "order": params.get("order", "newest"),
                         "term": params.get("term"),
+                        "reverse": params.get("reverse")
                     }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)

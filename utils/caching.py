@@ -81,7 +81,7 @@ def make_page(force, host_name, query, **kwargs):
         if flag != order:
             if query.get("full"):
                 out[flag]["results"] = list(
-                    map(lambda x: make_post(False, "", str(x), {"master": True}), out[flag]["results"][: 5]))
+                    map(lambda x: make_post(False, host_name, str(x), {"master": True}), out[flag]["results"][: 5]))
             else:
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
@@ -163,6 +163,9 @@ def make_post_list(force, host_name, query):
         posts = cache.get(key_path)
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
+    print(start)
+    print(end)
+    print(len(posts))
     return {
         "results": list(map(lambda x: make_post(False, host_name, str(x), {
             "master": False,
