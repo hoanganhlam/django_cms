@@ -13,10 +13,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import datetime
 from dotenv import load_dotenv
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", __file__)
-django.setup()
 
 load_dotenv()
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
