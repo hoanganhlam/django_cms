@@ -105,7 +105,7 @@ class PostViewSet(viewsets.ModelViewSet):
             instance._prefetched_objects_cache = {}
         return Response(
             status=status.HTTP_200_OK,
-            data=caching.make_post(True, instance.host, str(instance.id), {"master": True}))
+            data=caching.make_post(True, instance.primary_publication.host, str(instance.id), {"master": True}))
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
