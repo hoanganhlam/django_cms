@@ -14,6 +14,7 @@ from utils.instagram import fetch_by_hash_tag
 import json
 from apps.cms.tasks import task_sync_drive
 from django.template.defaultfilters import slugify
+from utils import caching
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -102,7 +103,9 @@ class PostViewSet(viewsets.ModelViewSet):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
-        return Response(serializer.data)
+        return Response(
+            status=status.HTTP_200_OK,
+            data=caching.make_post(True, instance.host, str(instance.id), {"master": True}))
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -222,7 +225,9 @@ class PubTermViewSet(viewsets.ModelViewSet):
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response(serializer.data)
+        return Response(
+            status=status.HTTP_200_OK,
+            data=caching.make_term(True, str(instance.id), False))
 
 
 @api_view(['GET'])
