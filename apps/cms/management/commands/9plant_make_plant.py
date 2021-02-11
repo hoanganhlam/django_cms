@@ -19,41 +19,18 @@ def get_field(title, genera, data, f):
     return None
 
 
-def sync_ig_user(user_raw):
-    if user_raw is None:
-        return None
-    test_user, created = User.objects.get_or_create(username=user_raw.get("username"))
-    user = test_user
-    if created:
-        raw_avatar = fetch_avatar(user_raw.get("profile_pic_id"))
-        media = None
-        if raw_avatar:
-            media = Media.objects.save_url(raw_avatar)
-            print(MediaSerializer(media).data.get("id"))
-        test_profile, is_created = Profile.objects.get_or_create(
-            user=user,
-            defaults={
-                "nick": user_raw.get("full_name"),
-                "options": {"source": "instagram"},
-                "media": media if media is not None else None
-            }
-        )
-        if test_profile.media is None:
-            if test_profile.media is None:
-                test_profile.nick = user_raw.get("full_name")
-                test_profile.options = {"source": "instagram"}
-                test_profile.media = media if media is not None else None
-                test_profile.save()
-    return user
-
-
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        admin = User.objects.get(pk=1)
+        posts = Post.objects.filter(title__startswith="Peperomia", description__isnull=True)
+        for post in posts:
+            post.show_cms = False
+            post.save()
+        return
+
+        genera_name = "spathiphyllum"
         pub = Publication.objects.get(host="9plant.com")
-        pub_15 = Publication.objects.get(pk=15)
-        genus = PublicationTerm.objects.get(publication=pub, term__slug="peperomia", taxonomy="genus")
-        species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith="Peperomia")
+        genus = PublicationTerm.objects.get(publication=pub, term__slug=genera_name, taxonomy="genus")
+        species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith=genera_name.capitalize())
         with open('genera_export.json') as json_file:
             data = json.load(json_file)
             for sp in species:
@@ -64,7 +41,6 @@ class Command(BaseCommand):
                         post_type="plant",
                         primary_publication=pub,
                         status="POSTED",
-                        show_cms=True,
                         meta={
                             "score_temperature": int(genus.meta.get("temperature")),
                             "score_light": int(genus.meta.get("light")),
@@ -89,7 +65,6 @@ class Command(BaseCommand):
                     )
                     for related in sp.related.all():
                         test.terms.add(related)
-                test.show_cms = True
                 test.status = "POSTED"
                 test.save()
                 print(test.title)
