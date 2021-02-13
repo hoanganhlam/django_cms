@@ -258,3 +258,24 @@ def sync_plant_universe():
             "indoorplants", "instaplants", "plantlover", "botanicalwomen"]
     for tag in tags:
         plant_universe_worker(tag, None)
+
+
+@shared_task
+def make_score_post():
+    posts = Post.objects.all()
+    for post in posts:
+        # total view
+        # total vote
+        # total related
+        # total term
+        pass
+
+
+@shared_task
+def make_score_term():
+    items = PublicationTerm.objects.all()
+    for item in items:
+        # total view
+        # total vote
+        # total posts
+        pass

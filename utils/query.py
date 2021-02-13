@@ -34,7 +34,7 @@ def query_posts(q):
 def query_post(slug, query):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s, %s)", [
-            int(slug) if type(slug)is int or (type(slug) is str and slug.isnumeric()) else slug,
+            int(slug) if type(slug) is int or (type(slug) is str and slug.isnumeric()) else slug,
             query.get("pid"),
             query.get("is_guess_post"),
             query.get("show_cms"),
@@ -55,3 +55,12 @@ def query_publication(host):
         cursor.close()
         connection.close()
         return result
+
+
+def query_related(q):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_RELATED_POST(%s, %s)", [q.get("id"), q.get("limit")])
+        result = cursor.fetchone()[0]
+        if result is None:
+            result = []
+        return list(map(lambda x: x.get("id"), result))

@@ -54,7 +54,7 @@ def make_page(force, host_name, query, **kwargs):
             q_term & Q(term__slug=term_term)).first() if term_term is not None else None
         newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
         popular = list(Post.objects.filter(q).order_by("id").values_list('id', flat=True))
-        terms = PublicationTerm.objects.filter(q_term)[:10].values_list("id", flat=True)
+        terms = PublicationTerm.objects.filter(q_term)[:12].values_list("id", flat=True)
         out = {
             "term": term_object.id if term_object is not None else None,
             "newest": {
@@ -131,13 +131,6 @@ def make_post_list(force, host_name, query):
     q = q & Q(show_cms=True, status="POSTED")
     # Related outer
     if related is not None:
-        q_related = Q(
-            post_type=query.get("type"),
-            primary_publication__host=host_name,
-        )
-        q_related = q_related & ~Q(id=related)
-        q_related = q_related | Q(terms__posts__id=related)
-        q = q & q_related
         key_path = "{}_related-{}".format(key_path, related)
     # Related inner
     if post_related is not None:
@@ -157,15 +150,15 @@ def make_post_list(force, host_name, query):
         if order == "newest":
             posts = list(Post.objects.filter(q).order_by("-id").distinct().values_list('id', flat=True))
         else:
-            posts = list(Post.objects.filter(q).order_by("id").distinct().values_list('id', flat=True))
+            if related is None:
+                posts = list(Post.objects.filter(q).order_by("measure__score").distinct().values_list('id', flat=True))
+            else:
+                posts = query_maker.query_related({"id": related, "limit": query.get("page_size", 6)})
         cache.set(key_path, posts, timeout=60 * 60 * 24)
     else:
         posts = cache.get(key_path)
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
-    print(start)
-    print(end)
-    print(len(posts))
     return {
         "results": list(map(lambda x: make_post(False, host_name, str(x), {
             "master": False,
