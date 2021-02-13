@@ -53,7 +53,7 @@ def make_page(force, host_name, query, **kwargs):
         term_object = PublicationTerm.objects.filter(
             q_term & Q(term__slug=term_term)).first() if term_term is not None else None
         newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
-        popular = list(Post.objects.filter(q).order_by("id").values_list('id', flat=True))
+        popular = list(Post.objects.filter(q).order_by("measure__score").values_list('id', flat=True))
         terms = PublicationTerm.objects.filter(q_term)[:12].values_list("id", flat=True)
         out = {
             "term": term_object.id if term_object is not None else None,
@@ -154,7 +154,6 @@ def make_post_list(force, host_name, query):
             if related is None:
                 posts = list(Post.objects.filter(q).order_by("measure__score").distinct().values_list('id', flat=True))
             else:
-                print("A")
                 posts = query_maker.query_related({"id": related, "limit": query.get("page_size", 6)})
         cache.set(key_path, posts, timeout=60 * 60 * 24)
     else:
@@ -190,9 +189,9 @@ def make_term_list(force, host_name, query):
         q = q & Q(term__title__icontains=query.get("search"))
     if (force or key_path not in cache) or query.get("search"):
         if order == "newest":
-            terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("-id").values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).distinct().values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("measure__score").values_list("id", flat=True)
         if not query.get("search"):
             cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:
