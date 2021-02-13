@@ -132,6 +132,7 @@ def make_post_list(force, host_name, query):
     # Related outer
     if related is not None:
         key_path = "{}_related-{}".format(key_path, related)
+        order = "popular"
     # Related inner
     if post_related is not None:
         if query.get("reverse"):
@@ -153,6 +154,7 @@ def make_post_list(force, host_name, query):
             if related is None:
                 posts = list(Post.objects.filter(q).order_by("measure__score").distinct().values_list('id', flat=True))
             else:
+                print("A")
                 posts = query_maker.query_related({"id": related, "limit": query.get("page_size", 6)})
         cache.set(key_path, posts, timeout=60 * 60 * 24)
     else:
