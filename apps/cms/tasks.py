@@ -255,7 +255,7 @@ def plant_universe_worker(k, n):
 @shared_task
 def sync_plant_universe():
     tags = ["plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
-            "indoorplants", "instaplants", "plantlover", "botanicalwomen"]
+            "indoorplants", "instaplants", "plantlover", "botanicalwomen", "peperomia", "monstera", "alocasia"]
     for tag in tags:
         plant_universe_worker(tag, None)
 
@@ -275,7 +275,10 @@ def make_score_post():
 def make_score_term():
     items = PublicationTerm.objects.all()
     for item in items:
-        # total view
-        # total vote
-        # total posts
-        pass
+        if item.measure is None:
+            item.measure = {}
+        # total view 1
+        # total vote 1
+        # total posts 1
+        item.measure["score"] = item.posts.count()
+        item.save()
