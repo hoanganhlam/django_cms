@@ -50,7 +50,7 @@ def make_page(force, host_name, query, **kwargs):
         q = q & Q(post_related__id=post_related)
         key_path = "{}_post_related-{}".format(key_path, post_related)
     if user is not None:
-        q = q & Q(user__id=user)
+        q = q & Q(user__username=user)
         key_path = "{}_user-{}".format(key_path, user)
     # ====================================================================================
     if key_path not in cache or force:
