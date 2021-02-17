@@ -30,7 +30,8 @@ def make_page(force, host_name, query, **kwargs):
     post_type = query.get("post_type")
     post_related = query.get("post_related")
     post_terms = query.get("terms", {})
-    post_terms_keys = list(post_terms.keys())
+    post_terms_keys = list(post_terms.keys()),
+    user = query.get("user_id")
     if len(post_terms_keys) == 1:
         term_taxonomy = post_terms_keys[0]
         term_term = post_terms.get(term_taxonomy, None)
@@ -48,6 +49,9 @@ def make_page(force, host_name, query, **kwargs):
     if post_related is not None:
         q = q & Q(post_related__id=post_related)
         key_path = "{}_post_related-{}".format(key_path, post_related)
+    if user is not None:
+        q = q & Q(user__id=user)
+        key_path = "{}_user-{}".format(key_path, user)
     # ====================================================================================
     if key_path not in cache or force:
         term_object = PublicationTerm.objects.filter(
