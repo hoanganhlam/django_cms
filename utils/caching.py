@@ -30,7 +30,7 @@ def make_page(force, host_name, query, **kwargs):
     post_type = query.get("post_type")
     post_related = query.get("post_related")
     post_terms = query.get("terms", {})
-    post_terms_keys = list(post_terms.keys()),
+    post_terms_keys = list(post_terms.keys())
     user = query.get("user_id")
     if len(post_terms_keys) == 1:
         term_taxonomy = post_terms_keys[0]
