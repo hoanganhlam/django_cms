@@ -16,7 +16,7 @@ from apps.activity import actions
 from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
 from utils.other import get_paginator, clone_dict
-from utils.query import query_post, query_posts, query_publication
+from utils.query import query_post, query_posts, query_publication, query_user
 from utils import caching
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -389,7 +389,6 @@ def graph(request):
     pub = Publication.objects.get(host=hostname)
     if hostname is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
     if request.method == "POST":
         out = {}
         query = request.data.get("query")
@@ -399,12 +398,10 @@ def graph(request):
             schemas = q.get("s") or ["id"]
             instance_related = None
             instance_post_related = None
-
             if params.get("related"):
                 instance_related = fetch_instance(hostname, params.get("related"), False)
             if params.get("post_related"):
                 instance_post_related = fetch_instance(hostname, params.get("post_related"), False)
-
             if q.get("q") == "post_detail":
                 instance = None
                 if params.get("slug"):
@@ -439,7 +436,8 @@ def graph(request):
                         "offs3t": page_size * page - page_size,
                         "search": params.get("search"),
                         "order_by": params.get("order_by"),
-                        "user_id": user,
+                        "auth_id": user,
+                        "user_id": params.get("user"),
                         "type": params.get("type"),
                         "status": "POSTED",
                         "is_guess_post": params.get("is_guess_post"),
@@ -462,7 +460,8 @@ def graph(request):
                         "master": True,
                         "order": params.get("order", "newest"),
                         "term": params.get("term"),
-                        "reverse": params.get("reverse")
+                        "reverse": params.get("reverse"),
+                        "user_id": params.get("user"),
                     }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
@@ -510,6 +509,8 @@ def graph(request):
                         if pt is not None:
                             pub_term_id = pt.id
                 out[q.get("o")] = clone_dict(caching.make_term(force, pub_term_id, True), schemas, None)
+            if q.get("q") == "user_detail":
+                out[q.get("o")] = clone_dict(query_user(params.get("user"), {}), schemas, None)
         return Response(out)
 
 

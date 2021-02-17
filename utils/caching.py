@@ -126,7 +126,7 @@ def make_post_list(force, host_name, query):
     related = query.get("related")
     post_related = query.get("post_related")
     term = query.get("term")
-
+    user = query.get("user_id")
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q = q & Q(show_cms=True, status="POSTED")
     # Related outer
@@ -134,6 +134,9 @@ def make_post_list(force, host_name, query):
         key_path = "{}_related-{}".format(key_path, related)
         order = "popular"
     # Related inner
+    if user is not None:
+        q = q & Q(user__id=user)
+        key_path = "{}_user-{}".format(key_path, user)
     if post_related is not None:
         if query.get("reverse"):
             q = q & Q(post_related_revert__id=post_related)
@@ -191,7 +194,8 @@ def make_term_list(force, host_name, query):
         if order == "newest":
             terms = PublicationTerm.objects.filter(q).distinct().order_by("-id").values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id",
+                                                                                                         flat=True)
         if not query.get("search"):
             cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:

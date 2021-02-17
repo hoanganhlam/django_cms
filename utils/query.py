@@ -11,7 +11,7 @@ def query_posts(q):
                            q.get("offs3t"),
                            q.get("search"),
                            q.get("order_by"),
-                           q.get("user_id"),
+                           q.get("auth_id"),
                            q.get("type"),
                            q.get("status"),
                            q.get("is_guess_post", False),
@@ -64,3 +64,14 @@ def query_related(q):
         if result is None:
             result = []
         return list(map(lambda x: x.get("id"), result))
+
+
+def query_user(username, query):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
+            username,
+            query.get("auth_id")
+        ])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
