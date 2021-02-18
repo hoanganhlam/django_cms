@@ -14,7 +14,7 @@ from apps.authentication.models import Profile
 
 
 def get_field(title, genera, data, f):
-    if data.get(f) is not None:
+    if data.get(f) is not None and len(data.get(f)) > 1:
         return random.choice(data.get(f)).replace("{{title}}", title).replace("{{genera}}", genera)
     return None
 
