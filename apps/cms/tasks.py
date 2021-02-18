@@ -15,6 +15,7 @@ from urllib.parse import urljoin, urlparse
 from utils.web_checker import get_web_meta
 from utils.instagram import fetch_by_hash_tag, get_comment, fetch_avatar
 from utils.slug import vi_slug
+import time
 
 api_key = "AIzaSyDGJRZXgn_r9BAIzu-lH7ndQhR1sJAY78M"
 
@@ -247,8 +248,8 @@ def plant_universe_worker(k, n):
                         pass
             # if item.get("comment_count"):
             #     print(get_comment(item.get("ig_id")))
-    print(out.get("next_id"))
     if out.get("next_id"):
+        time.sleep(60)
         plant_universe_worker(k, out.get("next_id"))
 
 
