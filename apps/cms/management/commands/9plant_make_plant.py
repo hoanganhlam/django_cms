@@ -21,20 +21,14 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        posts = Post.objects.filter(title__startswith="Peperomia", description__isnull=True)
-        for post in posts:
-            post.show_cms = False
-            post.save()
-        return
-
-        genera_name = "spathiphyllum"
+        genera_name = "alocasia"
         pub = Publication.objects.get(host="9plant.com")
         genus = PublicationTerm.objects.get(publication=pub, term__slug=genera_name, taxonomy="genus")
         species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith=genera_name.capitalize())
         with open('genera_export.json') as json_file:
             data = json.load(json_file)
             for sp in species:
-                test = Post.objects.filter(slug=sp.term.slug, post_type="plant", primary_publication=pub).first()
+                test = Post.objects.filter(slug__startswith=sp.term.slug, post_type="plant", primary_publication=pub).first()
                 if test is None:
                     test = Post.objects.create(
                         title=sp.term.title,
@@ -68,5 +62,3 @@ class Command(BaseCommand):
                 test.status = "POSTED"
                 test.save()
                 print(test.title)
-
-
