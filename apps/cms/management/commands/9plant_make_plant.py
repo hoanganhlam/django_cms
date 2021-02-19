@@ -21,7 +21,7 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera_name = "alocasia"
+        genera_name = "philodendron"
         pub = Publication.objects.get(host="9plant.com")
         genus = PublicationTerm.objects.get(publication=pub, term__slug=genera_name, taxonomy="genus")
         species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith=genera_name.capitalize())
@@ -33,6 +33,7 @@ class Command(BaseCommand):
                     test = Post.objects.create(
                         title=sp.term.title,
                         post_type="plant",
+                        description=sp.description,
                         primary_publication=pub,
                         status="POSTED",
                         meta={
@@ -59,6 +60,9 @@ class Command(BaseCommand):
                     )
                     for related in sp.related.all():
                         test.terms.add(related)
+                elif test.description is None:
+                    test.description = sp.description
+                    test.save()
                 test.status = "POSTED"
                 test.save()
                 print(test.title)
