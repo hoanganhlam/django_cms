@@ -113,8 +113,6 @@ def make_post(force, host_name, index, query):
         p = Post.objects.filter(q_general, id__lt=data.get("id")).first()
         data["next"] = n.id if n is not None else None
         data["previous"] = p.id if p is not None else None
-        data["related"] = []
-        data["post_related"] = data["post_related"] if data["post_related"] else []
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
