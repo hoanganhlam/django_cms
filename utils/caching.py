@@ -120,8 +120,6 @@ def make_post(force, host_name, index, query):
         data["next"] = make_post(False, host_name, str(data.get("next")), {}) if type(data.get("next")) is int else None
         data["previous"] = make_post(False, host_name, str(data.get("previous")), {}) if type(
             data.get("previous")) is int else None
-        data["related"] = []
-        data["post_related"] = []
     return data
 
 
