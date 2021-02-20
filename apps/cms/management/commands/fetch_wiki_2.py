@@ -18,9 +18,9 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Monstera"
+        genera = "Philodendron"
         family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/Monstera"
+        url = "https://en.wikipedia.org/wiki/List_of_Philodendron_species"
         selector = "#mw-content-text > div.mw-parser-output > div.div-col > ul"
 
         pub = Publication.objects.get(pk=7)
@@ -43,8 +43,8 @@ class Command(BaseCommand):
                         elif type(content) is NavigableString and content not in [" - ", ", ", " (", ")"]:
                             if re.search(r'\((.*?)\)', content):
                                 origins = origins + re.search(r'\((.*?)\)', content).group(1).split(",")
-                if li.find("span") is not None:
-                    authors.append(str(li.find("span").find(text=True)).strip())
+                if li.find("small") is not None:
+                    authors.append(str(li.find("small").find(text=True)).strip())
 
                 description_patterns = [
                     "{title} is a species of flowering plant in the {genera} family {family}",
@@ -78,7 +78,6 @@ class Command(BaseCommand):
                     family=family,
                     genera=genera) + "."
 
-                print(description)
                 test = Post.objects.filter(slug__startswith=slugify(title), post_type="plant",
                                            primary_publication=pub).first()
                 if test is None:
@@ -118,3 +117,4 @@ class Command(BaseCommand):
                 elif test.description is None:
                     test.description = description
                     test.save()
+                print(test.title)

@@ -16,7 +16,7 @@ from utils.web_checker import get_web_meta
 from utils.instagram import fetch_by_hash_tag, get_comment, fetch_avatar
 from utils.slug import vi_slug
 import time
-
+import random
 api_key = "AIzaSyDGJRZXgn_r9BAIzu-lH7ndQhR1sJAY78M"
 
 
@@ -257,6 +257,7 @@ def plant_universe_worker(k, n):
 def sync_plant_universe():
     tags = ["plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
             "indoorplants", "instaplants", "plantlover", "botanicalwomen", "peperomia", "monstera", "alocasia"]
+    random.shuffle(tags)
     for tag in tags:
         plant_universe_worker(tag, None)
 

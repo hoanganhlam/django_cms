@@ -32,10 +32,14 @@ def make_page(force, host_name, query, **kwargs):
     post_terms = query.get("terms", {})
     post_terms_keys = list(post_terms.keys())
     user = query.get("user_id")
+    show_cms = query.get("show_cms")
     if len(post_terms_keys) == 1:
         term_taxonomy = post_terms_keys[0]
         term_term = post_terms.get(term_taxonomy, None)
     # ====================================================================================
+    if show_cms is not None:
+        q = q & Q(show_cms=show_cms)
+        key_path = "{}_cms-{}".format(key_path, show_cms)
     if term_taxonomy is not None:
         q_term = q_term & Q(taxonomy=term_taxonomy)
         q = q & Q(terms__taxonomy=term_taxonomy)
@@ -131,8 +135,12 @@ def make_post_list(force, host_name, query):
     post_related = query.get("post_related")
     term = query.get("term")
     user = query.get("user_id")
+    show_cms = query.get("show_cms")
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
-    q = q & Q(show_cms=True, status="POSTED")
+    q = q & Q(status="POSTED")
+    if show_cms is not None:
+        q = q & Q(show_cms=show_cms)
+        key_path = "{}_cms-{}".format(key_path, show_cms)
     # Related outer
     if related is not None:
         key_path = "{}_related-{}".format(key_path, related)

@@ -70,11 +70,9 @@ class PublicationTerm(BaseModel):
 class Post(BaseModel, Taxonomy):
     pid = models.IntegerField(null=True, blank=True)
     user = models.ForeignKey(User, related_name="posts", on_delete=models.SET_NULL, null=True, blank=True)
-    primary_publication = models.ForeignKey(
-        Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL,
-        null=True)
+    primary_publication = models.ForeignKey(Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL, null=True)
     publications = models.ManyToManyField(Publication, related_name="posts", blank=True)
-
+    collaborators = models.ManyToManyField(User, related_name="collaborated_posts", blank=True)
     post_parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="post_child")
     post_related = models.ManyToManyField("self", blank=True, related_name="post_related_revert", symmetrical=False)
 
