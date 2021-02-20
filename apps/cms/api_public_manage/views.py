@@ -83,6 +83,13 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=False)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
+        instance = models.Post.objects.get(pk=serializer.data.get("id"))
+        if request.data.get("post_related"):
+            related = models.Post.objects.filter(id__in=request.data.get("post_related"))
+            old_related = instance.post_related.all()
+            for r in related:
+                if r not in old_related:
+                    instance.post_related.add(r)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
