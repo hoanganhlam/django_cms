@@ -25,7 +25,7 @@ def make_page(force, host_name, query, **kwargs):
     # ====================================================================================
     q_term = Q(publication__host=host_name)
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
-    q = q & Q(show_cms=True, status="POSTED")
+    q = q & Q(status="POSTED")
     # ====================================================================================
     post_type = query.get("post_type")
     post_related = query.get("post_related")
