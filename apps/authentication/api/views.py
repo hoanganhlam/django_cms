@@ -9,7 +9,7 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_auth.registration.views import SocialLoginView
 from rest_framework import viewsets, permissions
 from base import pagination
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework_jwt.settings import api_settings
 from rest_framework import status
 from django.db import connection
@@ -26,7 +26,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter]
+    filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['first_name', 'last_name', 'username']
     lookup_field = 'username'
     lookup_value_regex = '[\w.@+-]+'
