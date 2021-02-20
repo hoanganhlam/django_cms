@@ -32,14 +32,14 @@ def make_page(force, host_name, query, **kwargs):
     post_terms = query.get("terms", {})
     post_terms_keys = list(post_terms.keys())
     user = query.get("user_id")
-    show_cms = query.get("show_cms")
+    show_cms = query.get("show_cms", None)
     if len(post_terms_keys) == 1:
         term_taxonomy = post_terms_keys[0]
         term_term = post_terms.get(term_taxonomy, None)
     # ====================================================================================
     if show_cms is not None:
         q = q & Q(show_cms=show_cms)
-        key_path = "{}_cms-{}".format(key_path, show_cms)
+        key_path = "{}_show_cms-{}".format(key_path, show_cms)
     if term_taxonomy is not None:
         q_term = q_term & Q(taxonomy=term_taxonomy)
         q = q & Q(terms__taxonomy=term_taxonomy)
