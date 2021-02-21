@@ -18,10 +18,10 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Philodendron"
+        genera = "Epipremnum"
         family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/List_of_Philodendron_species"
-        selector = "#mw-content-text > div.mw-parser-output > div.div-col > ul"
+        url = "https://en.wikipedia.org/wiki/Epipremnum"
+        selector = "#mw-content-text > div.mw-parser-output > ol"
 
         pub = Publication.objects.get(pk=7)
         genus_instance = PublicationTerm.objects.filter(term__title=genera).first()
@@ -41,8 +41,9 @@ class Command(BaseCommand):
                         if type(content) is Tag and content.name not in ["sup", "ul"]:
                             origins = origins + content.find_all(text=True)
                         elif type(content) is NavigableString and content not in [" - ", ", ", " (", ")"]:
-                            if re.search(r'\((.*?)\)', content):
-                                origins = origins + re.search(r'\((.*?)\)', content).group(1).split(",")
+                            # if re.search(r'\((.*?)\)', content):
+                            #     origins = origins + re.search(r'\((.*?)\)', content).group(1).split(",")
+                            origins = origins + content.replace(" - ", "").split(",")
                 if li.find("small") is not None:
                     authors.append(str(li.find("small").find(text=True)).strip())
 
@@ -73,11 +74,11 @@ class Command(BaseCommand):
                 ds[0] = ds[0].capitalize()
                 description = ", ".join(ds).format(
                     title=title,
+                    plant=title,
                     origin=", ".join(origins) if len(origins) else None,
                     author=", ".join(authors) if len(authors) else None,
                     family=family,
                     genera=genera) + "."
-
                 test = Post.objects.filter(slug__startswith=slugify(title), post_type="plant",
                                            primary_publication=pub).first()
                 if test is None:

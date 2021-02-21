@@ -1,16 +1,7 @@
 from django.core.management.base import BaseCommand
-from apps.cms.models import Post, Term, SearchKeyword, Publication, PublicationTerm
-from utils.web_checker import get_keyword_suggestion
-import requests
-from django.contrib.auth.models import User
-from utils.instagram import get_comment, fetch_avatar
-from django.template.defaultfilters import slugify
+from apps.cms.models import Post, Publication, PublicationTerm
 import json
 import random
-from utils.instagram import fetch_by_hash_tag
-from apps.media.models import Media
-from apps.media.api.serializers import MediaSerializer
-from apps.authentication.models import Profile
 
 
 def get_field(title, genera, data, f):
@@ -21,7 +12,7 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera_name = "philodendron"
+        genera_name = "calathea"
         pub = Publication.objects.get(host="9plant.com")
         genus = PublicationTerm.objects.get(publication=pub, term__slug=genera_name, taxonomy="genus")
         species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith=genera_name.capitalize())
