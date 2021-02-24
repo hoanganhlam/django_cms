@@ -42,7 +42,7 @@ def on_login_callback(api, new_settings_file):
 
 
 user_name = 'hoanglamyeah'
-password = 'Lamhoang.bk57'
+password = 'Hoanganhlam@no99a'
 settings_file = "test_credentials.json"
 device_id = None
 try:
@@ -82,7 +82,7 @@ def fetch_by_hash_tag(search, max_id=None):
         results = api.feed_tag(keyword, rank_token="08276948-21a8-11ea-8c58-acde48001122")
     next_max_id = results.get('next_max_id')
     arr = results.get("items")
-    out_results = map(extract_item, arr)
+    out_results = list(map(extract_item, arr))
     return {
         "next_id": next_max_id,
         "results": out_results
@@ -158,3 +158,7 @@ def fetch_avatar(item_id):
     if test and len(test.get("items", [])) > 0:
         return extract_media(test.get("items")[0])
     return None
+
+
+def fetch_user(user_id):
+    return api.user_info(user_id).get("user")

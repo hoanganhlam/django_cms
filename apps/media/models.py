@@ -57,7 +57,9 @@ class MediaManager(models.Manager):
             if ext in ['jpg', 'jpeg', 'png']:
                 temp.flush()
                 img = self.model(
-                    title=extra_fields.get("title") if extra_fields.get("title", None) is not None else name)
+                    title=extra_fields.get("title") if extra_fields.get("title", None) is not None else name,
+                    user=extra_fields.get("user", None)
+                )
                 img.path.save(name, File(temp))
                 return img
             return None

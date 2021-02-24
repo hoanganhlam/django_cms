@@ -12,7 +12,7 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera_name = "calathea"
+        genera_name = "rhaphidophora"
         pub = Publication.objects.get(host="9plant.com")
         genus = PublicationTerm.objects.get(publication=pub, term__slug=genera_name, taxonomy="genus")
         species = PublicationTerm.objects.filter(publication=pub, related=genus, term__title__startswith=genera_name.capitalize())

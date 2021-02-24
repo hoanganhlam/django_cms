@@ -18,13 +18,14 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Epipremnum"
+        genera = "Dieffenbachia"
         family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/Epipremnum"
+        url = "https://en.wikipedia.org/wiki/Dieffenbachia"
         selector = "#mw-content-text > div.mw-parser-output > ol"
 
         pub = Publication.objects.get(pk=7)
-        genus_instance = PublicationTerm.objects.filter(term__title=genera).first()
+        genus_instance = PublicationTerm.objects.filter(term__title=genera, taxonomy="genus").first()
+        print(genus_instance.id)
         r = requests.get(url)
         soup = BeautifulSoup(r.content, features="html.parser")
         elms = soup.select(selector)

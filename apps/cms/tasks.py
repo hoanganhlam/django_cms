@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django_cms.celery import app
 from apps.media.models import Media
 from apps.media.api.serializers import MediaSerializer
-from apps.cms.models import Publication, Post, Term, PublicationTerm
+from apps.cms.models import Publication, Post, Term, PublicationTerm, SearchKeyword, SearchKeywordVolume
 from apps.authentication.models import Profile
 from urllib.parse import urljoin, urlparse
 from utils.web_checker import get_web_meta
@@ -17,6 +17,7 @@ from utils.instagram import fetch_by_hash_tag, get_comment, fetch_avatar
 from utils.slug import vi_slug
 import time
 import random
+
 api_key = "AIzaSyDGJRZXgn_r9BAIzu-lH7ndQhR1sJAY78M"
 
 
@@ -33,10 +34,10 @@ def sync_keyword(file_id, access_token):
         out = []
         while start < len(row_data):
             keyword = row_data[start].get("values")[0].get("formattedValue", None)
-            checker = models.SearchKeyword.objects.filter(slug=vi_slug(keyword)).first()
+            checker = SearchKeyword.objects.filter(slug=vi_slug(keyword)).first()
             if checker is None or checker.searches.count() == 0:
                 if checker is None:
-                    checker = models.SearchKeyword.objects.create(title=keyword)
+                    checker = SearchKeyword.objects.create(title=keyword)
                 new_record = {
                     "records": []
                 }
@@ -55,7 +56,7 @@ def sync_keyword(file_id, access_token):
                         date_str = keys[i].replace("Searches: ", "")
                         date_obj = datetime.datetime.strptime(date_str, '%b %Y')
 
-                        models.SearchKeywordVolume.objects.create(
+                        SearchKeywordVolume.objects.create(
                             search_keyword=checker,
                             value=val.get("formattedValue", None),
                             date_taken=date_obj
@@ -173,19 +174,18 @@ def sync_ig_user(user_raw):
         media = None
         if raw_avatar:
             media = Media.objects.save_url(raw_avatar)
-            print(MediaSerializer(media).data.get("id"))
         test_profile, is_created = Profile.objects.get_or_create(
             user=user,
             defaults={
                 "nick": user_raw.get("full_name"),
-                "options": {"source": "instagram"},
+                "options": {"source": "instagram", "id": user_raw.get("id")},
                 "media": media if media is not None else None
             }
         )
-        if test_profile.media is None:
+        if test_profile.media is None and not is_created:
             if test_profile.media is None:
                 test_profile.nick = user_raw.get("full_name")
-                test_profile.options = {"source": "instagram"}
+                test_profile.options = {"source": "instagram", "id": user_raw.get("id")}
                 test_profile.media = media if media is not None else None
                 test_profile.save()
     return user
@@ -210,17 +210,6 @@ def plant_universe_worker(k, n):
                 "credit": item.get("user").get("username"),
                 "medias": medias
             }
-            if item.get("user").get("username"):
-                test_user, created = User.objects.get_or_create(username=item.get("user").get("username"))
-                user = test_user
-                if created:
-                    Profile.objects.get_or_create(
-                        user=user,
-                        defaults={
-                            "nick": item.get("user").get("full_name"),
-                            "options": {"source": "instagram"}
-                        }
-                    )
             new_post = Post.objects.create(
                 title="Post by " + item.get("user").get("full_name") if item.get("user").get(
                     "full_name") else item.get("user").get("username"),
@@ -260,27 +249,3 @@ def sync_plant_universe():
     random.shuffle(tags)
     for tag in tags:
         plant_universe_worker(tag, None)
-
-
-@shared_task
-def make_score_post():
-    posts = Post.objects.all()
-    for post in posts:
-        # total view
-        # total vote
-        # total related
-        # total term
-        pass
-
-
-@shared_task
-def make_score_term():
-    items = PublicationTerm.objects.all()
-    for item in items:
-        if item.measure is None:
-            item.measure = {}
-        # total view 1
-        # total vote 1
-        # total posts 1
-        item.measure["score"] = item.posts.count()
-        item.save()
