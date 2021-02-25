@@ -20,8 +20,10 @@ class PublicationViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             queryset = []
-        else:
+        elif not request.user.is_superuser:
             queryset = self.filter_queryset(models.Publication.objects.order_by('-id').filter(user=request.user))
+        else:
+            queryset = self.filter_queryset(models.Publication.objects.order_by('-id'))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
