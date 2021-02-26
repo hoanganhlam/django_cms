@@ -73,3 +73,23 @@ class PubTermSerializer(serializers.ModelSerializer):
         self.fields['term'] = TermSerializer(read_only=True)
         self.fields['media'] = MediaSerializer()
         return super(PubTermSerializer, self).to_representation(instance)
+
+
+class ThemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Theme
+        fields = '__all__'
+        extra_fields = []
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'created': {'read_only': True},
+            'updated': {'read_only': True}
+        }
+
+
+class PThemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PublicationTheme
+        fields = '__all__'
+        extra_fields = []
+        extra_kwargs = {}

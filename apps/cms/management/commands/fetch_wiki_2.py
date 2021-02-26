@@ -18,10 +18,10 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Dieffenbachia"
+        genera = "Rhaphidophora"
         family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/Dieffenbachia"
-        selector = "#mw-content-text > div.mw-parser-output > ol"
+        url = "https://en.wikipedia.org/wiki/Rhaphidophora"
+        selector = "#mw-content-text > div.mw-parser-output > ul:nth-child(18)"
 
         pub = Publication.objects.get(pk=7)
         genus_instance = PublicationTerm.objects.filter(term__title=genera, taxonomy="genus").first()
@@ -49,6 +49,7 @@ class Command(BaseCommand):
                     authors.append(str(li.find("small").find(text=True)).strip())
 
                 description_patterns = [
+                    "{title} is a species of plant in the family {family}"
                     "{title} is a species of flowering plant in the {genera} family {family}",
                     "{title} is a species of {genera}",
                     "{title} is a perennial species in the genus {genera}, belonging to the family {family}",
@@ -80,6 +81,8 @@ class Command(BaseCommand):
                     author=", ".join(authors) if len(authors) else None,
                     family=family,
                     genera=genera) + "."
+                description = description.replace("..", ".")
+
                 test = Post.objects.filter(slug__startswith=slugify(title), post_type="plant",
                                            primary_publication=pub).first()
                 if test is None:

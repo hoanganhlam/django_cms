@@ -31,3 +31,13 @@ def publication_options():
         ],
         "post_fields": []
     }
+
+
+def theme_options():
+    return {
+        "layout": {},
+        "menu": {},
+        "css": {},
+        "widget": {},
+        "homepage": {}
+    }

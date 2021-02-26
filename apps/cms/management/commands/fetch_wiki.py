@@ -9,8 +9,8 @@ from bs4.element import Tag, NavigableString
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Homalomena"
-        url = "https://en.wikipedia.org/wiki/Homalomena"
+        genera = "Rhaphidophora"
+        url = "https://en.wikipedia.org/wiki/Rhaphidophora"
         terms = {
             "phylum": "Monocotyledon",
             "class": "Water Plantains",

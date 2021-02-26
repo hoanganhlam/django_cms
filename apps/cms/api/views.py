@@ -5,6 +5,7 @@ from rest_framework import status
 from base import pagination
 from . import serializers
 from apps.cms import models
+from django.db.models import Q
 
 
 class PublicationViewSet(viewsets.ModelViewSet):
@@ -69,3 +70,41 @@ class TermViewSet(viewsets.ModelViewSet):
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
     lookup_field = 'slug'
+
+
+class ThemeViewSet(viewsets.ModelViewSet):
+    models = models.Theme
+    queryset = models.objects.order_by('-id')
+    serializer_class = serializers.ThemeSerializer
+    permission_classes = permissions.IsAuthenticated,
+    pagination_class = pagination.Pagination
+    filter_backends = [OrderingFilter, SearchFilter]
+    search_fields = ['title', 'description']
+    lookup_field = 'pk'
+
+
+class PThemeViewSet(viewsets.ModelViewSet):
+    models = models.PublicationTheme
+    queryset = models.objects.order_by('-id')
+    serializer_class = serializers.PThemeSerializer
+    permission_classes = permissions.IsAuthenticated,
+    pagination_class = pagination.Pagination
+    lookup_field = 'pk'
+
+    def list(self, request, *args, **kwargs):
+        pub_id = request.GET.get("publication")
+        theme_id = request.GET.get("theme")
+        q = Q()
+        if pub_id:
+            q = q & Q(publication__id=pub_id)
+        if theme_id:
+            q = q & Q(theme__id=theme_id)
+
+        queryset = self.filter_queryset(models.Publication.objects.order_by('-id').filter(q))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

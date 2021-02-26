@@ -27,12 +27,27 @@ class SearchKeywordVolume(models.Model):
     date_taken = models.DateTimeField()
 
 
+class Theme(BaseModel, Taxonomy):
+    options = JSONField(null=True, blank=True, default=default.theme_options)
+    media = models.ForeignKey(Media, related_name="themes", blank=True, null=True, on_delete=models.SET_NULL)
+    price = models.FloatField(default=0)
+    status = models.CharField(default="developing", max_length=500)
+    user = models.ForeignKey(User, related_name="themes", on_delete=models.CASCADE)
+
+
 class Publication(BaseModel, Taxonomy):
     host = models.CharField(null=True, blank=True, max_length=150)
     user = models.ForeignKey(User, related_name="publications", on_delete=models.CASCADE)
     options = JSONField(null=True, blank=True, default=default.publication_options)
     measure = JSONField(null=True, blank=True)
     medias = models.ManyToManyField(Media, related_name="publication", blank=True)
+
+
+class PublicationTheme(models.Model):
+    theme = models.ForeignKey(Theme, related_name="publication_themes", on_delete=models.CASCADE)
+    publication = models.ForeignKey(Publication, related_name="publication_themes", on_delete=models.CASCADE)
+    options = JSONField(null=True, blank=True, default=default.theme_options)
+    is_active = models.BooleanField(default=False)
 
 
 class PublicationTerm(BaseModel):
@@ -70,7 +85,8 @@ class PublicationTerm(BaseModel):
 class Post(BaseModel, Taxonomy):
     pid = models.IntegerField(null=True, blank=True)
     user = models.ForeignKey(User, related_name="posts", on_delete=models.SET_NULL, null=True, blank=True)
-    primary_publication = models.ForeignKey(Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL, null=True)
+    primary_publication = models.ForeignKey(Publication, related_name="pp_posts", blank=True, on_delete=models.SET_NULL,
+                                            null=True)
     publications = models.ManyToManyField(Publication, related_name="posts", blank=True)
     collaborators = models.ManyToManyField(User, related_name="collaborated_posts", blank=True)
     post_parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="post_child")
