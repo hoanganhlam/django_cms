@@ -42,6 +42,23 @@ class PublicationViewSet(viewsets.ModelViewSet):
         # self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        active_theme = models.PublicationTheme.objects.filter(publication_id=instance.id, is_active=True).first()
+        if active_theme:
+            instance.options["theme"] = active_theme.options
+            instance.save()
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
 
 class PostViewSet(viewsets.ModelViewSet):
     models = models.Post
@@ -124,9 +141,11 @@ def pub_theme(request, pk):
             theme.save()
     else:
         current_active = None
+    # Update theme
     if request.method == "POST" and current_active is not None and current_active.id == request.data.get("id"):
         current_active.options = request.data.get("options")
         current_active.save()
+    # Active theme
     if request.method == "PUT" and request.data.get("theme") is not None:
         if current_active is not None and current_active.theme_id == request.data.get("id"):
             pass
