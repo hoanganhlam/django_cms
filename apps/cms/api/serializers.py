@@ -97,3 +97,7 @@ class PThemeSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_fields = []
         extra_kwargs = {}
+
+    def to_representation(self, instance):
+        self.fields['theme'] = ThemeSerializer()
+        return super(PThemeSerializer, self).to_representation(instance)

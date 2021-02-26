@@ -89,7 +89,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
 
 class PThemeViewSet(viewsets.ModelViewSet):
     models = models.PublicationTheme
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('-id').prefetch_related("theme")
     serializer_class = serializers.PThemeSerializer
     permission_classes = permissions.IsAuthenticated,
     pagination_class = pagination.Pagination
