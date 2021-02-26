@@ -82,6 +82,9 @@ class ThemeViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     lookup_field = 'pk'
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class PThemeViewSet(viewsets.ModelViewSet):
     models = models.PublicationTheme
