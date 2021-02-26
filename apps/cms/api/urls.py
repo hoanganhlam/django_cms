@@ -11,4 +11,5 @@ router.register(r'p-themes', views.PThemeViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
+    url(r'^publications/(?P<app_id>[-\w]+)/theme/$', views.pub_theme),
 ]

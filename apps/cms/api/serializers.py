@@ -86,6 +86,10 @@ class ThemeSerializer(serializers.ModelSerializer):
             'updated': {'read_only': True}
         }
 
+    def to_representation(self, instance):
+        self.fields['media'] = MediaSerializer()
+        return super(ThemeSerializer, self).to_representation(instance)
+
 
 class PThemeSerializer(serializers.ModelSerializer):
     class Meta:

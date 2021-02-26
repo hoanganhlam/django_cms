@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework import status
 from base import pagination
 from . import serializers
@@ -111,3 +112,19 @@ class PThemeViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET', 'POST'])
+def pub_theme(request, pk):
+    active_themes = models.PublicationTheme.objects.filter(publication_id=pk, is_active=True)
+    if active_themes.count() >= 1:
+        current_active = active_themes.first()
+        for theme in active_themes[1:]:
+            theme.is_active = False
+            theme.save()
+    else:
+        current_active = None
+    if request.method == "POST" and current_active is not None and current_active.id == request.data.get("id"):
+        current_active.options = request.data.get("options")
+        current_active.save()
+    return Response(serializers.PThemeSerializer(current_active).data)
