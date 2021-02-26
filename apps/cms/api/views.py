@@ -114,7 +114,7 @@ class PThemeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST', 'PUT'])
 def pub_theme(request, pk):
     active_themes = models.PublicationTheme.objects.filter(publication_id=pk, is_active=True)
     if active_themes.count() >= 1:
@@ -127,4 +127,17 @@ def pub_theme(request, pk):
     if request.method == "POST" and current_active is not None and current_active.id == request.data.get("id"):
         current_active.options = request.data.get("options")
         current_active.save()
+    if request.method == "PUT" and request.data.get("theme") is not None:
+        if current_active is not None and current_active.theme_id == request.data.get("id"):
+            pass
+        else:
+            if current_active is not None:
+                current_active.is_active = False
+                current_active.save()
+            current_active = models.PublicationTheme.objects.create(
+                publication_id=pk,
+                theme_id=request.data.get("theme"),
+                is_active=True
+            )
+
     return Response(serializers.PThemeSerializer(current_active).data)
