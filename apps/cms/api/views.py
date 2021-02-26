@@ -139,5 +139,9 @@ def pub_theme(request, pk):
                 theme_id=request.data.get("theme"),
                 is_active=True
             )
+    if request.method in ["POST", "POST"] and current_active is not None:
+        publication = models.Publication.objects.get(pk=pk)
+        publication.options["theme"] = current_active.options
+        publication.save()
 
     return Response(serializers.PThemeSerializer(current_active).data)
