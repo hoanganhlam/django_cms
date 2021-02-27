@@ -61,6 +61,7 @@ class PublicationTerm(BaseModel):
     options = JSONField(null=True, blank=True)
     measure = JSONField(null=True, blank=True)
     meta = JSONField(null=True, blank=True)
+    show_cms = models.BooleanField(default=False)
 
     def children(self):
         out = []

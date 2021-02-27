@@ -18,14 +18,14 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Rhaphidophora"
+        genera = "Anthurium"
         family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/Rhaphidophora"
-        selector = "#mw-content-text > div.mw-parser-output > ul:nth-child(18)"
+        url = "https://en.wikipedia.org/wiki/List_of_Anthurium_species"
+        selector = "#mw-content-text > div.mw-parser-output > div.div-col > ul"
 
         pub = Publication.objects.get(pk=7)
-        genus_instance = PublicationTerm.objects.filter(term__title=genera, taxonomy="genus").first()
-        print(genus_instance.id)
+        genus_instance = PublicationTerm.objects.filter(term__slug=slugify(genera), taxonomy="genus").first()
+        old_genus_instance = PublicationTerm.objects.filter(term__slug=genera, taxonomy="genus").first()
         r = requests.get(url)
         soup = BeautifulSoup(r.content, features="html.parser")
         elms = soup.select(selector)
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             lis = elm.select("li")
             for li in lis:
                 title = li.find(text=True).title()
-                if title == genera or title == "Subsp. " or title == "Var. ":
+                if title == genera or title == "Subsp. " or title == "Var. " or " X " in title or " Var. " in title:
                     continue
                 origins = []
                 authors = []
@@ -47,7 +47,6 @@ class Command(BaseCommand):
                             origins = origins + content.replace(" - ", "").split(",")
                 if li.find("small") is not None:
                     authors.append(str(li.find("small").find(text=True)).strip())
-
                 description_patterns = [
                     "{title} is a species of plant in the family {family}"
                     "{title} is a species of flowering plant in the {genera} family {family}",
@@ -119,7 +118,10 @@ class Command(BaseCommand):
                     for related in genus_instance.related.all():
                         test.terms.add(related)
                     test.terms.add(genus_instance)
-                elif test.description is None:
-                    test.description = description
-                    test.save()
+                else:
+                    if test.description is None:
+                        test.description = description
+                        test.save()
+                    test.terms.remove(old_genus_instance)
+                    test.terms.add(genus_instance)
                 print(test.title)

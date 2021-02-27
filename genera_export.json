@@ -1,45 +1,41 @@
 {
     "temperature": [
-        "The {{title}} prefers typical household  temperatures (68-80℉).  Avoid extremely hot or cold conditions.",
-        "Your {{title}} will grow best in temperatures between 70-80 degrees. Keep it away from drafts, especially during the winter months.",
-        "This plant is native to warm regions and is, therefore, is very sensitive to low temperatures. The winter minimum is around 12°C for a short time and slightly lower, and the summer maximum is  29°C. It tolerates the standard humidity of living spaces well, but it will feel better and grow more luxuriantly if there is more moisture. The ideal humidity of the room in which it is located should be around 40%. Misting the leaves will help to raise the humidity.",
-        "The {{title}} will grow happily in temperatures of 12-27°C, try to avoid sudden drops in temperature and be wary of draughts and open windows."
+        "Your {{title}} prefers temperatures between 65-80 degrees during the day and no cooler than 60 degrees at night. Avoid placing your plants near heating and air conditioning vents and fans.",
+        "Your {{title}} prefers temperatures between 65-80 degrees during the day and no cooler than 60 degrees at night. Avoid placing your plants near heating and air conditioning vents and fans.",
+        "Your {{title}} prefers temperatures between 65-80 degrees during the day and no cooler than 60 degrees at night. Avoid placing your plants near heating and air conditioning vents and fans.",
+        "The {{title}} prefers very warm temperatures (70-90 °F), but don't worry - these plants are extremely adaptable and can flourish in typical household temperature ranges. However, be careful of temperature extremes: if your thermostat drops below 50 °F, the {{title}} will stop growing; if your house gets too hot, your {{title}} will wilt.",
+        "{{title}} plants prefer temperatures 75 °F-85 °F (23.9 °C-29.4 °C) during the day and about 10 ° cooler at night. Temperatures below 50 °F (10 °C) slow the growth of leaves and flowers."
     ],
     "light": [
-        "Provide the {{title}} with  bright, indirect light. While it will tolerate some exposure to direct sunlight, too much will cause yellowed chlorotic leaves.  For ideal light conditions, place your plant in front of a north- or east-facing window.",
-        "Your {{title}} prefers bright, indirect light. It can survive in medium light conditions but may stop growing or produce smaller leaves. Do not put it in full, direct sunlight, the sun will burn the foliage.",
-        "Provide the {{title}} with bright, indirect light. While it will tolerate some exposure to direct sunlight, too much will cause yellowed chlorotic leaves. For ideal light conditions, place your plant in front of a north- or east-facing window.",
-        "{{title}} thrives best in a bright room with indirect light. It doesn't like too much direct sunlight since it could scorch the leaves. The ideal position is next to the east window, where the plant could enjoy the mild morning sun.",
-        "Ideally, bright but indirect filtered light, can cope with lower light too. Protect from harsh sun which can scorch the foliage."
+        "Place your {{title}} in a warm, well-lit spot. The more light the plant receives, the more blooms your plant will produce, but never expose it to direct sunlight.",
+        "Place your {{title}} in a warm, well-lit spot. The more light the plant receives, the more flowers your plant will produce, but never expose it to direct sunlight. During the winter they can handle less light.",
+        "Place your {{title}} in a warm, well-lit spot. The more light the plant receives, the more it will grow, but never expose it to direct sunlight.",
+        "Flowering {{title}} needs bright, indirect light (direct sunlight will scorch the leaves and flowers!). Low light will slow growth and produce fewer, smaller \u201cflowers.\u201d"
     ],
     "watering": [
-        "During the growing season (spring and summer), keep the soil moist by watering it  when the top of the soil becomes dry to the touch. Do not overwater. While the {{title}} likes moist conditions, it does not like its soil dense and soggy.  Water less frequently in the winter.",
-        "Water your {{title}} when the top 75% of the soil is dry. Water until liquid flows through the drainage hole in the bottom of the pot. Be sure to empty any excess water that collects in the saucer. Yellow leaves may indicate over watering, while brown leaves mean the plant needs more water.",
-        "During the growing season (spring and summer), keep the soil moist by watering it when the top of the soil becomes dry to the touch. Do not overwater. While the {{title}} likes moist conditions, it does not like its soil dense and soggy. Water less frequently in the winter.",
-        "{{title}} likes to stay pretty moist, at least during growing season. We've personally noticed faster growth with regular waterings and not leaving it too dry for too long. That said, this plant won't pout if you forget to water it now and then, and is more sensitive to overwatering if anything. I typically water when the potting medium is dried down 1-2\" and I don't let the root ball dry out. In the winter, you can cut down watering. "
+        "Water your {{title}} when the top 25% of soil is dry. Your {{title}} prefers a consistent watering schedule.",
+        "Keep the soil lightly moist during the growing season from March through September. Water your {{title}} well and then allow the top 1-2 inches of soil to dry out before watering again. Overwatering causes yellow leaf tips and under-watering causes brown leaf tips.",
+        "Keep the soil consistently moist during the growing season from spring through the end of summer. Water when the top 1-2 inches of soil are dry before watering again. Overwatering causes yellow leaf tips and under-watering causes brown leaf tips.",
+        "Water thoroughly when the first inch of the soil becomes dry to the touch, stopping when water starts draining from the drainage holes. Avoid overwatering ({{title}} roots are susceptible to rot!). The more light and warmth that your {{title}} gets, the more water it will need, so check the soil for dryness every few days. These plants will provide signs of stress or thirst, so pay attention: thirsty plants will be light if you lift them and will have droopy or puckering leaves. You will not need to water as often in the winter when the plant is not actively growing.",
+        "Water well and then allow the top two or three inches of soil to dry out before watering again. Over-watering causes yellow leaf tips and under- watering causes brown leaf tips."
     ],
     "soil": [
-        "The jungle-like beauty is not picky about soil and will do quite well in a  standard substrate for houseplants. The most important is that the substrate is well-drained. Therefore, apply a drainage layer of clay balls or tile fragments at the bottom of the pot.",
-        "Well-draining, organic-rich loamy soil is a good base for this plant. Add a little peat moss or some orchid bark to provide extra drainage while still holding some moisture. Perlite can also improve drainage. Avoid soils that become waterlogged or that are excessively sandy. A pH level of 6.0-6.5 should be fine for your plants.",
-        "A free-draining organic potting mix which allows breathability for the roots is ideal, and this houseplant also grows extremely well in coco chips or orchid bark."
+        "Use a rich, organic, loose potting soil that contains some mulch and sphagnum moss. The soil needs to drain quickly to prevent root-rot."
     ],
     "re-potting": [],
     "fertilizer": [
-        "Feed the {{title}} two to three times a month during the growing season with a gentle, balanced fertilizer.",
-        "{{title}} enjoy regular fertilising; twice a month during the growing season (Spring and Summer). Use a balanced fertiliser at half the recommended dilution level for this plant (as it’s a relatively fast grower). If the potting medium is particularly dry, water lightly before feeding to avoid fertiliser burning the roots.",
-        "Feed your {{title}} monthly in the spring and summer with a basic houseplant food diluted to half the recommended strength. Fertilize every other month in the fall and winter.",
-        "Feed the {{title}} two to three times a month during the growing season with a gentle, balanced fertilizer."
+        "Use a balanced fertilizer for {{genera}} plants diluted to half the recommended strength. Feed monthly in the spring and summer, when your {{title}} plant is actively growing.",
+        "Use a balanced fertilizer or one a little higher in nitrogen for {{genera}} plants. Feed monthly in the spring and summer, when {{title}} plants are actively growing. Dilute the plant food to one-third the recommended strength.",
+        "Use a balanced fertilizer or one higher in nitrogen for {{genera}} plants. Feed monthly in the spring and summer, when your plant is actively growing. Dilute the plant food to half the recommended strength.",
+        "During the growing season (spring and summer), feed your {{title}} once a month using a complete, ¼-strength liquid fertilizer. Note -- too much fertilizer can do more harm than good. To encourage more blooms, use a fertilizer higher in phosphorus during the growing season."
     ],
     "humidity": [
-        "The {{title}} thrives in areas with  higher humidity (60%), but it will still do well in typical household humidity levels of 30% -40%.  For a happier plant, consider using a humidifier.  If a humidifier is not available, place the {{genera}} near a tray filled with pebbles and water, or group it with other indoor plants.",
-        "Basic household humidity is fine for your {{title}}, but higher humidity encourages larger leaves. Your plant will benefit from the occasional misting.",
-        "The {{title}} thrives in areas with  higher humidity (60%), but it will still do well in typical household humidity levels of 30% -40%. For a happier plant, consider using a humidifier. If a humidifier is not available, place the {{title}} near a tray filled with pebbles and water, or group it with other indoor plants.",
-        "Moderate humidity and regular misting will be beneficial. A good level of humidity contributes to healthy growth and larger leaves on your {{title}}."
+        "Your {{title}} loves a humid environment, so feel free to mist every day. Use a pebble tray or a humidifier during the winter months when the air tends to be drier.",
+        "Your {{title}} loves a humid environment, so feel free to mist every day. Use a pebble tray or a humidifier during the winter months when the air tends to be much drier.",
+        "Your {{title}} loves a humid environment, so mist often. Use a pebble tray or a humidifier during the winter months when the air is dry.",
+        "Most {{title}} thrive on humidity, but the flowering varieties can tolerate more dryness. If your humidity level is less than 50%, then consider using a humidifier to increase the level to at least 60%. Filling small trays with pebbles and water and grouping indoor plants together can slightly increase the humidity immediately surrounding your plants.",
+        "The higher the humidity, the happier an {{genera}} plant."
     ],
-    "propagation": [
-        "Cuttings are the fastest and easiest way to propagate. Cut the shoot with at least one or more leaf nodes, 10 to 15 cm long. You can choose to start them in the water or directly in the soil.",
-        "{{title}} propagation is surprisingly easy. Select healthy cuttings that have at least a few leaf nodes on them. Set your cuttings into a glass of water or into moistened potting soil. Make sure that the lowest leaf node is under the surface. Roots will form from that point.",
-        "There are two options here. You can place the cuttings in water to root for a few weeks or put directly into coco chips (for lots of aeration). If in water, wait until the roots are a few centimetres long before potting on. If you pot directly into coco chips, be sure to water regularly."
-    ],
+    "propagation": [],
     "pruning": []
 }
