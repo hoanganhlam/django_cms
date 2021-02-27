@@ -122,6 +122,7 @@ class Command(BaseCommand):
                     if test.description is None:
                         test.description = description
                         test.save()
-                    test.terms.remove(old_genus_instance)
-                    test.terms.add(genus_instance)
+                    for related in genus_instance.related.all():
+                        if related not in test.terms.all():
+                            test.terms.add(related)
                 print(test.title)
