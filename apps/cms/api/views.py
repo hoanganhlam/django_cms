@@ -11,7 +11,7 @@ from django.db.models import Q
 
 class PublicationViewSet(viewsets.ModelViewSet):
     models = models.Publication
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('-id').prefetch_related("terms")
     serializer_class = serializers.PublicationSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -28,7 +28,7 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 q = q & Q(user=request.user)
             if request.GET.get("terms"):
                 q = q & Q(terms__slug__in=request.GET.get("terms").split(","))
-            queryset = self.filter_queryset(models.Publication.objects.filter(q).order_by('-id'))
+            queryset = self.filter_queryset(models.Publication.objects.filter(q).order_by('-id').prefetch_related("terms"))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
