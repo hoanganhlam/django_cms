@@ -95,7 +95,10 @@ class TermViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         q = Q()
         if request.GET.get("terms") is not None:
-            q = q & Q(id__in=request.GET.get("terms").split(","))
+            terms = []
+            if request.GET.get("terms") != "":
+                terms = request.GET.get("terms").split(",")
+            q = q & Q(id__in=terms)
         queryset = self.filter_queryset(models.Term.objects.filter(q).order_by('-id'))
         page = self.paginate_queryset(queryset)
         if page is not None:
