@@ -41,6 +41,22 @@ class Publication(BaseModel, Taxonomy):
     options = JSONField(null=True, blank=True, default=default.publication_options)
     measure = JSONField(null=True, blank=True)
     medias = models.ManyToManyField(Media, related_name="publication", blank=True)
+    terms = models.ManyToManyField(Term, related_name="publication", blank=True)
+
+
+class PublicationCooperation(BaseModel):
+    publication = models.ForeignKey(Publication, related_name="pub_cooperation_from", on_delete=models.CASCADE)
+    cooperation = models.ForeignKey(Publication, related_name="pub_cooperation_to", on_delete=models.CASCADE)
+    status = models.CharField(default="pending", max_length=50)
+    user = models.ForeignKey(User, related_name="pub_cooperation", on_delete=models.CASCADE)
+    options = JSONField(null=True, blank=True, default=default.publication_options)
+
+
+class PublicationUser(BaseModel):
+    publication = models.ForeignKey(Publication, related_name="publication_user", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="publication_user", on_delete=models.CASCADE)
+    status = models.CharField(default="pending", max_length=50)
+    options = JSONField(null=True, blank=True, default=default.publication_options)
 
 
 class PublicationTheme(models.Model):

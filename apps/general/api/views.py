@@ -15,6 +15,17 @@ def set_pub(request):
     return Response({})
 
 
+@api_view(['POST'])
+def set_term(request):
+    if request.user.is_authenticated:
+        profile = request.user.profile
+        if profile.options is None:
+            profile.options = {}
+        profile.options["terms"] = request.data.get("terms", [])
+        profile.save()
+    return Response({})
+
+
 @api_view(['GET'])
 def fetch_url(request):
     url = request.GET.get("url")

@@ -22,10 +22,13 @@ class PublicationViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             queryset = []
-        elif not request.user.is_superuser:
-            queryset = self.filter_queryset(models.Publication.objects.order_by('-id').filter(user=request.user))
         else:
-            queryset = self.filter_queryset(models.Publication.objects.order_by('-id'))
+            q = Q()
+            if not request.user.is_superuser:
+                q = q & Q(user=request.user)
+            if request.GET.get("terms"):
+                q = q & Q(terms__slug__in=request.GET.get("terms").split(","))
+            queryset = self.filter_queryset(models.Publication.objects.filter(q).order_by('-id'))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -43,7 +46,7 @@ class PublicationViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop('partial', True)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -88,6 +91,19 @@ class TermViewSet(viewsets.ModelViewSet):
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
     lookup_field = 'slug'
+
+    def list(self, request, *args, **kwargs):
+        q = Q()
+        if request.GET.get("terms") is not None:
+            q = q & Q(id__in=request.GET.get("terms").split(","))
+        queryset = self.filter_queryset(models.Term.objects.filter(q).order_by('-id'))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ThemeViewSet(viewsets.ModelViewSet):

@@ -13,11 +13,11 @@ def get_field(title, genera, data, f):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera_name = "rhaphidophora"
+        genera_name = "anthurium"
         raws = [
             {
-                "title": "Rhaphidophora Tetrasperma",
-                "description": "Colocasia esculenta is a tropical plant grown primarily for its edible corms, a root vegetable most commonly known as taro, kalo, or godere. It is the most widely cultivated species of several plants in the family Araceae that are used as vegetables for their corms, leaves, and petioles."
+                "title": "anthurium jari",
+                "description": "Anthurium Jari is a perennial species in the genus anthurium, belonging to the family arecaea"
             }
         ]
         pub = Publication.objects.get(host="9plant.com")
