@@ -43,6 +43,20 @@ class Publication(BaseModel, Taxonomy):
     medias = models.ManyToManyField(Media, related_name="publication", blank=True)
     terms = models.ManyToManyField(Term, related_name="publication", blank=True)
 
+    def draw_calendar_post(self):
+        posts = list(self.posts.all()) + list(self.pp_posts.all())
+        if self.measure is None:
+            self.measure = {"cal_post": {}}
+        if self.measure.get("cal_post") is None:
+            self.measure["cal_post"] = {}
+        for post in posts:
+            k = "{}-{}-{}".format(post.created.year, post.created.month, post.created.day)
+            if k not in self.measure["cal_post"]:
+                self.measure["cal_post"][k] = 1
+            else:
+                self.measure["cal_post"][k] = self.measure["cal_post"][k] + 1
+        self.save()
+
 
 class PublicationCooperation(BaseModel):
     publication = models.ForeignKey(Publication, related_name="pub_cooperation_from", on_delete=models.CASCADE)
@@ -97,6 +111,16 @@ class PublicationTerm(BaseModel):
 
     def entities(self):
         return self.children() + self.parents()
+
+    def sync(self):
+        posts = self.posts.all()
+        same_related = self.related.filter(taxonomy=self.taxonomy)
+        if same_related.count() > 0:
+            for post in posts:
+                post_terms = post.terms.all()
+                for related in same_related:
+                    if related not in post_terms:
+                        post.terms.add(related)
 
 
 class Post(BaseModel, Taxonomy):

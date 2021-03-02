@@ -28,7 +28,8 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 q = q & Q(user=request.user)
             if request.GET.get("terms"):
                 q = q & Q(terms__slug__in=request.GET.get("terms").split(","))
-            queryset = self.filter_queryset(models.Publication.objects.filter(q).order_by('-id').prefetch_related("terms"))
+            queryset = self.filter_queryset(
+                models.Publication.objects.filter(q).order_by('-id').prefetch_related("terms"))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -84,7 +85,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class TermViewSet(viewsets.ModelViewSet):
     models = models.Term
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('id')
     serializer_class = serializers.TermSerializer
     permission_classes = permissions.IsAdminUser,
     pagination_class = pagination.Pagination
@@ -99,7 +100,7 @@ class TermViewSet(viewsets.ModelViewSet):
             if request.GET.get("terms") != "":
                 terms = request.GET.get("terms").split(",")
             q = q & Q(id__in=terms)
-        queryset = self.filter_queryset(models.Term.objects.filter(q).order_by('-id'))
+        queryset = self.filter_queryset(models.Term.objects.filter(q).order_by('id'))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -183,3 +184,11 @@ def pub_theme(request, pk):
         publication.save()
 
     return Response(serializers.PThemeSerializer(current_active).data)
+
+
+@api_view(['GET', 'POST', 'PUT'])
+def pub_calendar_post(request, pk):
+    pub = models.Publication.objects.get(pk=pk)
+    if pub.measure is None or pub.measure["cal_post"] is None:
+        pub.draw_calendar_post()
+    return Response(status=200, data=pub.measure["cal_post"])

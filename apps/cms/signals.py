@@ -29,6 +29,10 @@ def on_post_save(sender, instance, created, *args, **kwargs):
                 if check is not None:
                     instance.options['action_post'] = check.id
         instance.save()
+    if instance.id:
+        terms = instance.terms.filter(options__sync=True)
+        for term in terms:
+            term.sync()
 
 
 @receiver(post_save, sender=Term)

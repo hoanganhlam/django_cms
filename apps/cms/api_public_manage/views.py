@@ -302,7 +302,8 @@ def fetch_terms(request):
             connection.close()
             return Response(status=status.HTTP_200_OK, data=result)
     if request.method == "POST":
-        term, created = models.Term.objects.get_or_create(title=request.data.get("title"), defaults={
+        term, created = models.Term.objects.get_or_create(slug=slugify(request.data.get("title")), defaults={
+            "title": request.data.get("title"),
             "options": {"need_fetch": True}
         })
         with connection.cursor() as cursor:
@@ -343,6 +344,14 @@ def fetch_term_vl(request, slug):
             kw.save()
         return Response({"id": kw.id, "fetch_status": "queue"})
     return Response()
+
+
+@api_view(['POST'])
+def sync_term(request, pk):
+    if request.method == "POST":
+        pub_term = models.PublicationTerm.objects.get(pk=pk)
+        pub_term.sync()
+    return Response(status=200)
 
 
 @api_view(['POST', "GET"])
