@@ -132,8 +132,7 @@ def make_post_list(force, host_name, query):
     term = query.get("term")
     user = query.get("user_id")
     show_cms = query.get("show_cms")
-    q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
-    q = q & Q(status="POSTED")
+    q = Q(status="POSTED")
     if show_cms is not None:
         q = q & Q(show_cms=show_cms)
         key_path = "{}_cms-{}".format(key_path, show_cms)
