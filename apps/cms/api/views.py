@@ -197,7 +197,8 @@ def pub_calendar_post(request, pk):
 @api_view(['GET', 'POST'])
 def pub_cooperate(request, pk):
     if request.method == "GET":
-        qs = models.PublicationCooperation.objects.filter(publication_id=pk)
+        q = Q(publication_id=pk) | Q(cooperation_id=pk)
+        qs = models.PublicationCooperation.objects.filter(q)
         return Response(serializers.CooperateSerializer(qs, many=True).data, status=status.HTTP_200_OK)
     else:
         if request.data.get("cooperation") is None or request.data.get("options") is None:
