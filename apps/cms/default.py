@@ -42,3 +42,12 @@ def theme_options():
         "widget": {},
         "homepage": {}
     }
+
+
+def publication_cooperation_options():
+    return {
+        "mapping": [
+            {"left": {"taxonomy": "tag"}, "right": {"post_type": "post"}},
+            {"left": {"post_type": "post"}, "right": {"post_type": "post"}},
+        ],
+    }

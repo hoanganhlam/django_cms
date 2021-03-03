@@ -192,3 +192,30 @@ def pub_calendar_post(request, pk):
     if pub.measure is None or pub.measure["cal_post"] is None:
         pub.draw_calendar_post()
     return Response(status=200, data=pub.measure["cal_post"])
+
+
+@api_view(['GET', 'POST'])
+def pub_cooperate(request, pk):
+    if request.method == "GET":
+        qs = models.PublicationCooperation.objects.filter(publication_id=pk)
+        return Response(serializers.CooperateSerializer(qs, many=True).data, status=status.HTTP_200_OK)
+    else:
+        if request.data.get("cooperation") is None or request.data.get("options") is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get("id"):
+            instance = models.PublicationCooperation.objects.get(pk=request.data.get("id"))
+            if instance.user.id == request.user.id:
+                instance.options = request.data.get("options")
+                instance.save()
+        else:
+            cooperation = models.Publication.objects.get(pk=request.data.get("cooperation"))
+            publication = models.Publication.objects.get(pk=pk)
+            instance, created = models.PublicationCooperation.objects.get_or_create(
+                cooperation=cooperation,
+                publication=publication,
+                defaults={
+                    "options": request.data.get("options"),
+                    "user": request.user
+                }
+            )
+        return Response(serializers.CooperateSerializer(instance).data, status=status.HTTP_201_CREATED)

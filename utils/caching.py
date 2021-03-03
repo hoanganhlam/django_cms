@@ -186,6 +186,10 @@ def make_term_list(force, host_name, query):
     taxonomy = query.get("taxonomy")
     related = query.get("related")
     q = Q(publication__host=host_name)
+    show_cms = query.get("show_cms")
+    if show_cms is not None:
+        q = q & Q(show_cms=show_cms)
+        key_path = "{}_cms-{}".format(key_path, show_cms)
     if taxonomy:
         key_path = "{}_taxonomy-{}".format(key_path, taxonomy)
         q = q & Q(taxonomy=taxonomy)

@@ -63,7 +63,7 @@ class PublicationCooperation(BaseModel):
     cooperation = models.ForeignKey(Publication, related_name="pub_cooperation_to", on_delete=models.CASCADE)
     status = models.CharField(default="pending", max_length=50)
     user = models.ForeignKey(User, related_name="pub_cooperation", on_delete=models.CASCADE)
-    options = JSONField(null=True, blank=True, default=default.publication_options)
+    options = JSONField(null=True, blank=True, default=default.publication_cooperation_options)
 
 
 class PublicationUser(BaseModel):

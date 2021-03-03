@@ -102,3 +102,18 @@ class PThemeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['theme'] = ThemeSerializer()
         return super(PThemeSerializer, self).to_representation(instance)
+
+
+class CooperateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PublicationCooperation
+        fields = '__all__'
+        extra_fields = []
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
+
+    def to_representation(self, instance):
+        self.fields['publication'] = PublicationSerializer()
+        self.fields['cooperation'] = PublicationSerializer()
+        return super(CooperateSerializer, self).to_representation(instance)

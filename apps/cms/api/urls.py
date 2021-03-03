@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^publications/(?P<pk>[-\w]+)/theme/$', views.pub_theme),
     url(r'^publications/(?P<pk>[-\w]+)/post-calendar/$', views.pub_calendar_post),
+    url(r'^publications/(?P<pk>[-\w]+)/cooperate/$', views.pub_cooperate),
 ]

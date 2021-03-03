@@ -46,8 +46,9 @@ class PostViewSet(viewsets.ModelViewSet):
                                    request.GET.get("show_cms", None),
                                    request.GET.get("taxonomies_operator", "OR"),
                                    '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                                   '{' + request.GET.get("publications") + '}' if request.GET.get("publications",
-                                                                                                  None) else None,
+                                   '{' + request.GET.get("publications") + '}' if request.GET.get(
+                                       "publications", None
+                                   ) else None,
                                    request.GET.get("related_operator", "OR"),
                                    '{' + request.GET.get('post_related') + '}' if request.GET.get(
                                        'post_related') else None,
