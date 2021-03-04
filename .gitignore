@@ -27,3 +27,7 @@ __ pycache __
 .vscode/
 static/
 public/
+/test_credentials.json
+/txt.txt
+/user.json
+/test.json

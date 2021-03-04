@@ -61,7 +61,8 @@ def make_page(force, host_name, query, **kwargs):
         key_path = "{}_user-{}".format(key_path, user)
     # ====================================================================================
     if key_path not in cache or force:
-        term_object = PublicationTerm.objects.filter(term__slug=term_term, taxonomy=term_taxonomy).first() if term_term is not None else None
+        term_object = PublicationTerm.objects.filter(term__slug=term_term,
+                                                     taxonomy=term_taxonomy).first() if term_term is not None else None
         newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
         popular = list(Post.objects.filter(q).order_by("-measure__score").values_list('id', flat=True))
         terms = PublicationTerm.objects.filter(q_term)[:12].values_list("id", flat=True)
@@ -170,7 +171,11 @@ def make_post_list(force, host_name, query):
             if related is None:
                 posts = list(Post.objects.filter(q).order_by("-measure__score").distinct().values_list('id', flat=True))
             else:
-                posts = query_maker.query_related({"id": related, "limit": query.get("page_size", 6)})
+                posts = query_maker.query_related({
+                    "id": related,
+                    "post_type": post_type,
+                    "limit": query.get("page_size", 6)
+                })
         cache.set(key_path, posts, timeout=60 * 60 * 24)
     else:
         posts = cache.get(key_path)

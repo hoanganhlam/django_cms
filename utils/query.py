@@ -59,7 +59,7 @@ def query_publication(host):
 
 def query_related(q):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT FETCH_RELATED_POST(%s, %s)", [q.get("id"), q.get("limit")])
+        cursor.execute("SELECT FETCH_RELATED_POST(%s, %s, %s)", [q.get("id"), q.get("post_type"), q.get("limit")])
         result = cursor.fetchone()[0]
         if result is None:
             result = []
