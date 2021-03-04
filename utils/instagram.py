@@ -41,8 +41,8 @@ def on_login_callback(api, new_settings_file):
         print('SAVED: {0!s}'.format(new_settings_file))
 
 
-user_name = 'hoanglamyeah'
-password = 'Lamhoang.bk59'
+user_name = '_9destination'
+password = 'Hoanganhlam@no1'
 settings_file = "test_credentials.json"
 device_id = None
 try:

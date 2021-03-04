@@ -463,6 +463,7 @@ def graph(request):
                         "reverse": params.get("reverse"),
                         "user_id": params.get("user"),
                         "show_cms": params.get("show_cms", None),
+                        "publications": params.get("publications")
                     }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
@@ -479,6 +480,7 @@ def graph(request):
                     "is_related_expanded": params.get("expanded_related"),
                     "user_id": params.get("user"),
                     "show_cms": params.get("show_cms", None),
+                    "publications": params.get("publications")
                 }), schemas, None)
             if q.get("q") == "term_list":
                 related = params.get("related", None)
@@ -501,6 +503,7 @@ def graph(request):
                     "related": related,
                     "reverse": params.get("reverse", False),
                     "show_cms": params.get("show_cms", None),
+                    "publications": params.get("publications")
                 }), schemas, None)
             if q.get("q") == "term_detail":
                 pub_term_id = params.get("id", None)
