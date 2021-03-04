@@ -246,6 +246,7 @@ def plant_universe_worker(k, n):
 def sync_plant_universe():
     tags = ["plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
             "indoorplants", "instaplants", "plantlover", "botanicalwomen", "peperomia", "monstera", "alocasia"]
+    tags = ["monstera"]
     random.shuffle(tags)
     for tag in tags:
         plant_universe_worker(tag, None)
