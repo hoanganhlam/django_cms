@@ -26,27 +26,28 @@ class Command(BaseCommand):
                     )
                     for sheet in maker_post.meta.get("sheets"):
                         title = sheet.get("title")
-                        slug = "{}_{}".format(maker_post.slug, slugify(title))
-                        meta = {
-                            "rows": sheet.get("rows")
-                        }
-                        sp_post, is_created = Post.objects.get_or_create(
-                            slug=slug,
-                            defaults={
-                                "title": title,
-                                "show_cms": True,
-                                "meta": meta,
-                                "description": sheet.get("description"),
-                                "options": {
-                                    "tasks": [],
-                                    "done_tasks": [],
-                                    "primary_term": pub_term.id
+                        if title is not None:
+                            slug = "{}_{}".format(maker_post.slug, slugify(title))
+                            meta = {
+                                "rows": sheet.get("rows")
+                            }
+                            sp_post, is_created = Post.objects.get_or_create(
+                                slug=slug,
+                                defaults={
+                                    "title": title,
+                                    "show_cms": True,
+                                    "meta": meta,
+                                    "description": sheet.get("description"),
+                                    "options": {
+                                        "tasks": [],
+                                        "done_tasks": [],
+                                        "primary_term": pub_term.id
+                                    },
+                                    "primary_publication": sp,
+                                    "status": "POSTED"
                                 },
-                                "primary_publication": sp,
-                                "status": "POSTED"
-                            },
-                        )
-                        if not is_created:
-                            if pub_term not in sp_post.terms.all():
-                                sp_post.terms.add(pub_term)
-                        print(title)
+                            )
+                            if not is_created:
+                                if pub_term not in sp_post.terms.all():
+                                    sp_post.terms.add(pub_term)
+                            print(title)
