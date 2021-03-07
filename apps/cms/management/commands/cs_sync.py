@@ -26,7 +26,7 @@ class Command(BaseCommand):
                     )
                     for sheet in maker_post.meta.get("sheets"):
                         title = sheet.get("title")
-                        if title is not None:
+                        if title is not None and len(title) < 200:
                             slug = "{}_{}".format(maker_post.slug, slugify(title))
                             meta = {
                                 "rows": sheet.get("rows")
@@ -37,7 +37,8 @@ class Command(BaseCommand):
                                     "title": title,
                                     "show_cms": True,
                                     "meta": meta,
-                                    "description": sheet.get("description"),
+                                    "description": sheet.get("description") if sheet.get("description") and len(sheet.get("description")) < 500 else None,
+                                    "content": sheet.get("description") if sheet.get("description") and len(sheet.get("description")) > 500 else None,
                                     "options": {
                                         "tasks": [],
                                         "done_tasks": [],
