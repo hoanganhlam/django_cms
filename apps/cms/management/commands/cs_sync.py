@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         maker = Publication.objects.get(pk=3)
         sp = Publication.objects.get(pk=24)
-        for post in sp.posts.all():
+        for post in sp.pp_posts.all():
             print(post.id)
             post.post_type = "post"
             post.save()
