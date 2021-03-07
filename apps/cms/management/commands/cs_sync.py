@@ -10,6 +10,7 @@ class Command(BaseCommand):
         maker = Publication.objects.get(pk=3)
         sp = Publication.objects.get(pk=24)
         for post in sp.posts.all():
+            print(post.id)
             post.post_type = "post"
             post.save()
         return
