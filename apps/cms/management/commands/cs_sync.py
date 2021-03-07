@@ -9,6 +9,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         maker = Publication.objects.get(pk=3)
         sp = Publication.objects.get(pk=24)
+        for post in sp.posts.all():
+            post.post_type = "post"
+            post.save()
+        return
         for maker_post in maker.posts.all():
             if maker_post.meta is not None:
                 if maker_post.meta.get("sheets"):
