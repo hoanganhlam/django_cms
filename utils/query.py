@@ -12,7 +12,7 @@ def query_posts(q):
                            q.get("search"),
                            q.get("order_by"),
                            q.get("auth_id"),
-                           q.get("type"),
+                           q.get("post_type"),
                            q.get("status"),
                            q.get("is_guess_post", False),
                            q.get("show_cms", True),

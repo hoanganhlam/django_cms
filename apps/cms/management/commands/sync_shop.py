@@ -25,6 +25,7 @@ def convert_ig_to_store(user_id):
             if user_raw.get("profile_pic_id"):
                 media = Media.objects.save_url(user_raw.get("hd_profile_pic_url_info").get("url"))
             profile = user.profile
+            profile.nick = user_raw.get("full_name")
             profile.options = {"source": "instagram", "id": user_raw.get("id")}
             profile.media = media
             profile.save()
@@ -43,7 +44,8 @@ def convert_ig_to_store(user_id):
             meta={
                 "ig_id": user_id,
                 "source": "instagram",
-                "media": user.profile.media_id if user.profile.media else None
+                "media": user.profile.media_id if user.profile.media else None,
+                "ig_username": user_raw.get("username")
             }
         )
         if user.profile.media is not None:

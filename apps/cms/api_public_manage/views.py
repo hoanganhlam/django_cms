@@ -12,9 +12,9 @@ from django.db import connection
 from django.template.defaultfilters import slugify
 from utils.other import get_paginator
 from utils.instagram import fetch_by_hash_tag
-from utils import caching
+from utils import caching, filter_query
 from base import pagination
-
+from django.db.models import Q
 import json
 
 
@@ -28,39 +28,35 @@ class PostViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
 
     def list(self, request, *args, **kwargs):
-        if request.method == "GET":
-            p = get_paginator(request)
-            user_id = request.user.id if request.user.is_authenticated else None
-            with connection.cursor() as cursor:
-                meta = json.loads(request.GET.get("meta")) if request.GET.get("meta") else None
-                cursor.execute("SELECT FETCH_POSTS_X(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                               [
-                                   p.get("page_size"),
-                                   p.get("offs3t"),
-                                   p.get("search"),
-                                   request.GET.get("order_by"),
-                                   user_id,
-                                   request.GET.get("post_type", None),
-                                   request.GET.get("status", None),
-                                   request.GET.get("is_guess_post", None),
-                                   request.GET.get("show_cms", None),
-                                   request.GET.get("taxonomies_operator", "OR"),
-                                   '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                                   '{' + request.GET.get("publications") + '}' if request.GET.get(
-                                       "publications", None
-                                   ) else None,
-                                   request.GET.get("related_operator", "OR"),
-                                   '{' + request.GET.get('post_related') + '}' if request.GET.get(
-                                       'post_related') else None,
-                                   request.GET.get("related", None),
-                                   json.dumps(meta) if meta else None
-                               ])
-                result = cursor.fetchone()[0]
-                if result.get("results") is None:
-                    result["results"] = []
-                cursor.close()
-                connection.close()
-                return Response(status=status.HTTP_200_OK, data=result)
+        q = Q()
+        if request.GET.get("post_type", None):
+            q = q & Q(post_type=request.GET.get("post_type", None))
+        if request.GET.get("status", None):
+            q = q & Q(status=filter_query.query_boolean)
+        if request.GET.get("is_guess_post", None):
+            q = q & Q(is_guess_post=filter_query.query_boolean(request.GET.get("is_guess_post", None)))
+        if request.GET.get("show_cms", None):
+            q = q & Q(show_cms=filter_query.query_boolean(request.GET.get("show_cms", None)))
+        if request.GET.get("user", None):
+            q = q & Q(user__id=request.GET.get("user", None))
+        if request.GET.get("terms", None):
+            q = q & Q(terms__term__slug__in=request.GET.get("terms").split(","))
+        if request.GET.get("publications", None):
+            pbs = request.GET.get("publications").split(",")
+            q = q & (Q(primary_publication__id__in=pbs) | Q(publications__id__in=pbs))
+        queryset = self.filter_queryset(models.Post.objects.filter(q).order_by('id').distinct())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            out = []
+            for p in page:
+                out.append(caching.make_post(False, None, p.id, {"master": True}))
+            return Response({
+                "results": out,
+                "count": queryset.count()
+            })
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -92,7 +88,11 @@ class PostViewSet(viewsets.ModelViewSet):
             for r in related:
                 if r not in old_related:
                     instance.post_related.add(r)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=caching.make_post(True, None, str(serializer.data.get("id")), {"master": True}),
+            headers=headers
+        )
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
@@ -129,30 +129,34 @@ class PubTermViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PubTermSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter]
+    filter_backends = [OrderingFilter, SearchFilter]
+    search_fields = ['term__title']
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        user_id = request.user.id if request.user.is_authenticated else None
-        p = get_paginator(request)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_TERM_TAXONOMIES(%s, %s, %s, %s, %s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               p.get("search"),
-                               request.GET.get("order_by"),
-                               user_id,
-                               request.GET.get("taxonomy", None),
-                               '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                               request.GET.get('publication'),
-                           ])
-            result = cursor.fetchone()[0]
-            if result.get("results") is None:
-                result["results"] = []
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data=result)
+        q = Q()
+        if request.GET.get("post_type", None):
+            q = q & Q(posts__post_type=request.GET.get("post_type"))
+        if request.GET.get("taxonomy", None):
+            q = q & Q(taxonomy=request.GET.get("taxonomy"))
+        if request.GET.get("ids", None):
+            q = q & Q(id__in=request.GET.get("ids").split(","))
+        if request.GET.get("publications", None):
+            pbs = request.GET.get("publications").split(",")
+            q = q & Q(publications__id__in=pbs)
+        queryset = self.filter_queryset(models.PublicationTerm.objects.filter(q).order_by('id').distinct())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            out = []
+            for p in page:
+                out.append(caching.make_term(False, p.id, master=False))
+            return Response({
+                "results": out,
+                "count": queryset.count()
+            })
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         user_id = request.user.id if request.user.is_authenticated else None
@@ -237,49 +241,6 @@ class PubTermViewSet(viewsets.ModelViewSet):
         return Response(
             status=status.HTTP_200_OK,
             data=caching.make_term(True, str(instance.id), False))
-
-
-@api_view(['GET'])
-def fetch_ig_post(request):
-    if request.method == "GET":
-        out = fetch_by_hash_tag(request.GET.get("search"), request.GET.get("next", None))
-        return Response(out)
-
-
-@api_view(['POST'])
-def import_ig_post(request):
-    if request.method == "POST":
-        items = request.data.get("items", [])
-        pub = models.Publication.objects.get(pk=request.data.get("pub"))
-        related = models.Post.objects.filter(id__in=request.data.get("related", []))
-        for item in items:
-            instance = models.Post.objects.filter(meta__ig_id=item.get("ig_id")).first()
-            if instance is None and len(item.get("images", [])) > 0:
-                medias = []
-                for img in item.get("images", []):
-                    media = Media.objects.save_url(img)
-                    medias.append(media.id)
-                    print(MediaSerializer(media).data.get("id"))
-                meta = {
-                    "ig_id": item.get("ig_id"),
-                    "credit": item.get("user").get("username"),
-                    "medias": medias
-                }
-                instance = models.Post.objects.create(
-                    title="Post by " + item.get("user").get("full_name") if item.get("user").get(
-                        "full_name") else item.get("user").get("username"),
-                    description=item.get("caption")[:300] if item.get("caption") else None,
-                    meta=meta,
-                    primary_publication=pub,
-                    user=request.user,
-                    post_type=request.data.get("post_type", "post"),
-                    show_cms=True,
-                    status="POSTED"
-                )
-                for r in related:
-                    instance.post_related.add(r)
-                    instance.publications.add(pub)
-        return Response({})
 
 
 @api_view(['GET', 'POST'])

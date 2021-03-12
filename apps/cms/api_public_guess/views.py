@@ -17,7 +17,7 @@ from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
 from utils.other import get_paginator, clone_dict
 from utils.query import query_post, query_posts, query_publication, query_user
-from utils import caching
+from utils import caching, filter_query
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -179,7 +179,7 @@ def fetch_posts(request, app_id):
             "search": p.get("search"),
             "order_by": request.GET.get("order_by"),
             "user_id": user_id,
-            "type": request.GET.get("type"),
+            "post_type": request.GET.get("post_type"),
             "status": "POSTED",
             "is_guess_post": request.GET.get("is_guess_post"),
             "show_cms": request.GET.get("show_cms", None),
@@ -366,6 +366,7 @@ def follow(request, app_id, slug):
     return Response(flag)
 
 
+# ==========================================================================
 def fetch_instance(host_name, pk, is_pid):
     try:
         if is_pid:
@@ -374,13 +375,13 @@ def fetch_instance(host_name, pk, is_pid):
             if not pk.isnumeric():
                 post_instance = Post.objects.get(slug=pk)
             else:
-                post_instance = Post.objects.get(pk=pk)
-    except:
+                return pk
+    except Exception as e:
+        print(e)
         post_instance = None
     return post_instance.id if post_instance is not None else None
 
 
-# ==========================================================================
 # Init
 @api_view(['POST'])
 def graph(request):
@@ -392,16 +393,21 @@ def graph(request):
     if request.method == "POST":
         out = {}
         query = request.data.get("query")
-        force = request.GET.get("force", False)
+        force = filter_query.query_boolean(request.GET.get("force"), False)
         for q in query:
+            # INIT
             params = q.get("p") or {}
             schemas = q.get("s") or ["id"]
             instance_related = None
             instance_post_related = None
+
+            # PREPARE
             if params.get("related"):
                 instance_related = fetch_instance(hostname, params.get("related"), False)
             if params.get("post_related"):
                 instance_post_related = fetch_instance(hostname, params.get("post_related"), False)
+
+            # HANDLE QUERY
             if q.get("q") == "post_detail":
                 instance = None
                 if params.get("slug"):
@@ -411,60 +417,25 @@ def graph(request):
                 else:
                     out[q.get("o")] = clone_dict(
                         caching.make_post(force, hostname, instance, {"master": True}),
-                        schemas, None)
+                        schemas, None
+                    )
             if q.get("q") == "post_list":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
-                if params.get("search") or params.get("terms"):
-                    sub_pub = pub.id
-                    if params.get("pub"):
-                        sub_pub = params.get("pub")
-                    tag_ids = []
-                    if params.get("terms"):
-                        qs = models.PublicationTerm.objects.filter(
-                            publication__id=sub_pub,
-                            taxonomy="tag",
-                            term__slug__in=params.get("terms")
-                        )
-                        if qs.count() == 0:
-                            tag_ids = ["0"]
-                        else:
-                            for s in qs:
-                                tag_ids.append(str(s.id))
-                    out[q.get("o")] = clone_dict(query_posts({
-                        "page_size": page_size,
-                        "offs3t": page_size * page - page_size,
-                        "search": params.get("search"),
-                        "order_by": params.get("order_by"),
-                        "auth_id": user,
-                        "user_id": params.get("user"),
-                        "type": params.get("type"),
-                        "status": "POSTED",
-                        "is_guess_post": params.get("is_guess_post"),
-                        "show_cms": params.get("show_cms", None),
-                        "taxonomies_operator": params.get("taxonomies_operator"),
-                        "taxonomies": ",".join(tag_ids) if len(tag_ids) > 0 else None,
-                        "app_id": str(sub_pub),
-                        "related_operator": params.get("related_operator"),
-                        "post_related": instance_post_related,
-                        "related": instance_related,
-                        "meta": params.get("meta")
-                    }), schemas, None)
-                else:
-                    out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
-                        "page_size": page_size,
-                        "offset": page_size * page - page_size,
-                        "post_type": params.get("post_type"),
-                        "post_related": instance_post_related,
-                        "related": instance_related,
-                        "master": True,
-                        "order": params.get("order", "newest"),
-                        "term": params.get("term"),
-                        "reverse": params.get("reverse"),
-                        "user_id": params.get("user"),
-                        "show_cms": params.get("show_cms", None),
-                        "publications": params.get("publications")
-                    }), schemas, None)
+                out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
+                    "page_size": page_size,
+                    "offset": page_size * page - page_size,
+                    "post_type": params.get("post_type"),
+                    "post_related": instance_post_related,
+                    "related": instance_related,
+                    "master": True,
+                    "order": params.get("order", "newest"),
+                    "term": params.get("term"),
+                    "reverse": params.get("reverse"),
+                    "user_id": params.get("user"),
+                    "show_cms": params.get("show_cms", None),
+                    "publications": params.get("publications")
+                }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)

@@ -1,8 +1,10 @@
 from django.db import models
+from apps.media.models import Media
 from base.interface import BaseModel, Taxonomy
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from apps.media.models import Media
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from . import default
 
 
@@ -151,3 +153,19 @@ class Ranker(models.Model):
     publication = models.ForeignKey(Publication, related_name="list_ranker", on_delete=models.CASCADE)
     value = models.IntegerField(default=101)
     date_taken = models.DateTimeField()
+
+
+class Contribute(BaseModel):
+    user = models.ForeignKey(User, related_name="contributes", on_delete=models.CASCADE)
+    target_content_type = models.ForeignKey(
+        ContentType, related_name='contribute_target',
+        on_delete=models.CASCADE, db_index=True
+    )
+    target_object_id = models.CharField(max_length=255, db_index=True)
+    target = GenericForeignKey('target_content_type', 'target_object_id')
+    field = models.CharField(max_length=120)
+    # type - Media, Post, Term, str, int, list
+    # data -
+    value = JSONField(null=True, blank=True)
+    # draft / pending / accept / deleted
+    status = models.CharField(max_length=20, default="draft")
