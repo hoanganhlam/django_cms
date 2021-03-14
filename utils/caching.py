@@ -220,8 +220,7 @@ def make_term_list(force, host_name, query):
         if order == "newest":
             terms = PublicationTerm.objects.filter(q).distinct().order_by("-id").values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id",
-                                                                                                         flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id", flat=True)
         if not query.get("search"):
             cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:

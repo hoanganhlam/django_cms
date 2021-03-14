@@ -233,7 +233,8 @@ def fetch_post(request, app_id, slug):
     publication = Publication.objects.get(pk=app_id)
     if request.method == "PUT":
         instance = Post.objects.get(pk=slug)
-        if request.user.is_authenticated and request.user.is_superuser or request.user.is_staff or request.user is instance.user:
+        is_authenticated = request.user.is_authenticated and request.user.is_superuser or request.user.is_staff or request.user is instance.user
+        if is_authenticated:
             if request.data.get("title"):
                 instance.title = request.data.get("title")
             if request.data.get("description"):
@@ -257,33 +258,32 @@ def fetch_post(request, app_id, slug):
                     pr = PublicationTerm.objects.get(pk=p)
                     instance.terms.add(pr)
             instance.save()
-        else:
-            ct = ContentType.objects.get(app_label='cms', model='post')
-            for key in request.data.keys():
-                val = request.data.get(key)
-                if key in ["post_related_add", "post_related_removal"]:
-                    typ3 = "post"
-                elif key in ["terms_add", "terms_removal"]:
-                    typ3 = "publication_term"
-                elif type(val) is dict or type(val) is list:
-                    val = json.dumps(val)
-                    if type(val) is dict:
-                        typ3 = "dict"
-                    else:
-                        typ3 = "list"
+        ct = ContentType.objects.get(app_label='cms', model='post')
+        for k in request.data.keys():
+            val = request.data.get(k)
+            if k in ["post_related_add", "post_related_removal"]:
+                typ3 = "post"
+            elif k in ["terms_add", "terms_removal"]:
+                typ3 = "publication_term"
+            elif type(val) is dict or type(val) is list:
+                val = json.dumps(val)
+                if type(val) is dict:
+                    typ3 = "dict"
                 else:
-                    typ3 = "str"
+                    typ3 = "list"
+            else:
+                typ3 = "str"
 
-                if not (key in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(
-                    val) == 0):
-                    models.Contribute.objects.create(
-                        user=request.user if request.user.is_authenticated else None,
-                        target_content_type=ct,
-                        target_object_id=instance.id,
-                        field=key,
-                        value=val,
-                        type=typ3
-                    )
+            if not (k in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(val) == 0):
+                models.Contribute.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    target_content_type=ct,
+                    target_object_id=instance.id,
+                    field=k,
+                    value=val,
+                    type=typ3,
+                    status="approved" if is_authenticated else "pending"
+                )
         return Response(
             status=status.HTTP_200_OK,
             data=caching.make_post(True, None, str(instance.id), {"master": True})

@@ -10,6 +10,16 @@ from . import default
 
 # Create your models here.
 
+def find_deep_field(value, field):
+    current = value
+    arr = field.split("__")
+    for a in arr:
+        if hasattr(current, a) and getattr(current, a):
+            current = getattr(current, a)
+        else:
+            return None
+    return current
+
 
 class SearchKeyword(Taxonomy, BaseModel):
     meta = JSONField(null=True, blank=True)
@@ -124,6 +134,24 @@ class PublicationTerm(BaseModel):
                     if related not in post_terms:
                         post.terms.add(related)
 
+    def url(self, hostname, patterns, taxonomies, post_types):
+        out = ""
+        for pattern in patterns:
+            if "__" in pattern:
+                arr = pattern.split("__")
+                if arr[0] == self.taxonomy:
+                    arr.pop(0)
+                elif arr[0] in taxonomies:
+                    setattr(self, arr[0], self.related.filter(taxonomy=arr[0]).first())
+                out = out + find_deep_field(self, "__".join(arr))
+            else:
+                out = out + pattern
+        return {
+            "location": "{hostname}{location}".format(hostname=hostname, location=out),
+            "priority": 0.8,
+            "updated": self.updated
+        }
+
 
 class Post(BaseModel, Taxonomy):
     pid = models.IntegerField(null=True, blank=True)
@@ -146,6 +174,30 @@ class Post(BaseModel, Taxonomy):
     measure = JSONField(null=True, blank=True)
     meta = JSONField(null=True, blank=True)
     terms = models.ManyToManyField(PublicationTerm, related_name="posts", blank=True)
+
+    def url(self, hostname, patterns, taxonomies, post_types):
+        # ["/", "question__term__term__slug", "/", "question__slug"]
+        # clean pattern
+        out = ""
+        for pattern in patterns:
+            if "__" in pattern:
+                arr = pattern.split("__")
+                if arr[0] == self.post_type:
+                    arr.pop(0)
+                    if len(arr) > 2 and arr[1] == "term" and self.options.get("primary_term"):
+                        setattr(self, "term", self.terms.filter(id=self.options.get("primary_term")).first())
+                elif arr[0] in taxonomies:
+                    setattr(self, arr[0], self.terms.filter(taxonomy=arr[0]).first())
+                elif arr[0] in post_types:
+                    setattr(self, arr[0], self.post_related.filter(post_type=arr[0]).first())
+                out = out + find_deep_field(self, "__".join(arr))
+            else:
+                out = out + pattern
+        return {
+            "location": "{hostname}{location}".format(hostname=hostname, location=out),
+            "priority": 1,
+            "updated": self.updated
+        }
 
 
 class Ranker(models.Model):
