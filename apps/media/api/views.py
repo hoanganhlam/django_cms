@@ -7,18 +7,32 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-# from datetime import datetime
-
-
 class MediaViewSet(viewsets.ModelViewSet):
     models = models.Media
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.MediaSerializer
-    permission_classes = permissions.AllowAny,
+    permission_classes = permissions.IsAuthenticatedOrReadOnly,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
     lookup_field = 'pk'
+
+    def list(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            if request.user.is_staff or request.user.is_superuser:
+                queryset = self.filter_queryset(models.Media.objects.order_by('-id'))
+            else:
+                queryset = self.filter_queryset(models.Media.objects.filter(user=request.user).order_by('-id'))
+        else:
+            queryset = []
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)

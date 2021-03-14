@@ -156,7 +156,7 @@ class Ranker(models.Model):
 
 
 class Contribute(BaseModel):
-    user = models.ForeignKey(User, related_name="contributes", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="contributes", on_delete=models.CASCADE, null=True, blank=True)
     target_content_type = models.ForeignKey(
         ContentType, related_name='contribute_target',
         on_delete=models.CASCADE, db_index=True
@@ -165,6 +165,7 @@ class Contribute(BaseModel):
     target = GenericForeignKey('target_content_type', 'target_object_id')
     field = models.CharField(max_length=120)
     # type - Media, Post, Term, str, int, list
+    type = models.CharField(max_length=120)
     # data -
     value = JSONField(null=True, blank=True)
     # draft / pending / accept / deleted

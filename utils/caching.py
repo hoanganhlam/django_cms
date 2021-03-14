@@ -92,7 +92,7 @@ def make_page(force, host_name, query, **kwargs):
         if flag != order:
             if query.get("full"):
                 out[flag]["results"] = list(
-                    map(lambda x: make_post(False, host_name, str(x), {"master": True}), out[flag]["results"][: 5]))
+                    map(lambda x: make_post(False, None, str(x), {"master": True}), out[flag]["results"][: 5]))
             else:
                 out[flag]["results"] = []
     if out.get("term", None) is not None:
@@ -107,7 +107,9 @@ def make_page(force, host_name, query, **kwargs):
 def make_post(force, host_name, index, query):
     if index is None:
         return None
-    q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
+    q_general = Q()
+    if host_name:
+        q_general = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     q_general = q_general & Q(show_cms=True, status="POSTED")
     key_path = "{post_type}-{id}".format(post_type="post", id=index)
     if force or key_path not in cache:
@@ -182,7 +184,7 @@ def make_post_list(force, host_name, query):
     start = query.get("offset", 0)
     end = query.get("offset", 0) + query.get("page_size", 10)
     return {
-        "results": list(map(lambda x: make_post(False, host_name, str(x), {
+        "results": list(map(lambda x: make_post(False, None, str(x), {
             "master": False,
             "user": query.get("user")
         }), posts[start: end])),

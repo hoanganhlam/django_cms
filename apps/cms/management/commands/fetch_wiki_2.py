@@ -23,11 +23,10 @@ def clean_origin(ori):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Agave"
+        genera = "Albuca"
         family = "Asparagaceae"
-        url = "https://en.wikipedia.org/wiki/List_of_Agave_species"
-        selector = "#mw-content-text > div.mw-parser-output > ul"
-
+        url = "https://en.wikipedia.org/wiki/Albuca"
+        selector = "#mw-content-text div.div-col ul"
         with open('genera_export.json') as json_file:
             data = json.load(json_file)
         pub = Publication.objects.get(pk=7)
@@ -35,7 +34,6 @@ class Command(BaseCommand):
         r = requests.get(url)
         soup = BeautifulSoup(r.content, features="html.parser")
         elms = soup.select(selector)
-        ignore_titles = ["Agave Capensis"]
         for elm in elms:
             lis = elm.select("li")
             for li in lis:
@@ -103,9 +101,14 @@ class Command(BaseCommand):
                         family=family,
                         genera=genera) + "."
                     description = description.replace("..", ".")
-
-                test = Post.objects.filter(slug__startswith=slugify(title), post_type="plant",
-                                           primary_publication=pub).first()
+                print(title)
+                print(origins)
+                print(authors)
+                print(description)
+                test = Post.objects.filter(
+                    slug__startswith=slugify(title),
+                    post_type="plant",
+                    primary_publication=pub).first()
                 if test is None:
                     meta = {
                         "score_temperature": int(genus_instance.meta.get("temperature")),

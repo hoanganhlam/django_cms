@@ -4,6 +4,7 @@ from django.core.cache import cache
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.contrib.auth.models import User
+from django.template.defaultfilters import slugify
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -18,6 +19,8 @@ from apps.activity.api.serializers import CommentSerializer
 from utils.other import get_paginator, clone_dict
 from utils.query import query_post, query_posts, query_publication, query_user
 from utils import caching, filter_query
+from django.contrib.contenttypes.models import ContentType
+import json
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -191,47 +194,37 @@ def fetch_posts(request, app_id):
             "meta": request.GET.get("meta")
         }))
     if request.method == "POST":
-        err = []
-        if request.data.get("primary_pub", None) is None:
-            err.append("ERR_PUBLICATION")
-        if len(err):
-            return Response(data=err, status=status.HTTP_400_BAD_REQUEST)
-        pub = Publication.objects.get(pk=request.data.get("primary_pub"))
+        pub = Publication.objects.get(pk=app_id)
         if pub.options.get("allow_guess_post", False):
             meta = request.data.get("meta", {})
-            meta["price"] = request.data.get("price", 0)
-            post = Post.objects.create(
-                title=request.data.get("title", "Untitled"),
-                description=request.data.get("description"),
-                content=request.data.get("content"),
+            post, is_created = Post.objects.get_or_create(
+                slug=slugify(request.data.get("title")),
                 primary_publication=pub,
-                status="POSTED",
                 post_type=request.data.get("post_type", "article"),
-                user=request.user if request.user.is_authenticated else None,
-                meta=meta,
-                show_cms=pub.options.get("auto_guess_public", False),
-                is_guess_post=True
+                defaults={
+                    "title": request.data.get("title", "Untitled"),
+                    "description": request.data.get("description"),
+                    "content": request.data.get("content"),
+                    "status": "POSTED",
+                    "user": request.user if request.user.is_authenticated else None,
+                    "meta": meta,
+                    "show_cms": pub.options.get("auto_guess_public", False),
+                    "is_guess_post": True
+                }
             )
-            if request.data.get("post_related", None) is not None:
-                for p in request.data.get("post_related", None):
-                    pr = Post.objects.get(pk=p)
-                    post.post_related.add(pr)
-            if request.data.get("terms", None) is not None:
-                prs = PublicationTerm.objects.filter(id__in=request.data.get("terms", []))
-                for p in prs:
-                    post.terms.add(p)
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT FETCH_POST(%s, %s, %s, %s, %s)", [
-                    post.id,
-                    request.GET.get("uid") is not None,
-                    None,
-                    None,
-                    request.user.id
-                ])
-                result = cursor.fetchone()[0]
-                cursor.close()
-                connection.close()
-                return Response(status=status.HTTP_200_OK, data=result)
+            if is_created:
+                if request.data.get("post_related_add", None) is not None:
+                    for p in request.data.get("post_related_add", None):
+                        pr = Post.objects.get(pk=p)
+                        post.post_related.add(pr)
+                if request.data.get("terms_add", None) is not None:
+                    prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
+                    for p in prs:
+                        post.terms.add(p)
+            return Response(
+                status=status.HTTP_200_OK,
+                data=caching.make_post(True, None, str(post.id), {"master": True})
+            )
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -240,23 +233,61 @@ def fetch_post(request, app_id, slug):
     publication = Publication.objects.get(pk=app_id)
     if request.method == "PUT":
         instance = Post.objects.get(pk=slug)
-        if request.data.get("title"):
-            instance.title = request.data.get("title")
-        if request.data.get("description"):
-            instance.description = request.data.get("description")
-        if request.data.get("meta"):
-            instance.meta = request.data.get("meta")
-        if request.data.get("post_related_deleted"):
-            for p in request.data.get("post_related_deleted"):
-                pr = Post.objects.get(pk=p)
-                instance.post_related.remove(pr)
-        if request.data.get("post_related"):
-            for p in request.data.get("post_related"):
-                pr = Post.objects.get(pk=p)
-                instance.post_related.add(pr)
-        instance.save()
-        return Response(status=status.HTTP_200_OK,
-                        data=caching.make_post(True, publication.host, str(instance.id), {"master": True}))
+        if request.user.is_authenticated and request.user.is_superuser or request.user.is_staff or request.user is instance.user:
+            if request.data.get("title"):
+                instance.title = request.data.get("title")
+            if request.data.get("description"):
+                instance.description = request.data.get("description")
+            if request.data.get("meta"):
+                instance.meta = request.data.get("meta")
+            if request.data.get("post_related_removal"):
+                for p in request.data.get("post_related_removal"):
+                    pr = Post.objects.get(pk=p)
+                    instance.post_related.remove(pr)
+            if request.data.get("post_related_add"):
+                for p in request.data.get("post_related_add"):
+                    pr = Post.objects.get(pk=p)
+                    instance.post_related.add(pr)
+            if request.data.get("terms_removal"):
+                for p in request.data.get("terms_removal"):
+                    pr = PublicationTerm.objects.get(pk=p)
+                    instance.terms.remove(pr)
+            if request.data.get("terms_add"):
+                for p in request.data.get("terms_add"):
+                    pr = PublicationTerm.objects.get(pk=p)
+                    instance.terms.add(pr)
+            instance.save()
+        else:
+            ct = ContentType.objects.get(app_label='cms', model='post')
+            for key in request.data.keys():
+                val = request.data.get(key)
+                if key in ["post_related_add", "post_related_removal"]:
+                    typ3 = "post"
+                elif key in ["terms_add", "terms_removal"]:
+                    typ3 = "publication_term"
+                elif type(val) is dict or type(val) is list:
+                    val = json.dumps(val)
+                    if type(val) is dict:
+                        typ3 = "dict"
+                    else:
+                        typ3 = "list"
+                else:
+                    typ3 = "str"
+
+                if not (key in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(
+                    val) == 0):
+                    models.Contribute.objects.create(
+                        user=request.user if request.user.is_authenticated else None,
+                        target_content_type=ct,
+                        target_object_id=instance.id,
+                        field=key,
+                        value=val,
+                        type=typ3
+                    )
+        return Response(
+            status=status.HTTP_200_OK,
+            data=caching.make_post(True, None, str(instance.id), {"master": True})
+        )
 
     if request.method in ["GET"]:
         return Response(status=status.HTTP_200_OK, data=query_post(slug, {

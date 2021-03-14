@@ -44,7 +44,7 @@ class PostViewSet(viewsets.ModelViewSet):
         if request.GET.get("publications", None):
             pbs = request.GET.get("publications").split(",")
             q = q & (Q(primary_publication__id__in=pbs) | Q(publications__id__in=pbs))
-        queryset = self.filter_queryset(models.Post.objects.filter(q).order_by('id').distinct())
+        queryset = self.filter_queryset(models.Post.objects.filter(q).order_by('-id').distinct())
         page = self.paginate_queryset(queryset)
         if page is not None:
             out = []
@@ -144,7 +144,7 @@ class PubTermViewSet(viewsets.ModelViewSet):
         if request.GET.get("publications", None):
             pbs = request.GET.get("publications").split(",")
             q = q & Q(publications__id__in=pbs)
-        queryset = self.filter_queryset(models.PublicationTerm.objects.filter(q).order_by('id').distinct())
+        queryset = self.filter_queryset(models.PublicationTerm.objects.filter(q).order_by('-id').distinct())
         page = self.paginate_queryset(queryset)
         if page is not None:
             out = []
@@ -195,7 +195,7 @@ class PubTermViewSet(viewsets.ModelViewSet):
             db_status=1
         ).first()
         if tax is None:
-            tax = models.PublicationTerm.objects.create(
+            models.PublicationTerm.objects.create(
                 publication=pub,
                 taxonomy=request.data.get("taxonomy"),
                 term=term
