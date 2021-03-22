@@ -240,7 +240,10 @@ def fetch_post(request, app_id, slug):
             if request.data.get("description"):
                 instance.description = request.data.get("description")
             if request.data.get("meta"):
-                instance.meta = request.data.get("meta")
+                if instance.meta is None:
+                    instance.meta = {}
+                for key in request.data.get("meta").keys():
+                    instance.meta[key] = request.data.get("meta")[key]
             if request.data.get("post_related_removal"):
                 for p in request.data.get("post_related_removal"):
                     pr = Post.objects.get(pk=p)
@@ -261,12 +264,12 @@ def fetch_post(request, app_id, slug):
         ct = ContentType.objects.get(app_label='cms', model='post')
         for k in request.data.keys():
             val = request.data.get(k)
+            field = k
             if k in ["post_related_add", "post_related_removal"]:
                 typ3 = "post"
             elif k in ["terms_add", "terms_removal"]:
                 typ3 = "publication_term"
             elif type(val) is dict or type(val) is list:
-                val = json.dumps(val)
                 if type(val) is dict:
                     typ3 = "dict"
                 else:
@@ -275,15 +278,37 @@ def fetch_post(request, app_id, slug):
                 typ3 = "str"
 
             if not (k in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(val) == 0):
-                models.Contribute.objects.create(
-                    user=request.user if request.user.is_authenticated else None,
-                    target_content_type=ct,
-                    target_object_id=instance.id,
-                    field=k,
-                    value=val,
-                    type=typ3,
-                    status="approved" if is_authenticated else "pending"
-                )
+                if k != "meta":
+                    models.Contribute.objects.create(
+                        user=request.user if request.user.is_authenticated else None,
+                        target_content_type=ct,
+                        target_object_id=instance.id,
+                        field=field,
+                        value=val,
+                        type=typ3,
+                        status="approved" if is_authenticated else "pending"
+                    )
+                else:
+                    for km in request.data.get("meta"):
+                        val = request.data.get("meta").get(km)
+                        if type(val) is dict or type(val) is list:
+                            if type(val) is dict:
+                                typ3 = "dict"
+                            else:
+                                typ3 = "list"
+                        else:
+                            typ3 = "str"
+
+                        field = field + "__" + km
+                        models.Contribute.objects.create(
+                            user=request.user if request.user.is_authenticated else None,
+                            target_content_type=ct,
+                            target_object_id=instance.id,
+                            field=field,
+                            value=val,
+                            type=typ3,
+                            status="approved" if is_authenticated else "pending"
+                        )
         return Response(
             status=status.HTTP_200_OK,
             data=caching.make_post(True, None, str(instance.id), {"master": True})
