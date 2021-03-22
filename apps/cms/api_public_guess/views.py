@@ -197,30 +197,26 @@ def fetch_posts(request, app_id):
         pub = Publication.objects.get(pk=app_id)
         if pub.options.get("allow_guess_post", False):
             meta = request.data.get("meta", {})
-            post, is_created = Post.objects.get_or_create(
-                slug=slugify(request.data.get("title")),
+            post, is_created = Post.objects.create(
                 primary_publication=pub,
+                status="POSTED",
+                show_cms=pub.options.get("auto_guess_public", False),
                 post_type=request.data.get("post_type", "article"),
-                defaults={
-                    "title": request.data.get("title", "Untitled"),
-                    "description": request.data.get("description"),
-                    "content": request.data.get("content"),
-                    "status": "POSTED",
-                    "user": request.user if request.user.is_authenticated else None,
-                    "meta": meta,
-                    "show_cms": pub.options.get("auto_guess_public", False),
-                    "is_guess_post": True
-                }
+                title=request.data.get("title", "Untitled"),
+                description=request.data.get("description"),
+                content=request.data.get("content"),
+                user=request.user if request.user.is_authenticated else None,
+                meta=meta,
+                is_guess_post=True
             )
-            if is_created:
-                if request.data.get("post_related_add", None) is not None:
-                    for p in request.data.get("post_related_add", None):
-                        pr = Post.objects.get(pk=p)
-                        post.post_related.add(pr)
-                if request.data.get("terms_add", None) is not None:
-                    prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
-                    for p in prs:
-                        post.terms.add(p)
+            if request.data.get("post_related_add", None) is not None:
+                for p in request.data.get("post_related_add", None):
+                    pr = Post.objects.get(pk=p)
+                    post.post_related.add(pr)
+            if request.data.get("terms_add", None) is not None:
+                prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
+                for p in prs:
+                    post.terms.add(p)
             return Response(
                 status=status.HTTP_200_OK,
                 data=caching.make_post(True, None, str(post.id), {"master": True})
