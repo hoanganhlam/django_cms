@@ -299,7 +299,7 @@ def fetch_post(request, app_id, slug):
                         else:
                             typ3 = "str"
 
-                        field = field + "__" + km
+                        field = k + "__" + km
                         models.Contribute.objects.create(
                             user=request.user if request.user.is_authenticated else None,
                             target_content_type=ct,
