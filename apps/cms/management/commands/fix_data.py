@@ -7,6 +7,6 @@ class Command(BaseCommand):
         tillandsia = PublicationTerm.objects.get(taxonomy="genus", term__slug="tillandsia")
         plants = tillandsia.posts.filter(post_type="plant")
         for plant in plants:
-            plant.meta["soil"] = None
+            plant.meta["soil"] = "Don't need"
             plant.save()
             print(plant)
