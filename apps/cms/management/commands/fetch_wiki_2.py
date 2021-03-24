@@ -23,9 +23,9 @@ def clean_origin(ori):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        genera = "Vriesea"
+        genera = "Werauhia"
         family = "Bromeliaceae"
-        url = "https://en.wikipedia.org/wiki/Vriesea"
+        url = "https://en.wikipedia.org/wiki/Werauhia"
         selector = "#mw-content-text > div.mw-parser-output > div.div-col > ul"
         with open('genera_export.json') as json_file:
             data = json.load(json_file)
@@ -61,23 +61,26 @@ class Command(BaseCommand):
                                     media_url = r2_data.get("originalimage").get("source")
                             origins = []
                             authors = []
-                            # if len(li.contents) > 3:
-                            #     for content in li.contents[3:]:
-                            #         if type(content) is Tag and content.name not in ["sup", "ul"]:
-                            #             origins = origins + content.find_all(text=True)
-                            #         elif type(content) is NavigableString and content not in [" - ", ", ", " (", ")"]:
-                            #             # if re.search(r'\((.*?)\)', content):
-                            #             #     origins = origins + re.search(r'\((.*?)\)', content).group(1).split(",")
-                            #             xxx = content.split("-")[1] if len(content.split("-")) > 1 else content.split("-")[0]
-                            #             origins = origins + xxx.replace(" - ", "").split(",")
-                            # if li.find("small") is not None:
-                            #     authors.append(str(li.find("small").find(text=True)).strip())
-                            # elif len(li.contents) == 2 and li.contents[1]:
-                            #     authors.append(li.contents[1].strip())
+
                             try:
+                                # if len(li.contents) > 3:
+                                #     for content in li.contents[3:]:
+                                #         if type(content) is Tag and content.name not in ["sup", "ul"]:
+                                #             origins = origins + content.find_all(text=True)
+                                #         elif type(content) is NavigableString and content not in [" - ", ", ", " (",
+                                #                                                                   ")"]:
+                                #             # if re.search(r'\((.*?)\)', content):
+                                #             #     origins = origins + re.search(r'\((.*?)\)', content).group(1).split(",")
+                                #             xxx = content.split("-")[1] if len(content.split("-")) > 1 else \
+                                #             content.split("-")[0]
+                                #             origins = origins + xxx.replace(" - ", "").split(",")
+                                # if li.find("small") is not None:
+                                #     authors.append(str(li.find("small").find(text=True)).strip())
+                                # elif len(li.contents) == 2 and li.contents[1]:
+                                #     authors.append(li.contents[1].strip())
                                 if len(li.contents) == 2:
                                     content2 = li.contents[1].split(" - ")
-                                    origins = list(map(lambda x: x.strip(), content2[1].split(",")))
+                                    # origins = list(map(lambda x: x.strip(), content2[1].split(",")))
                                     authors = list(map(lambda x: x.strip(), content2[0].split(",")))
                             except Exception as e:
                                 print(e)
