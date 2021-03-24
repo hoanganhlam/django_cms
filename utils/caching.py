@@ -65,7 +65,7 @@ def make_page(force, host_name, query, **kwargs):
                                                      taxonomy=term_taxonomy).first() if term_term is not None else None
         newest = list(Post.objects.filter(q).order_by("-id").values_list('id', flat=True))
         popular = list(Post.objects.filter(q).order_by("-measure__score").values_list('id', flat=True))
-        terms = PublicationTerm.objects.filter(q_term)[:12].values_list("id", flat=True)
+        terms = PublicationTerm.objects.filter(q_term)[:query.get("term_page_size", 10)].values_list("id", flat=True)
         out = {
             "term": term_object.id if term_object is not None else None,
             "newest": {
