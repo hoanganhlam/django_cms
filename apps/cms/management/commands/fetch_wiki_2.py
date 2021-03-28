@@ -274,4 +274,5 @@ class Command(BaseCommand):
                 "#mw-content-text div.mw-parser-output ol"
             ]
         ]
-        x("Peltandra", "https://en.wikipedia.org/wiki/Peltandra", "#mw-content-text div.mw-parser-output ol")
+        for item in arr:
+            x(item[0], item[1], item[2])
