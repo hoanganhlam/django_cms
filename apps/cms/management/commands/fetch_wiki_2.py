@@ -213,64 +213,48 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         arr = [
             [
-                "Philodendron",
-                "https://en.wikipedia.org/wiki/List_of_Philodendron_species",
-                "#mw-content-text div.mw-parser-output ul"
-            ],
-            [
-                "Philonotion",
-                "https://en.wikipedia.org/wiki/Philonotion",
+                "Syngonium",
+                "https://en.wikipedia.org/wiki/Syngonium",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Pinellia",
-                "https://en.wikipedia.org/wiki/Pinellia",
+                "Taccarum",
+                "https://en.wikipedia.org/wiki/Taccarum",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Piptospatha",
-                "https://en.wikipedia.org/wiki/Piptospatha",
+                "Theriophonum",
+                "https://en.wikipedia.org/wiki/Theriophonum",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Remusatia",
-                "https://en.wikipedia.org/wiki/Remusatia",
+                "Typhonium",
+                "https://en.wikipedia.org/wiki/Typhonium",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Sauromatum",
-                "https://en.wikipedia.org/wiki/Sauromatum",
+                "Ulearum",
+                "https://en.wikipedia.org/wiki/Ulearum",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Scaphispatha",
-                "https://en.wikipedia.org/wiki/Scaphispatha",
+                "Xanthosoma",
+                "https://en.wikipedia.org/wiki/Xanthosoma",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Schismatoglottis",
-                "https://en.wikipedia.org/wiki/Schismatoglottis",
+                "Zantedeschia",
+                "https://en.wikipedia.org/wiki/Zantedeschia",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Spathantheum",
-                "https://en.wikipedia.org/wiki/Spathantheum",
+                "Zomicarpa",
+                "https://en.wikipedia.org/wiki/Zomicarpa",
                 "#mw-content-text div.mw-parser-output ol"
             ],
             [
-                "Spathicarpa",
-                "https://en.wikipedia.org/wiki/Spathicarpa",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Steudnera",
-                "https://en.wikipedia.org/wiki/Steudnera",
-                "#mw-content-text div.mw-parser-output ol"
-            ]
-            ,
-            [
-                "Stylochaeton",
-                "https://en.wikipedia.org/wiki/Stylochaeton",
+                "Zomicarpella",
+                "https://en.wikipedia.org/wiki/Zomicarpella",
                 "#mw-content-text div.mw-parser-output ol"
             ]
         ]
