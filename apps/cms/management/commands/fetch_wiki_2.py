@@ -21,7 +21,7 @@ def clean_origin(ori):
 
 
 def x(genera, url, selector):
-    family = "Araceae"
+    family = "Commelinaceae"
     with open('genera_export.json') as json_file:
         data = json.load(json_file)
     pub = Publication.objects.get(pk=7)
@@ -212,51 +212,71 @@ def x(genera, url, selector):
 class Command(BaseCommand):
     def handle(self, *args, **options):
         arr = [
+            # [
+            #     "Amischotolype",
+            #     "https://en.wikipedia.org/wiki/Amischotolype",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Porandra",
+            #     "https://en.wikipedia.org/wiki/Porandra",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Dichorisandra",
+            #     "https://en.wikipedia.org/wiki/Dichorisandra",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Coleotrype",
+            #     "https://en.wikipedia.org/wiki/Coleotrype",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Dichorisandra",
+            #     "https://en.wikipedia.org/wiki/Dichorisandra",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Coleotrype",
+            #     "https://en.wikipedia.org/wiki/Coleotrype",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Geogenanthus",
+            #     "https://en.wikipedia.org/wiki/Geogenanthus",
+            #     "#mw-content-text > div.mw-parser-output > table > tbody > tr:nth-child(17) > td > ul"
+            # ],
+            # [
+            #     "Plowmanianthus",
+            #     "https://en.wikipedia.org/wiki/Plowmanianthus",
+            #     "#mw-content-text > div.mw-parser-output > table > tbody > tr:nth-child(17) > td > ul"
+            # ],
+            # [
+            #     "Tinantia",
+            #     "https://en.wikipedia.org/wiki/Tinantia",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Thyrsanthemum",
+            #     "https://en.wikipedia.org/wiki/Thyrsanthemum",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
+            # [
+            #     "Gibasis",
+            #     "https://en.wikipedia.org/wiki/Gibasis",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
             [
-                "Syngonium",
-                "https://en.wikipedia.org/wiki/Syngonium",
-                "#mw-content-text div.mw-parser-output ol"
+                "Tradescantia",
+                "https://en.wikipedia.org/wiki/Tradescantia",
+                "#mw-content-text ul"
             ],
-            [
-                "Taccarum",
-                "https://en.wikipedia.org/wiki/Taccarum",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Theriophonum",
-                "https://en.wikipedia.org/wiki/Theriophonum",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Typhonium",
-                "https://en.wikipedia.org/wiki/Typhonium",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Ulearum",
-                "https://en.wikipedia.org/wiki/Ulearum",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Xanthosoma",
-                "https://en.wikipedia.org/wiki/Xanthosoma",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Zantedeschia",
-                "https://en.wikipedia.org/wiki/Zantedeschia",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Zomicarpa",
-                "https://en.wikipedia.org/wiki/Zomicarpa",
-                "#mw-content-text div.mw-parser-output ol"
-            ],
-            [
-                "Zomicarpella",
-                "https://en.wikipedia.org/wiki/Zomicarpella",
-                "#mw-content-text div.mw-parser-output ol"
-            ]
+            # [
+            #     "Tripogandra",
+            #     "https://en.wikipedia.org/wiki/Tripogandra",
+            #     "#mw-content-text > div.mw-parser-output > ul"
+            # ],
         ]
         for item in arr:
             x(item[0], item[1], item[2])

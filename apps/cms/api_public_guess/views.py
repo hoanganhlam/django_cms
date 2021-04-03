@@ -424,10 +424,10 @@ def fetch_instance(host_name, pk, is_pid):
         if is_pid:
             post_instance = Post.objects.get(pid=pk, primary_publication__host=host_name)
         else:
-            if not pk.isnumeric():
-                post_instance = Post.objects.get(slug=pk)
-            else:
+            if type(pk) == int or pk.isnumeric():
                 return pk
+            else:
+                post_instance = Post.objects.get(slug=pk)
     except Exception as e:
         print(e)
         post_instance = None

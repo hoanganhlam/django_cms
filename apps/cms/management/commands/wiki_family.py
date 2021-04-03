@@ -23,8 +23,8 @@ def clean_origin(ori):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        family = "Araceae"
-        url = "https://en.wikipedia.org/wiki/List_of_Araceae_genera"
+        family = "Commelinaceae"
+        url = "https://en.wikipedia.org/wiki/List_of_Commelinaceae_genera"
         selector = "#mw-content-text > div.mw-parser-output > table > tbody > tr"
         default_meta = {
             "soil": "mix",
