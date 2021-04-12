@@ -35,6 +35,7 @@ def publication_options():
 
 def theme_options():
     return {
+        "general": {},
         "header": {},
         "layout": {},
         "menu": {},

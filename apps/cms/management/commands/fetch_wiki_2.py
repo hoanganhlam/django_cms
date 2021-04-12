@@ -212,71 +212,57 @@ def x(genera, url, selector):
 class Command(BaseCommand):
     def handle(self, *args, **options):
         arr = [
-            # [
-            #     "Amischotolype",
-            #     "https://en.wikipedia.org/wiki/Amischotolype",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Porandra",
-            #     "https://en.wikipedia.org/wiki/Porandra",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Dichorisandra",
-            #     "https://en.wikipedia.org/wiki/Dichorisandra",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Coleotrype",
-            #     "https://en.wikipedia.org/wiki/Coleotrype",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Dichorisandra",
-            #     "https://en.wikipedia.org/wiki/Dichorisandra",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Coleotrype",
-            #     "https://en.wikipedia.org/wiki/Coleotrype",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Geogenanthus",
-            #     "https://en.wikipedia.org/wiki/Geogenanthus",
-            #     "#mw-content-text > div.mw-parser-output > table > tbody > tr:nth-child(17) > td > ul"
-            # ],
-            # [
-            #     "Plowmanianthus",
-            #     "https://en.wikipedia.org/wiki/Plowmanianthus",
-            #     "#mw-content-text > div.mw-parser-output > table > tbody > tr:nth-child(17) > td > ul"
-            # ],
-            # [
-            #     "Tinantia",
-            #     "https://en.wikipedia.org/wiki/Tinantia",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Thyrsanthemum",
-            #     "https://en.wikipedia.org/wiki/Thyrsanthemum",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
-            # [
-            #     "Gibasis",
-            #     "https://en.wikipedia.org/wiki/Gibasis",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
             [
-                "Tradescantia",
-                "https://en.wikipedia.org/wiki/Tradescantia",
-                "#mw-content-text ul"
+                "Stanfieldiella",
+                "https://en.wikipedia.org/wiki/Stanfieldiella",
+                "#mw-content-text > div.mw-parser-output ul"
             ],
-            # [
-            #     "Tripogandra",
-            #     "https://en.wikipedia.org/wiki/Tripogandra",
-            #     "#mw-content-text > div.mw-parser-output > ul"
-            # ],
+            [
+                "Floscopa",
+                "https://en.wikipedia.org/wiki/Floscopa",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Murdannia",
+                "https://en.wikipedia.org/wiki/Murdannia",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Buforrestia",
+                "https://en.wikipedia.org/wiki/Buforrestia",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Tricarpelema",
+                "https://en.wikipedia.org/wiki/Tricarpelema",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Dictyospermum",
+                "https://en.wikipedia.org/wiki/Dictyospermum",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Pollia",
+                "https://en.wikipedia.org/wiki/Pollia_(plant)",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Aneilema",
+                "https://en.wikipedia.org/wiki/Aneilema",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Rhopalephora",
+                "https://en.wikipedia.org/wiki/Rhopalephora",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+            [
+                "Commelina",
+                "https://en.wikipedia.org/wiki/List_of_Commelina_species",
+                "#mw-content-text > div.mw-parser-output ul"
+            ],
+
         ]
         for item in arr:
             x(item[0], item[1], item[2])

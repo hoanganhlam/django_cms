@@ -135,6 +135,7 @@ class PubTermViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         q = Q()
+        pbs = []
         if request.GET.get("post_type", None):
             q = q & Q(posts__post_type=request.GET.get("post_type"))
         if request.GET.get("taxonomy", None):
@@ -143,7 +144,10 @@ class PubTermViewSet(viewsets.ModelViewSet):
             q = q & Q(id__in=request.GET.get("ids").split(","))
         if request.GET.get("publications", None):
             pbs = request.GET.get("publications").split(",")
-            q = q & Q(publications__id__in=pbs)
+        if request.GET.get("publication", None):
+            pbs.append(request.GET.get("publication"))
+        if len(pbs) > 0:
+            q = q & Q(publication__id__in=pbs)
         queryset = self.filter_queryset(models.PublicationTerm.objects.filter(q).order_by('-id').distinct())
         page = self.paginate_queryset(queryset)
         if page is not None:
