@@ -1,0 +1,53 @@
+{
+  "head": {
+    "title": "Do gem",
+    "category": "Ruby libraries"
+  },
+  "body": [
+    {
+      "title": "Connection",
+      "elms": "\n    server = DO::Server.new('srv1', 'srv1.domain.local', 'root', :key => \n        %w[srv1.pem]\n    ",
+      "h2": null
+    },
+    {
+      "title": "Run",
+      "elms": "    server.run 'uname'\n    # root@srv1 ~ # uname\n    # Linux\n    \n    server.run 'uname', '-a'\n    # root@srv1 ~ # uname -a\n    # Linux srv1.lipsiasoft.net 2.6.18-194.32.1.el5  x86_64 x86_64 x86_64 GNU/Linux\n    \n    server.run 'mysqladmin -u root -p password \"oldone\"', 'newpassword'\n    # root@srv1 ~ # mysqladmin -u root -p password 'oldone'\n    # Enter password: oldone\n    # mysqladmin: connect to server at 'localhost' failed\n    # error: 'Access denied for user 'root'@'localhost' (using password: YES)'\n    ",
+      "h2": null
+    },
+    {
+      "title": "Files",
+      "elms": "\n    server.exist?('~/.ssh')\n    # root@srv1 ~ # test -e ~/.ssh && echo True\n    # => true\n    \n    server.read('/etc/redhat-release')\n    # root@srv1 ~ # cat /etc/redhat-release\n    # => \"CentOS release 5.5 (Final)\"\n",
+      "h2": null
+    },
+    {
+      "title": "Upload/download",
+      "elms": "\n    server.upload '/tmp/file', '/tmp/foo'\n    # root@srv1 ~ # upload from '/tmp/file' to '/tmp/foo'\n    \n    server.download '/tmp/foo', '/tmp/file2'\n    # root@srv1 ~ # download from '/tmp/foo' to '/tmp/file2'\n    ",
+      "h2": null
+    },
+    {
+      "title": "Replace",
+      "elms": "\n    server.replace :all, 'new content', '/tmp/file'\n    # root@srv1 ~ # replace all in '/tmp/foo'\n    \n    server.read('/tmp/foo')\n    # root@srv1 ~ # cat /tmp/foo\n    # => \"new content\"\n    ",
+      "h2": null
+    },
+    {
+      "title": "Replace via regex",
+      "elms": "\n    server.replace /content$/, 'changed content', '/tmp/foo'\n    # root@srv1 ~ # replace /content$/ in '/tmp/foo'\n    \n    server.read('/tmp/foo')\n    # root@srv1 ~ # cat /tmp/foo\n    # => \"new changed content\"\n    ",
+      "h2": null
+    },
+    {
+      "title": "Append",
+      "elms": "\n    server.append('appended', '/tmp/foo')\n    # root@srv1 ~ # append to 'bottom' in '/tmp/foo'\n    \n    server.read('/tmp/foo')\n    # root@srv1 ~ # cat /tmp/foo\n    # => \"new changed contentappended\"\n    ",
+      "h2": null
+    },
+    {
+      "title": "Append to top",
+      "elms": "\n    server.append('---', '/tmp/foo', :top)\n    # root@srv1 ~ # append to 'top' in '/tmp/foo'\n    \n    server.read('/tmp/foo')\n    # root@srv1 ~ # cat /tmp/foo\n    # => \"---new changed contentappended\"\n    ",
+      "h2": null
+    },
+    {
+      "title": "Prompt",
+      "elms": "    \n    server.ask \"Please choose\"\n    # root@srv1 ~ # Please choose: foo\n    # => \"foo\"\n    \n    server.yes? \"Do you want to proceed\"\n    # root@srv1 ~ # Do you want to proceed? (y/n): y\n    # => 0\n    \n    server.wait\n    # Press ENTER to continue...",
+      "h2": null
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "head": {
+    "title": "adb (Android Debug Bridge)",
+    "category": "CLI",
+    "layout": "2017/sheet",
+    "weight": -1,
+    "authors": [
+      {
+        "github": "ZackNeyland"
+      }
+    ],
+    "updated": "2018-03-06T00:00:00.000Z"
+  },
+  "body": [
+    {
+      "title": "Device Basics",
+      "elms": "\n| Command                           | Description                                 |\n| ---                               | ---                                         |\n| `adb devices`                     | Lists connected devices                     |\n| `adb devices -l`                  | Lists connected devices and kind            |\n| ---                               | ---                                         |\n| `adb root`                        | Restarts adbd with root permissions         |\n| `adb start-server`                | Starts the adb server                       |\n| `adb kill-server`                 | Kills the adb server                        |\n| `adb remount`                     | Remounts file system with read/write access |\n| `adb reboot`                      | Reboots the device                          |\n| `adb reboot bootloader`           | Reboots the device into fastboot            |\n| `adb disable-verity`              | Reboots the device into fastboot            |\n\n`wait-for-device` can be specified after `adb` to ensure that the command will run once the device is connected.\n\n`-s` can be used to send the commands to a specific device when multiple are connected.\n\n#### Examples\n\n```\n$ adb wait-for-device devices\n List of devices attached\n somedevice-1234 device\n someotherdevice-1234 device\n```\n\n```\n$ adb -s somedevice-1234 root\n```\n",
+      "h2": null
+    },
+    {
+      "title": "Logcat",
+      "elms": "\n| Command                              | Description                            |\n| ---                                  | ---                                    |\n| `adb logcat`                         | Starts printing log messages to stdout |\n| `adb logcat -g`                      | Displays current log buffer sizes      |\n| `adb logcat -G <size>`               | Sets the buffer size (K or M)          |\n| `adb logcat -c`                      | Clears the log buffers                 |\n| `adb logcat *:V`                     | Enables ALL log messages (verbose)     |\n| `adb logcat -f <filename>`           | Dumps to specified file                |\n\n#### Examples\n```\n$ adb logcat -G 16M\n$ adb logcat *:V > output.log\n```\n",
+      "h2": null
+    },
+    {
+      "title": "File Management",
+      "elms": "\n| Command                              | Description                       |\n| ---                                  | ---                               |\n| `adb push <local> <remote>` | Copies the local to the device at remote   |\n| `adb pull <remote> <local>` | Copies the remote from the device to local |\n\n#### Examples\n\n```\n$ echo \"This is a test\" > test.txt\n$ adb push  test.txt /sdcard/test.txt\n$ adb pull /sdcard/test.txt pulledTest.txt\n```\n",
+      "h2": null
+    },
+    {
+      "title": "Remote Shell",
+      "elms": "\n| Command                                | Description                                                           |\n| ---                                    | ---                                                                   |\n| `adb shell <command>`                  | Runs the specified command on device (most unix commands work here)   |\n| `adb shell wm size`                    | Displays the current screen resolution                                |\n| `adb shell wm size WxH`                | Sets the resolution to WxH                                            |\n| `adb shell pm list packages`           | Lists all installed packages                                          |\n| `adb shell pm list packages -3`        | Lists all installed 3rd-party packages                                |\n| `adb shell monkey -p app.package.name` | Starts the specified package                                          |",
+      "h2": null
+    }
+  ]
+}

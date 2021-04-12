@@ -13,8 +13,10 @@ from os import walk
 class Command(BaseCommand):
     def handle(self, *args, **options):
         pub = Publication.objects.get(pk=24)
+        i = 0
         for filename in listdir("./out"):
             with open('./out/{}'.format(filename)) as json_file:
+                print(filename)
                 data = json.load(json_file)
                 term, is_created = Term.objects.get_or_create(
                     slug=slugify(data.get("head").get("title")),
@@ -49,9 +51,10 @@ class Command(BaseCommand):
                     pub_term.related.add(category)
                 for section in data.get("body"):
                     title = section.get("title")
-
                     if title is None:
                         title = section.get("h2")
+                        if title is None:
+                            title = "Untitled"
                         slug = slugify(title)
                     elif section.get("h2"):
                         slug = "{}_{}".format(slugify(section.get("h2")), slugify(title))
@@ -69,12 +72,5 @@ class Command(BaseCommand):
                             "post_type": "post"
                         }
                     )
-                    print(is_created)
-                    if not is_created:
-                        post.show_cms = True
-                        post.post_type = "post",
-                        post.status = "POSTED"
-                        post.save()
                     post.terms.add(pub_term)
 
-            break

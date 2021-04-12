@@ -1,0 +1,1 @@
+{"head":{"title":"Shell: named pipes","category":"CLI","layout":"2017/sheet"},"body":[{"title":"Named pipes","elms":"\n```sh\ndiff <(ls ./old) <(ls ./new)\n```\n\nThis creates a virtual file with the contents of the output of `ls ./old`.\n","h2":null},{"title":"References","elms":"\n* [Named pipe](https://en.wikipedia.org/wiki/Named_pipe) _(wikipedia.org)_","h2":null}]}
