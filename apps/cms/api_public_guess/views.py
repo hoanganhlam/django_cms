@@ -197,7 +197,7 @@ def fetch_posts(request, app_id):
         pub = Publication.objects.get(pk=app_id)
         if pub.options.get("allow_guess_post", False):
             meta = request.data.get("meta", {})
-            post, is_created = Post.objects.create(
+            post = Post.objects.create(
                 primary_publication=pub,
                 status="POSTED",
                 show_cms=pub.options.get("auto_guess_public", False),
