@@ -233,6 +233,8 @@ def fetch_post(request, app_id, slug):
         if is_authenticated:
             if request.data.get("title"):
                 instance.title = request.data.get("title")
+            if request.data.get("show_cms"):
+                instance.show_cms = request.data.get("show_cms")
             if request.data.get("description"):
                 instance.description = request.data.get("description")
             if request.data.get("meta"):
@@ -439,7 +441,6 @@ def fetch_instance(host_name, pk, is_pid):
 def graph(request):
     hostname = request.GET.get("host", None)
     user = request.user.id if request.user.is_authenticated else None
-    pub = Publication.objects.get(host=hostname)
     if hostname is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
     if request.method == "POST":
