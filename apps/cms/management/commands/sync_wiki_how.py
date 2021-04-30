@@ -28,6 +28,7 @@ class Command(BaseCommand):
         name_folders.sort()
         break_point = "Completed Commuting"
         start = False
+        print(name_folders)
         for folder in name_folders:
             if not start:
                 if break_point == folder:
