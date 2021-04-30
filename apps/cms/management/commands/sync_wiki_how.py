@@ -26,9 +26,8 @@ class Command(BaseCommand):
         pub_question = Publication.objects.get(pk=14)
         name_folders = os.listdir("data_wiki_how")
         name_folders.sort()
-        break_point = "Completed Commuting"
+        break_point = "Commuting"
         start = False
-        print(name_folders)
         for folder in name_folders:
             if not start:
                 if break_point == folder:
