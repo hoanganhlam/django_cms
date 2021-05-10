@@ -238,7 +238,7 @@ def fetch_post(request, app_id, slug):
             if request.data.get("description"):
                 instance.description = request.data.get("description")
             if request.data.get("content"):
-                instance.description = request.data.get("content")
+                instance.content = request.data.get("content")
             if request.data.get("meta"):
                 if instance.meta is None:
                     instance.meta = {}
