@@ -216,9 +216,11 @@ def make_term_list(force, host_name, query):
             q = q & Q(related__id=related)
     if query.get("search"):
         q = q & Q(term__title__icontains=query.get("search"))
-    if (force or key_path not in cache) or query.get("search"):
+    if (force or key_path not in cache) or query.get("search") or order == "random":
         if order == "newest":
             terms = PublicationTerm.objects.filter(q).distinct().order_by("-id").values_list("id", flat=True)
+        elif order == "random":
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("?").values_list("id", flat=True)
         else:
             terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id", flat=True)
         if not query.get("search"):
