@@ -26,7 +26,7 @@ class Command(BaseCommand):
         pub = Publication.objects.get(pk=28)
         name_folders = os.listdir("wiki_date")
         name_folders.sort()
-        break_point = "April 14.json"
+        break_point = "March 31.json"
         start = False
         for file in name_folders:
             print(file)
