@@ -195,6 +195,9 @@ class PubTermViewSet(viewsets.ModelViewSet):
         tax = models.PublicationTerm.objects.filter(
             publication=pub,
             taxonomy=request.data.get("taxonomy"),
+            description=request.data.get("description"),
+            meta=request.data.get("meta", {}),
+            options=request.data.get("options", {}),
             term=term,
             db_status=1
         ).first()
@@ -231,6 +234,8 @@ class PubTermViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_200_OK, data=result)
 
     def update(self, request, *args, **kwargs):
+        if not (request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff)):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)

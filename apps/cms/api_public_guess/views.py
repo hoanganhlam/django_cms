@@ -153,7 +153,44 @@ def fetch_taxonomy(request, app_id, slug):
             cursor.close()
             connection.close()
             return Response(status=status.HTTP_200_OK, data=result)
-    return Response()
+    if request.method == "PUT":
+        instance = PublicationTerm.objects.get(term__slug=slug, publication_id=app_id,
+                                               taxonomy=request.GET.get("taxonomy"))
+        is_authenticated = request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff)
+        if is_authenticated:
+            for k in request.data.keys():
+                setattr(instance, k, request.data.get(k))
+            instance.save()
+        ct = ContentType.objects.get(app_label='cms', model='publicationterm')
+        for k in request.data.keys():
+            if k in ["meta", "options"]:
+                for km in request.data.get(k):
+                    val = request.data.get(k).get(km)
+                    models.Contribute.objects.create(
+                        user=request.user if request.user.is_authenticated else None,
+                        target_content_type=ct,
+                        target_object_id=instance.id,
+                        field="{}__{}".format(k, km),
+                        value=val,
+                        type=type(val),
+                        status="approved" if is_authenticated else "pending"
+                    )
+            else:
+                models.Contribute.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    target_content_type=ct,
+                    target_object_id=instance.id,
+                    field=k,
+                    value=request.data.get(k),
+                    type=type(request.data.get(k)),
+                    status="approved" if is_authenticated else "pending"
+                )
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=caching.make_post(True, None, str(instance.id), {"master": True})
+        )
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, )
 
 
 @api_view(['GET', 'POST'])
@@ -229,7 +266,10 @@ def fetch_post(request, app_id, slug):
     publication = Publication.objects.get(pk=app_id)
     if request.method == "PUT":
         instance = Post.objects.get(pk=slug)
-        is_authenticated = request.user.is_authenticated and request.user.is_superuser or request.user.is_staff or request.user is instance.user
+        is_authenticated = request.user.is_authenticated and (
+                    request.user.is_superuser or request.user.is_staff or request.user is instance.user)
+        if request.user.is_authenticated and request.user not in instance.collaborators.all():
+            instance.collaborators.add(request.user)
         if is_authenticated:
             if request.data.get("title"):
                 instance.title = request.data.get("title")
@@ -289,16 +329,8 @@ def fetch_post(request, app_id, slug):
                         status="approved" if is_authenticated else "pending"
                     )
                 else:
-                    for km in request.data.get("meta"):
-                        val = request.data.get("meta").get(km)
-                        if type(val) is dict or type(val) is list:
-                            if type(val) is dict:
-                                typ3 = "dict"
-                            else:
-                                typ3 = "list"
-                        else:
-                            typ3 = "str"
-
+                    for km in request.data.get(k):
+                        val = request.data.get(k).get(km)
                         field = k + "__" + km
                         models.Contribute.objects.create(
                             user=request.user if request.user.is_authenticated else None,
@@ -306,7 +338,7 @@ def fetch_post(request, app_id, slug):
                             target_object_id=instance.id,
                             field=field,
                             value=val,
-                            type=typ3,
+                            type=type(val),
                             status="approved" if is_authenticated else "pending"
                         )
         return Response(
@@ -383,6 +415,30 @@ def fetch_comments(request, app_id, slug):
         return Response(status=status.HTTP_400_BAD_REQUEST, data=msg)
     else:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET'])
+def fetch_contributions(request, app_id, slug):
+    if request.method == "GET":
+        p = get_paginator(request)
+        contributor = request.GET.get("contributor")
+        field = request.GET.get("field")
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_CONTRIBUTIONS(%s, %s, %s, %s, %s, %s, %s)", [
+                p.get("page_size"),
+                p.get("offs3t"),
+                request.GET.get("order_by"),
+                22,
+                slug,
+                contributor,
+                field
+            ])
+            result = cursor.fetchone()[0]
+            if result.get("results") is None:
+                result["results"] = []
+            cursor.close()
+            connection.close()
+            return Response(status=status.HTTP_200_OK, data=result)
 
 
 @api_view(['GET', 'POST'])
