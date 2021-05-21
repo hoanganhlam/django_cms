@@ -88,6 +88,8 @@ def list_following(request):
             result = cursor.fetchone()[0]
             cursor.close()
             connection.close()
+            if result["results"] is None:
+                result["results"] = []
             return Response(result)
     return Response({})
 
