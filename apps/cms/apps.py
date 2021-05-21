@@ -9,5 +9,6 @@ class CmsConfig(AppConfig):
         from apps.activity import registry
         registry.register(self.get_model('post'))
         registry.register(self.get_model('publication'))
+        registry.register(self.get_model('publicationterm'))
         registry.register(User)
         from apps.cms import signals

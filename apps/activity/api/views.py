@@ -85,7 +85,10 @@ def list_following(request):
                                request.user.id,
                                request.GET.get("content_type")
                            ])
-            return Response(cursor.fetchone()[0])
+            result = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return Response(result)
     return Response({})
 
 

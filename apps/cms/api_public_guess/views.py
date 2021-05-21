@@ -275,7 +275,7 @@ def fetch_post(request, app_id, slug):
                 instance.title = request.data.get("title")
             if request.data.get("show_cms"):
                 instance.show_cms = request.data.get("show_cms")
-            if request.data.get("description"):
+            if request.data.get("description") or request.data.get("description") == "":
                 instance.description = request.data.get("description")
             if request.data.get("content"):
                 instance.content = request.data.get("content")
@@ -475,6 +475,24 @@ def follow(request, app_id, slug):
     else:
         actions.follow(request.user, instance)
         flag = True
+    return Response(flag)
+
+
+@api_view(['POST', 'GET'])
+def follow_term(request, app_id, slug):
+    instance = PublicationTerm.objects.get(pk=slug)
+    if actions.is_following(request.user, instance):
+        if request.method == 'POST':
+            actions.un_follow(request.user, instance)
+            flag = False
+        else:
+            flag = True
+    else:
+        if request.method == 'POST':
+            actions.follow(request.user, instance)
+            flag = True
+        else:
+            flag = False
     return Response(flag)
 
 
