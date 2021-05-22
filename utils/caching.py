@@ -217,7 +217,7 @@ def make_term_list(force, host_name, query):
             q = q & Q(related__id=related)
     if featured is not None:
         key_path = "{}_featured-{}".format(key_path, featured)
-        # q = q & Q(options__hightlight=featured)
+        q = q & Q(options__hightlight=featured)
     if query.get("search"):
         q = q & Q(term__title__icontains=query.get("search"))
     if (force or key_path not in cache) or query.get("search") or order == "random":
