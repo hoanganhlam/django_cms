@@ -197,6 +197,7 @@ def make_term_list(force, host_name, query):
     key_path = host_name + "_list_term" + order
     taxonomy = query.get("taxonomy")
     related = query.get("related")
+    featured = query.get("featured")
     q = Q(publication__host=host_name)
     if query.get("publications"):
         q = q | Q(publication__id__in=query.get("publications"))
@@ -214,6 +215,9 @@ def make_term_list(force, host_name, query):
         else:
             key_path = "{}_related-{}".format(key_path, related)
             q = q & Q(related__id=related)
+    if featured is not None:
+        key_path = "{}_featured-{}".format(key_path, featured)
+        q = q & Q(options__hightlight=featured)
     if query.get("search"):
         q = q & Q(term__title__icontains=query.get("search"))
     if (force or key_path not in cache) or query.get("search") or order == "random":
@@ -222,7 +226,8 @@ def make_term_list(force, host_name, query):
         elif order == "random":
             terms = PublicationTerm.objects.filter(q).distinct().order_by("?").values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id",
+                                                                                                         flat=True)
         if not query.get("search"):
             cache.set(key_path, terms, timeout=60 * 60 * 24)
     else:
