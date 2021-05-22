@@ -1,7 +1,6 @@
 from apps.cms import models
 from apps.cms.api import serializers
-from apps.media.models import Media
-from apps.media.api.serializers import MediaSerializer
+from apps.activity import actions
 from apps.cms.tasks import task_sync_drive
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -11,11 +10,9 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from django.db import connection
 from django.template.defaultfilters import slugify
 from utils.other import get_paginator
-from utils.instagram import fetch_by_hash_tag
 from utils import caching, filter_query
 from base import pagination
 from django.db.models import Q
-import json
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -202,11 +199,13 @@ class PubTermViewSet(viewsets.ModelViewSet):
             db_status=1
         ).first()
         if tax is None:
-            models.PublicationTerm.objects.create(
+            tax = models.PublicationTerm.objects.create(
                 publication=pub,
                 taxonomy=request.data.get("taxonomy"),
                 term=term
             )
+        if request.user.is_authenticated:
+            actions.follow(request.user, tax)
         with connection.cursor() as cursor:
             cursor.execute("SELECT FETCH_TAXONOMY(%s, %s, %s, %s)", [
                 term.slug,

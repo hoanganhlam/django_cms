@@ -4,7 +4,6 @@ from django.core.cache import cache
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.contrib.auth.models import User
-from django.template.defaultfilters import slugify
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -20,7 +19,6 @@ from utils.other import get_paginator, clone_dict
 from utils.query import query_post, query_posts, query_publication, query_user
 from utils import caching, filter_query
 from django.contrib.contenttypes.models import ContentType
-import json
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -254,6 +252,8 @@ def fetch_posts(request, app_id):
                 prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
                 for p in prs:
                     post.terms.add(p)
+            if request.user.is_authenticated:
+                actions.follow(request.user, post)
             return Response(
                 status=status.HTTP_200_OK,
                 data=caching.make_post(True, None, str(post.id), {"master": True})
@@ -603,7 +603,8 @@ def graph(request):
                     "related": related,
                     "reverse": params.get("reverse", False),
                     "show_cms": params.get("show_cms", None),
-                    "publications": params.get("publications")
+                    "publications": params.get("publications"),
+                    "featured": params.get("featured", None),
                 }), schemas, None)
             if q.get("q") == "term_detail":
                 pub_term_id = params.get("id", None)
