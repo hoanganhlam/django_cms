@@ -2,10 +2,10 @@ from django.core.cache import cache
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db.models import Q
-from . import query as query_maker
 import hashlib
-from apps.cms.models import Term, Post, PublicationTerm, Publication
-from apps.cms.api.serializers import TermSerializer, PubTermSerializer
+from apps.cms.models import Post, PublicationTerm
+from apps.cms.api.serializers import PubTermSerializer
+from . import query as query_maker
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -138,10 +138,12 @@ def make_post_list(force, host_name, query):
     term = query.get("term")
     user = query.get("user_id")
     show_cms = query.get("show_cms")
+    excluded_posts = query.get("excluded_posts")
     # Check query.get("publications")
     q = Q(primary_publication__host=host_name) | Q(publications__host=host_name)
     if query.get("publications"):
         q = q | Q(primary_publication__id__in=query.get("publications"))
+        key_path = "{}_publications-{}".format(key_path, query.get("publications"))
     q = q & Q(status="POSTED")
     if show_cms is not None:
         q = q & Q(show_cms=show_cms)
@@ -167,6 +169,11 @@ def make_post_list(force, host_name, query):
     if term is not None:
         q = q & Q(terms__term__slug=term)
         key_path = "{}_post_related-{}".format(key_path, term)
+    if excluded_posts is not None:
+        q = q & ~Q(id__in=excluded_posts)
+        key_path = "{}_excluded_posts-{}".format(key_path, excluded_posts)
+    hash_object = hashlib.md5(key_path.encode())
+    key_path = hash_object.hexdigest()
     if force or key_path not in cache:
         if order == "newest":
             posts = list(Post.objects.filter(q).order_by("-id").distinct().values_list('id', flat=True))
@@ -229,7 +236,8 @@ def make_term_list(force, host_name, query):
         elif order == "random":
             terms = PublicationTerm.objects.filter(q).distinct().order_by("?").values_list("id", flat=True)
         else:
-            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id", flat=True)
+            terms = PublicationTerm.objects.filter(q).distinct().order_by("-measure__score").values_list("id",
+                                                                                                         flat=True)
         if not query.get("search"):
             cache.set(key_path, list(terms), timeout=60 * 60 * 24)
     else:

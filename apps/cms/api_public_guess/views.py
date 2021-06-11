@@ -50,6 +50,15 @@ def get_action_id(app_id, slug, flag):
     return None
 
 
+def is_equal(a, b):
+    if type(a) == list:
+        return str(a) == str(b)
+    elif type(a) == object:
+        return str(a) == str(b)
+    else:
+        return a == b
+
+
 # ==========================================================================
 @api_view(['GET'])
 def init(request):
@@ -152,43 +161,105 @@ def fetch_taxonomy(request, app_id, slug):
             connection.close()
             return Response(status=status.HTTP_200_OK, data=result)
     if request.method == "PUT":
-        instance = PublicationTerm.objects.get(term__slug=slug, publication_id=app_id,
-                                               taxonomy=request.GET.get("taxonomy"))
+        instance = PublicationTerm.objects.get(id=slug, publication_id=app_id)
         is_authenticated = request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff)
-        if is_authenticated:
-            for k in request.data.keys():
-                setattr(instance, k, request.data.get(k))
-            instance.save()
         ct = ContentType.objects.get(app_label='cms', model='publicationterm')
         for k in request.data.keys():
             if k in ["meta", "options"]:
                 for km in request.data.get(k):
-                    val = request.data.get(k).get(km)
+                    if not is_equal(request.data.get(k).get(km), getattr(instance, k).get(km)):
+                        val = request.data.get(k).get(km)
+                        models.Contribute.objects.create(
+                            user=request.user if request.user.is_authenticated else None,
+                            target_content_type=ct,
+                            target_object_id=instance.id,
+                            field="{}__{}".format(k, km),
+                            value=val,
+                            type=type(val).__name__,
+                            status="approved" if is_authenticated else "pending"
+                        )
+            else:
+                if not is_equal(request.data.get(k), getattr(instance, k)):
                     models.Contribute.objects.create(
                         user=request.user if request.user.is_authenticated else None,
                         target_content_type=ct,
                         target_object_id=instance.id,
-                        field="{}__{}".format(k, km),
-                        value=val,
-                        type=type(val),
+                        field=k,
+                        value=request.data.get(k),
+                        type=type(request.data.get(k)),
                         status="approved" if is_authenticated else "pending"
                     )
-            else:
-                models.Contribute.objects.create(
-                    user=request.user if request.user.is_authenticated else None,
-                    target_content_type=ct,
-                    target_object_id=instance.id,
-                    field=k,
-                    value=request.data.get(k),
-                    type=type(request.data.get(k)),
-                    status="approved" if is_authenticated else "pending"
-                )
-
+        if is_authenticated:
+            for k in request.data.keys():
+                if k in ["meta", "options"]:
+                    if getattr(instance, k) is None:
+                        setattr(instance, k, {})
+                    for key in request.data.get(k).keys():
+                        if k == "meta":
+                            instance.meta[key] = request.data.get("meta")[key]
+                        else:
+                            instance.options[key] = request.data.get("options")[key]
+                else:
+                    setattr(instance, k, request.data.get(k))
+            instance.save()
         return Response(
             status=status.HTTP_200_OK,
-            data=caching.make_post(True, None, str(instance.id), {"master": True})
+            data=caching.make_term(True, str(instance.id), True)
         )
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, )
+
+
+@api_view(['GET', 'POST'])
+def fetch_taxonomy_contribute(request, app_id, slug):
+    if request.method == "GET":
+        term = models.PublicationTerm.objects.get(pk=slug)
+        if request.GET.get("fields"):
+            fields = request.GET.get("fields").split(",")
+        else:
+            fields = ["title", "description", "meta"]
+        qc = Q(target_object_id=slug, target_content_type_id=29)
+        if request.GET.get("fields"):
+            qc = qc & Q(field__in=request.GET.get("fields"))
+        if request.GET.get("contributor"):
+            qc = qc & Q(user__id=request.GET.get("contributor"))
+        contrib_list = models.Contribute.objects.filter(qc).order_by("id").order_by("field").distinct("field")
+        out_origin = serializers.PubTermSerializer(term).data
+        out_contrib = {}
+        out = {}
+        for contrib in contrib_list:
+            out_contrib[contrib.field] = contrib.value
+        for field in fields:
+            if field == "posts":
+                q = Q(terms__id=slug) & ~Q(id__in=out_contrib.get("excluded_posts", []))
+                if request.GET.get("contributor") is None:
+                    q = q & Q(show_cms=True)
+                qs = models.Post.objects.prefetch_related("terms").filter(q).values_list('id', flat=True)
+                out[field] = list(map(lambda x: caching.make_post(False, None, str(x), {
+                    "master": False,
+                    "user": None
+                }), qs))
+            elif out_contrib.get(field):
+                out[field] = out_contrib.get(field)
+            else:
+                if "meta__" in field:
+                    field = field.replace("meta__", "")
+                    out[field] = out_origin.get("meta").get(field)
+                else:
+                    out[field] = out_origin.get(field)
+        return Response(status=status.HTTP_200_OK, data=out)
+    elif request.method == "POST":
+        for field in request.body.keys():
+            models.Contribute.objects.create(
+                user=request.user,
+                target_object_id=slug,
+                target_content_type=ContentType.objects.get(pk=29),
+                field=field,
+                type=type(request.body.get(field)).__name__,
+                value=request.body.get(field)
+            )
+        return Response(status=status.HTTP_202_ACCEPTED, data="DONE")
+
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['GET', 'POST'])
@@ -267,7 +338,7 @@ def fetch_post(request, app_id, slug):
     if request.method == "PUT":
         instance = Post.objects.get(pk=slug)
         is_authenticated = request.user.is_authenticated and (
-                    request.user.is_superuser or request.user.is_staff or request.user is instance.user)
+                request.user.is_superuser or request.user.is_staff or request.user is instance.user)
         if request.user.is_authenticated and request.user not in instance.collaborators.all():
             instance.collaborators.add(request.user)
         if is_authenticated:
@@ -277,7 +348,7 @@ def fetch_post(request, app_id, slug):
                 instance.show_cms = request.data.get("show_cms")
             if request.data.get("description") or request.data.get("description") == "":
                 instance.description = request.data.get("description")
-            if request.data.get("content"):
+            if request.data.get("content") is not None:
                 instance.content = request.data.get("content")
             if request.data.get("meta"):
                 if instance.meta is None:
@@ -529,13 +600,18 @@ def graph(request):
             schemas = q.get("s") or ["id"]
             instance_related = None
             instance_post_related = None
-
+            pub_term = None
             # PREPARE
             if params.get("related"):
                 instance_related = fetch_instance(hostname, params.get("related"), False)
             if params.get("post_related"):
                 instance_post_related = fetch_instance(hostname, params.get("post_related"), False)
-
+            if params.get("taxonomy") and params.get("term"):
+                pub_term = models.PublicationTerm.objects.get(
+                    taxonomy=params.get("taxonomy"),
+                    publication__host=hostname,
+                    term__slug=params.get("term")
+                )
             # HANDLE QUERY
             if q.get("q") == "post_detail":
                 instance = None
@@ -549,6 +625,9 @@ def graph(request):
                         schemas, None
                     )
             if q.get("q") == "post_list":
+                excluded_posts = []
+                if pub_term and pub_term.meta is not None:
+                    excluded_posts = pub_term.meta.get("excluded_posts", None)
                 page_size = params.get('page_size', 10)
                 page = params.get('page', 1)
                 out[q.get("o")] = clone_dict(caching.make_post_list(force, hostname, {
@@ -560,10 +639,12 @@ def graph(request):
                     "master": True,
                     "order": params.get("order", "newest"),
                     "term": params.get("term"),
+                    "taxonomy": params.get("taxonomy"),
                     "reverse": params.get("reverse"),
                     "user_id": params.get("user"),
                     "show_cms": params.get("show_cms", None),
-                    "publications": params.get("publications")
+                    "publications": params.get("publications"),
+                    "excluded_posts": excluded_posts
                 }), schemas, None)
             if q.get("q") == "archive":
                 page_size = params.get('page_size', 10)

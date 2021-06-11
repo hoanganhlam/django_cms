@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^pub-(?P<app_id>[-\w]+)/shopping-profile/$', commerce.view_shopping_profile),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/$', views.fetch_taxonomies),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/(?P<slug>[-\w]+)/$', views.fetch_taxonomy),
+    url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/(?P<slug>[-\w]+)/contrib/$', views.fetch_taxonomy_contribute),
     url(r'^pub-(?P<app_id>[-\w]+)/taxonomies/(?P<slug>[-\w]+)/follow/$', views.follow_term),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/$', views.fetch_posts),
     url(r'^pub-(?P<app_id>[-\w]+)/posts/(?P<slug>[-\w]+)/$', views.fetch_post),
