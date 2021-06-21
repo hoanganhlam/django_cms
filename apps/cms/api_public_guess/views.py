@@ -610,11 +610,11 @@ def graph(request):
             if params.get("post_related"):
                 instance_post_related = fetch_instance(hostname, params.get("post_related"), False)
             if params.get("taxonomy") and params.get("term"):
-                pub_term = models.PublicationTerm.objects.get(
+                pub_term = models.PublicationTerm.objects.filter(
                     taxonomy=params.get("taxonomy"),
                     publication__host=hostname,
                     term__slug=params.get("term")
-                )
+                ).first()
             # HANDLE QUERY
             if q.get("q") == "post_detail":
                 instance = None
