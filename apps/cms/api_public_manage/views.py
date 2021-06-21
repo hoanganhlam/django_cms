@@ -137,6 +137,8 @@ class PubTermViewSet(viewsets.ModelViewSet):
         pbs = []
         if request.GET.get("post_type", None):
             q = q & Q(posts__post_type=request.GET.get("post_type"))
+        if request.GET.get("show_cms", None):
+            q = q & Q(show_cms=True if request.GET.get("show_cms") == "true" else False)
         if request.GET.get("taxonomy", None):
             q = q & Q(taxonomy=request.GET.get("taxonomy"))
         if request.GET.get("ids", None):
