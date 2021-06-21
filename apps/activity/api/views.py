@@ -75,23 +75,22 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def list_following(request):
-    if request.user.is_authenticated:
-        p = get_paginator(request)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_LIST_FOLLOWING(%s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               request.user.id,
-                               request.GET.get("content_type")
-                           ])
-            result = cursor.fetchone()[0]
-            cursor.close()
-            connection.close()
-            if result["results"] is None:
-                result["results"] = []
-            return Response(result)
-    return Response({})
+    p = get_paginator(request)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_LIST_FOLLOWING(%s, %s, %s, %s, %s)",
+                       [
+                           p.get("page_size"),
+                           p.get("offs3t"),
+                           request.user.id if request.user.is_authenticated else None,
+                           request.GET.get("content_type"),
+                           request.GET.get("object_ids")
+                       ])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
+        if result["results"] is None:
+            result["results"] = []
+        return Response(result)
 
 
 @api_view(['POST'])

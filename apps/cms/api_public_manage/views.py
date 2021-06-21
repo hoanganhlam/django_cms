@@ -26,6 +26,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         q = Q()
+        if request.GET.get("ids", None):
+            q = q & Q(id_in=request.GET.get("ids").split(","))
         if request.GET.get("post_type", None):
             q = q & Q(post_type=request.GET.get("post_type", None))
         if request.GET.get("status", None):
