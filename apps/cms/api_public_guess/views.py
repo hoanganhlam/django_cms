@@ -537,16 +537,19 @@ def push_vote(request, app_id, slug):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def follow(request, app_id, slug):
     instance = Post.objects.get(pk=slug)
-    if actions.is_following(request.user, instance):
-        actions.un_follow(request.user, instance)
-        flag = False
+    if request.method == "GET":
+        return Response(actions.is_following(request.user, instance))
     else:
-        actions.follow(request.user, instance)
-        flag = True
-    return Response(flag)
+        if actions.is_following(request.user, instance):
+            actions.un_follow(request.user, instance)
+            flag = False
+        else:
+            actions.follow(request.user, instance)
+            flag = True
+        return Response(flag)
 
 
 @api_view(['POST', 'GET'])
