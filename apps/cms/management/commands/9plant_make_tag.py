@@ -12,7 +12,7 @@ class Command(BaseCommand):
         pub = Publication.objects.get(host="9plant.com")
         plants = Post.objects.filter(primary_publication=pub, post_type="plant")
         for plant in plants:
-            slug = slugify(plant.title).replace("-", "_")
+            slug = slugify(plant.title).replace("-", "")
             term = Term.objects.filter(slug=slug).first()
             if term is None:
                 term = Term.objects.create(slug=slug, title=plant.title)
