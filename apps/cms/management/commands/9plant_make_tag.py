@@ -19,3 +19,4 @@ class Command(BaseCommand):
             pub_term, created = PublicationTerm.objects.get_or_create(term=term, taxonomy="tag", publication=pub)
             if pub_term not in plant.terms.all():
                 plant.terms.add(pub_term)
+            print(plant.title)
