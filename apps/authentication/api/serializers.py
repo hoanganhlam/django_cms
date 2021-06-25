@@ -36,8 +36,8 @@ class NameRegistrationSerializer(RegisterSerializer):
     def create(self, validated_data):
         pass
 
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
 
     def custom_signup(self, request, user):
         user.first_name = self.validated_data.get('first_name', '')
