@@ -191,6 +191,9 @@ def sync_ig_user(user_raw):
     return user
 
 
+plant_pub = Publication.objects.get(pk=7)
+
+
 def plant_universe_worker(k, n):
     out = fetch_by_hash_tag(k, n)
     items = out.get("results", [])
@@ -233,7 +236,15 @@ def plant_universe_worker(k, n):
                                 "taxonomy": "tag"
                             })
                         new_post.terms.add(pub_term)
+                        plants = plant_pub.posts.filter(
+                            terms__taxonomy="tag",
+                            terms__term__slug=tag,
+                            post_type="plant"
+                        )
+                        for plant in plants:
+                            new_post.post_related.add(plant)
                     except Exception as e:
+                        print(e)
                         pass
             # if item.get("comment_count"):
             #     print(get_comment(item.get("ig_id")))
@@ -244,8 +255,14 @@ def plant_universe_worker(k, n):
 
 @shared_task
 def sync_plant_universe():
-    tags = ["plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
-            "indoorplants", "instaplants", "plantlover", "botanicalwomen", "peperomia", "monstera", "alocasia"]
-    random.shuffle(tags)
-    for tag in tags:
-        plant_universe_worker(tag, None)
+    # tags = [
+    #     "plantshop", "urbanjungle", "plantladder", "plantmom", "plantmama", "plantstagram", "tropicalplants",
+    #     "indoorplants", "instaplants", "plantlover", "botanicalwomen", "peperomia", "monstera", "alocasia"]
+    # random.shuffle(tags)
+    # for tag in tags:
+    #     plant_universe_worker(tag, None)
+    plants = plant_pub.posts.filter(post_type="plant", show_cms=True)
+    for plant in plants:
+        print(plant.title)
+        slug = slugify(plant.title).replace("-", "")
+        plant_universe_worker(slug, None)

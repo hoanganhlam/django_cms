@@ -541,7 +541,10 @@ def push_vote(request, app_id, slug):
 def follow(request, app_id, slug):
     instance = Post.objects.get(pk=slug)
     if request.method == "GET":
-        return Response(actions.is_following(request.user, instance))
+        return Response({
+            "is_follow": actions.is_following(request.user, instance),
+            "total_follow": actions.total_following(instance)
+        })
     else:
         if actions.is_following(request.user, instance):
             actions.un_follow(request.user, instance)
@@ -549,7 +552,10 @@ def follow(request, app_id, slug):
         else:
             actions.follow(request.user, instance)
             flag = True
-        return Response(flag)
+        return Response({
+            "is_follow": flag,
+            "total_follow": actions.total_following(instance)
+        })
 
 
 @api_view(['POST', 'GET'])

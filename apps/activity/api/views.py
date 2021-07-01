@@ -182,3 +182,16 @@ def get_vote_object(request):
             "total": 0,
             "is_voted": False
         })
+
+
+@api_view(['GET'])
+def check_votes(request):
+    user_id = request.user.id if request.user.is_authenticated else None
+    pks = request.GET.get("ids")
+    model = request.GET.get("model")
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FOLLOW_OBJECTS(%s, %s, %s)", [user_id, int(model), '{' + pks + '}'])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
+        return Response(result)

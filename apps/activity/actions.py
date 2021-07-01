@@ -95,6 +95,20 @@ def is_following(user, obj, flag=''):
     return qs.exists()
 
 
+def total_following(obj, flag=''):
+    check(obj)
+
+    qs = apps.get_model('activity', 'follow').objects.filter(
+        object_id=obj.pk,
+        content_type=ContentType.objects.get_for_model(obj)
+    )
+
+    if flag:
+        qs = qs.filter(flag=flag)
+
+    return qs.count()
+
+
 def action_handler(verb, **kwargs):
     """
     Handler function to create Action instance upon action signal call.
