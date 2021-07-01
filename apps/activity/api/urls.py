@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'^comments/(?P<pk>[0-9]+)/vote$', views.vote_comment),
     url(r'^follow', views.follow),
     url(r'^check-vote', views.get_vote_object),
+    url(r'^check-follow', views.check_follows),
 ]

@@ -185,7 +185,7 @@ def get_vote_object(request):
 
 
 @api_view(['GET'])
-def check_votes(request):
+def check_follows(request):
     user_id = request.user.id if request.user.is_authenticated else None
     pks = request.GET.get("ids")
     model = request.GET.get("model")
