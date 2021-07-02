@@ -17,7 +17,7 @@ from apps.activity.models import Comment, Action
 from apps.activity.api.serializers import CommentSerializer
 from utils.other import get_paginator, clone_dict
 from utils.query import query_post, query_posts, query_publication, query_user
-from utils import caching, filter_query
+from utils import caching, filter_query, caching_v2
 from django.contrib.contenttypes.models import ContentType
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -583,13 +583,13 @@ def fetch_instance(host_name, pk, is_pid):
             post_instance = Post.objects.get(pid=pk, primary_publication__host=host_name)
         else:
             if type(pk) == int or pk.isnumeric():
-                return pk
+                post_instance = Post.objects.get(pk=pk)
             else:
-                post_instance = Post.objects.get(slug=pk)
+                return pk
     except Exception as e:
         print(e)
         post_instance = None
-    return post_instance.id if post_instance is not None else None
+    return post_instance.slug if post_instance is not None else None
 
 
 # Init
@@ -626,13 +626,10 @@ def graph(request):
                 instance = None
                 if params.get("slug"):
                     instance = fetch_instance(hostname, params.get("slug"), params.get("pid"))
-                if user:
-                    out[q.get("o")] = clone_dict(query_post(instance, {"user": user}), schemas, None)
-                else:
-                    out[q.get("o")] = clone_dict(
-                        caching.make_post(force, hostname, instance, {"master": True}),
-                        schemas, None
-                    )
+                out[q.get("o")] = clone_dict(
+                    caching.make_post(force, hostname, instance, {"master": True}),
+                    schemas, None
+                )
             if q.get("q") == "post_list":
                 excluded_posts = []
                 if pub_term and pub_term.meta is not None:
@@ -710,6 +707,46 @@ def graph(request):
             if q.get("q") == "user_detail":
                 out[q.get("o")] = clone_dict(query_user(params.get("user"), {}), schemas, None)
         return Response(out)
+
+
+@api_view(['POST'])
+def graph_v2(request):
+    hostname = request.GET.get("host", None)
+    if hostname is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    out = {}
+    # type{post_list|post_detail|term_list|term_detail|user_detail|user_list}
+    # params{page, page_size, order, value}
+    query = request.data.get("query")
+    schemas = request.data.get("schemas")
+    force = filter_query.query_boolean(request.GET.get("force"), False)
+    if query.get("type") == "post_list":
+        out = caching_v2.make_posts(hostname, query=query, force=force)
+    elif query.get("type") == "post_detail":
+        pk = fetch_instance(hostname, query.get("value"), query.get("is_pid"))
+        out = caching_v2.make_post(hostname, {"instance": pk, "is_page": True}, force=force)
+    elif query.get("type") == "term_list":
+        out = caching_v2.make_terms(hostname, query=query, force=force)
+    elif query.get("type") == "term_detail":
+        instance = PublicationTerm.objects.filter(
+            publication__host=hostname,
+            taxonomy=query.get("taxonomy"),
+            term__slug=query.get("value")).first()
+        out = caching_v2.make_term(
+            hostname,
+            {
+                "instance": instance,
+                "order": query.get("order"),
+                "post_type": query.get("post_type"),
+                "page": query.get("page"),
+                "is_page": True
+            },
+            force=force
+        )
+    elif query.get("type") == "user_detail":
+        out = caching_v2.make_user(hostname, query, force=force)
+    out = clone_dict(out, schemas, None)
+    return Response(out)
 
 
 @api_view(['POST'])

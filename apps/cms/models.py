@@ -69,6 +69,12 @@ class Publication(BaseModel, Taxonomy):
                 self.measure["cal_post"][k] = self.measure["cal_post"][k] + 1
         self.save()
 
+    def make_posts(self, post_type, order):
+        return self.posts.filter(post_type=post_type, show_cms=True).distinct().values_list('id', flat=True)
+
+    def maker_terms(self, taxonomy, order):
+        return self.pub_terms.filter(taxonomy=taxonomy, show_cms=True).distinct().values_list('id', flat=True)
+
 
 class PublicationCooperation(BaseModel):
     publication = models.ForeignKey(Publication, related_name="pub_cooperation_from", on_delete=models.CASCADE)
@@ -151,6 +157,9 @@ class PublicationTerm(BaseModel):
             "priority": 0.8,
             "updated": self.updated
         }
+
+    def make_posts(self, post_type, order):
+        return self.posts.filter(post_type=post_type, show_cms=True).distinct().values_list('id', flat=True)
 
 
 class Post(BaseModel, Taxonomy):

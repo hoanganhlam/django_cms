@@ -28,6 +28,6 @@ __ pycache __
 static/
 public/
 /test_credentials.json
-/txt.txt
+/files/txt.txt
 /user.json
 /test.json

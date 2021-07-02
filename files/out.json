@@ -1,0 +1,32 @@
+{
+  "id": 269983,
+  "updated": "2021-06-30T10:29:52.574645+00:00",
+  "created": "2021-06-30T10:29:52.574642+00:00",
+  "db_status": 1,
+  "description": null,
+  "options": null,
+  "measure": null,
+  "parent_id": null,
+  "publication_id": 30,
+  "term_id": 1488,
+  "taxonomy": "language",
+  "media_id": null,
+  "meta": null,
+  "show_cms": false,
+  "term": {
+    "id": 1488,
+    "title": "Html",
+    "slug": "html",
+    "description": null,
+    "options": null,
+    "measure": null
+  },
+  "media": null,
+  "related": [
+    269983,
+    269980,
+    269982,
+    269991,
+    269992
+  ]
+}

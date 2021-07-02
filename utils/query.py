@@ -45,6 +45,14 @@ def query_post(slug, query):
         return result
 
 
+def query_term(pk):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_TAXONOMY_BY_ID(%s)", [pk])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
+
+
 def query_publication(host):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
