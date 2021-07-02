@@ -70,10 +70,10 @@ class Publication(BaseModel, Taxonomy):
         self.save()
 
     def make_posts(self, post_type, order):
-        return self.posts.filter(post_type=post_type, show_cms=True).distinct().values_list('id', flat=True)
+        return self.pp_posts.filter(post_type=post_type, show_cms=True).values_list('id', flat=True)
 
     def maker_terms(self, taxonomy, order):
-        return self.pub_terms.filter(taxonomy=taxonomy, show_cms=True).distinct().values_list('id', flat=True)
+        return self.pub_terms.filter(taxonomy=taxonomy, show_cms=True).values_list('id', flat=True)
 
 
 class PublicationCooperation(BaseModel):

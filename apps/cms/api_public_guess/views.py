@@ -585,7 +585,7 @@ def fetch_instance(host_name, pk, is_pid):
             if type(pk) == int or pk.isnumeric():
                 return pk
             else:
-                post_instance = Post.objects.get(pk=pk)
+                post_instance = Post.objects.get(slug=pk)
     except Exception as e:
         print(e)
         post_instance = None
