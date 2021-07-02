@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from apps.cms.models import Post, PublicationTerm, Publication
-import query as query_maker
+from utils import query as query_maker
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
