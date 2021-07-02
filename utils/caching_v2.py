@@ -19,10 +19,13 @@ def check_page_size(theme, flag, field, default=10):
 def maker_pub(hostname, force):
     key_path = "{}_{}".format("pub", hostname)
     if force or key_path not in cache:
-        data = Publication.objects.get(host=hostname)
+        data = query_maker.query_publication(hostname)
         cache.set(key_path, data)
     else:
         data = cache.get(key_path)
+        if type(data) is Publication:
+            data = query_maker.query_publication(hostname)
+            cache.set(key_path, data)
     return data
 
 
