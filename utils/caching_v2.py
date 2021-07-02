@@ -78,15 +78,18 @@ def make_term(hostname, query, force):
         cache.set(key_path, data)
     else:
         data = cache.get(key_path)
+    print(data)
     if query.get("is_page") and type(instance) is PublicationTerm:
-        key_path_post = "term_{}_{}_{}".format(instance.id, query.get("post_type", "article"), query.get("order", "n"))
+        page = query.get("page") or 1
+        order = query.get("order") or "n"
+        post_type = query.get("post_type") or "article"
+        key_path_post = "term_{}_{}_{}".format(instance.id, post_type, order)
         pub = maker_pub(hostname, False)
-        page = query.get("page", 1)
         page_size = check_page_size(pub.get("theme"), "general", "post_limit", 10)
         limit_list_related = check_page_size(pub.get("theme"), "general", "limit_list_related", 5)
         offset = page_size * page - page_size
         if force or key_path_post not in cache:
-            ids = instance.make_posts(query.get("post_type", "article"), query.get("order", "n"))
+            ids = instance.make_posts(query.get("post_type", "article"), order)
         else:
             ids = cache.get(key_path_post)
         if data.get("related"):
