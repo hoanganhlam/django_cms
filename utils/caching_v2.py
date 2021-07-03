@@ -119,7 +119,7 @@ def make_terms(hostname, query, force):
         ids = cache.get(key_path)
     offset = page_size * page - page_size
     return {
-        "results": list(map(lambda x: make_term(hostname, {"instance": x}, False), ids[offset: offset + page_size])),
+        "results": list(map(lambda x: make_term(hostname, {"instance": x}, False).get("instance"), ids[offset: offset + page_size])),
         "count": len(ids)
     }
 
