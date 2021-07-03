@@ -52,7 +52,7 @@ def make_posts(hostname, query, force):
     page_size = check_page_size(pub.get("theme"), "general", "post_limit", 10)
     offset = page_size * page - page_size
     post_type = query.get("post_type") or pub.options.get("default_post_type", "article")
-    order = query.get("order", "n")  # n-newest|p-popular|d-daily
+    order = query.get("order") or "p"  # n-newest|p-popular|d-daily
     key_path = "{}_{}_{}".format(hostname, post_type, order)
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
@@ -110,7 +110,7 @@ def make_terms(hostname, query, force):
     page = query.get("page") or 1
     page_size = check_page_size(pub.get("theme"), "general", "term_limit", 10)
     taxonomy = query.get("taxonomy") or pub.options.get("default_taxonomy", "category")
-    order = query.get("order", "n")  # n-newest|p-popular|d-daily
+    order = query.get("order") or "p"  # n-newest|p-popular|d-daily
     key_path = "{}_{}_{}".format(hostname, taxonomy, order)
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
