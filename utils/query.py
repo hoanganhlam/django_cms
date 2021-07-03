@@ -45,6 +45,17 @@ def query_post(slug, query):
         return result
 
 
+def query_post_detail(slug):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_POST_DETAIL(%s, %s)", [
+            slug if type(slug) is str and not slug.isnumeric() else None,
+            int(slug) if type(slug) is int or (type(slug) is str and slug.isnumeric()) else None,
+        ])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
+
+
 def query_term(pk):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_TAXONOMY_BY_ID(%s)", [pk])
@@ -76,10 +87,15 @@ def query_related(q):
 
 def query_user(username, query):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
-            username,
-            query.get("auth_id")
-        ])
+        if type(username) is str:
+            cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
+                username,
+                query.get("auth_id")
+            ])
+        else:
+            cursor.execute("SELECT FETCH_USER_ID(%s)", [
+                username
+            ])
         result = cursor.fetchone()[0]
         cursor.close()
         return result
