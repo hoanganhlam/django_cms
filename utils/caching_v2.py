@@ -64,7 +64,7 @@ def make_post(hostname, query, force):
             data[pt] = list(
                 map(
                     lambda x: make_post(hostname, {"instance": str(x)}, False),
-                    data.get(pt)[0: limit_list_related]))
+                    data.get(pt, [])[0: limit_list_related]))
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
         "user_id") else None
     data["terms"] = list(
