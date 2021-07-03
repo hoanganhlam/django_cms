@@ -107,7 +107,7 @@ def make_term(hostname, query, force):
 
 def make_terms(hostname, query, force):
     pub = maker_pub(hostname, force)
-    page = query.get("page")
+    page = query.get("page") or 1
     page_size = check_page_size(pub.get("theme"), "general", "term_limit", 10)
     taxonomy = query.get("taxonomy") or pub.options.get("default_taxonomy", "category")
     order = query.get("order", "n")  # n-newest|p-popular|d-daily
