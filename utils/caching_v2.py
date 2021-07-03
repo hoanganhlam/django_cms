@@ -15,7 +15,6 @@ def check_page_size(theme, flag, field, default=10):
     return default
 
 
-# CACHE
 def maker_pub(hostname, force):
     key_path = "{}_{}".format("pub", hostname)
     if force or key_path not in cache:
@@ -52,7 +51,7 @@ def make_posts(hostname, query, force):
     page = query.get("page", 1)
     page_size = check_page_size(pub.get("theme"), "general", "post_limit", 10)
     offset = page_size * page - page_size
-    post_type = query.get("post_type", "article")
+    post_type = query.get("post_type") or pub.options.get("default_post_type", "article")
     order = query.get("order", "n")  # n-newest|p-popular|d-daily
     key_path = "{}_{}_{}".format(hostname, post_type, order)
     if force or key_path not in cache:
@@ -78,7 +77,6 @@ def make_term(hostname, query, force):
         cache.set(key_path, data)
     else:
         data = cache.get(key_path)
-    print(data)
     if query.get("is_page") and type(instance) is PublicationTerm:
         page = query.get("page") or 1
         order = query.get("order") or "n"
@@ -111,7 +109,7 @@ def make_terms(hostname, query, force):
     pub = maker_pub(hostname, force)
     page = query.get("page")
     page_size = check_page_size(pub.get("theme"), "general", "term_limit", 10)
-    taxonomy = query.get("taxonomy", "category")
+    taxonomy = query.get("taxonomy") or pub.options.get("default_taxonomy", "category")
     order = query.get("order", "n")  # n-newest|p-popular|d-daily
     key_path = "{}_{}_{}".format(hostname, taxonomy, order)
     if force or key_path not in cache:
@@ -128,7 +126,7 @@ def make_terms(hostname, query, force):
 
 def make_user(hostname, query, force):
     pk = query.get("value")
-    key_path = "{}_user_{}".format(hostname, pk)
+    key_path = "user_{}".format(hostname, pk)
     if force or key_path not in cache:
         data = query_maker.query_user(pk, {})
         cache.set(key_path, data)
@@ -163,4 +161,11 @@ def make_user(hostname, query, force):
             "results": list(map(lambda x: make_post(hostname, str(x), False), ids[offset: offset + page_size])),
             "count": len(ids)
         }
+    }
+
+
+def make_home(hostname, query, force):
+    return {
+        "response_post": make_posts(hostname, query, force),
+        "response_term": make_terms(hostname, query, force)
     }

@@ -63,26 +63,13 @@ def is_equal(a, b):
 @api_view(['GET'])
 def init(request):
     if request.method == "GET":
-        user = None
-        if request.user.is_authenticated:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
-                    request.user.username,
-                    request.user.id if request.user.is_authenticated else None
-                ])
-                user = cursor.fetchone()[0]
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
+        return Response(status=status.HTTP_200_OK, data={
+            "p": caching_v2.maker_pub(request.GET.get("host"), request.GET.get("force")),
+            "u": caching_v2.make_user(
                 request.GET.get("host"),
-                request.user.id if request.user.is_authenticated else None
-            ])
-            result = cursor.fetchone()[0]
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data={
-                "p": result,
-                "u": user
-            })
+                {"value": request.user.username},
+                request.GET.get("force")) if request.user.is_authenticated else None
+        })
 
 
 @api_view(['GET'])
@@ -742,6 +729,8 @@ def graph_v2(request):
         out = caching_v2.make_post(hostname, {"instance": pk, "is_page": True}, force=force)
     elif query.get("type") == "term_list":
         out = caching_v2.make_terms(hostname, query=query, force=force)
+    elif query.get("type") == "home":
+        out = caching_v2.make_home(hostname, query=query, force=force)
     elif query.get("type") == "term_detail":
         instance = PublicationTerm.objects.filter(
             publication__host=hostname,
