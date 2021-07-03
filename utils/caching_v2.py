@@ -65,8 +65,10 @@ def make_post(hostname, query, force):
                 map(
                     lambda x: make_post(hostname, {"instance": str(x)}, False),
                     data.get(pt)[0: limit_list_related]))
-    data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get("user_id") else None
-    data["terms"] = list(map(lambda x: make_term(hostname, {"instance": x}, False).get("instance"), data["terms"]))
+    data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
+        "user_id") else None
+    data["terms"] = list(
+        map(lambda x: make_term(hostname, {"instance": x}, False).get("instance"), data.get("terms", [])))
     return data
 
 
@@ -94,6 +96,8 @@ def make_term(hostname, query, force):
     instance = query.get("instance")
     if type(instance) is PublicationTerm:
         pk = instance.id
+    elif type(instance) is dict:
+        pk = instance.get("id")
     else:
         pk = instance
     key_path = "{}_{}".format("term", pk)
