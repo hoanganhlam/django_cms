@@ -63,10 +63,13 @@ def make_post(hostname, query, force):
                 lambda x: make_post(hostname, {"instance": str(x)}, False),
                 data.get("related")[0: limit_list_related]))
         for pt in post_type_related:
-            data[pt] = list(
-                map(
-                    lambda x: make_post(hostname, {"instance": str(x)}, False),
-                    data.get(pt, [])[0: limit_list_related]))
+            data[pt] = {
+                "results": list(
+                    map(
+                        lambda x: make_post(hostname, {"instance": str(x)}, False),
+                        data.get(pt, [])[0: limit_list_related])),
+                "count": len(data.get(pt, []))
+            }
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
         "user_id") else None
     data["terms"] = list(
