@@ -27,7 +27,7 @@ def maker_pub(hostname, force):
     key_path = "{}_{}".format("pub", hostname)
     if force or key_path not in cache:
         data = query_maker.query_publication(hostname)
-        cache.set(key_path, data)
+        cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
         if type(data) is Publication:
@@ -88,6 +88,7 @@ def make_posts(hostname, query, force):
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
         ids = pub_instance.make_posts(post_type, order)
+        cache.set(key_path, ids, timeout=CACHE_TTL)
     else:
         ids = cache.get(key_path)
     return {
@@ -108,7 +109,7 @@ def make_term(hostname, query, force):
     key_path = "{}_{}".format("term", pk)
     if force or key_path not in cache:
         data = query_maker.query_term(pk=pk)
-        cache.set(key_path, data)
+        cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
     if query.get("is_page") and type(instance) is PublicationTerm:
@@ -122,6 +123,7 @@ def make_term(hostname, query, force):
         offset = page_size * page - page_size
         if force or key_path_post not in cache:
             ids = instance.make_posts(query.get("post_type", "article"), order)
+            cache.set(key_path_post, ids, timeout=CACHE_TTL)
         else:
             ids = cache.get(key_path_post)
         if data.get("related"):
@@ -151,6 +153,7 @@ def make_terms(hostname, query, force):
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
         ids = pub_instance.maker_terms(taxonomy, order)
+        cache.set(key_path, ids, timeout=CACHE_TTL)
     else:
         ids = cache.get(key_path)
     offset = page_size * page - page_size
@@ -166,7 +169,7 @@ def make_user(hostname, query, force):
     key_path = "user_{}".format(hostname, pk)
     if force or key_path not in cache:
         data = query_maker.query_user(pk, {})
-        cache.set(key_path, data)
+        cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
     if query.get("is_page"):
