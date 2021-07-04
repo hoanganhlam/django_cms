@@ -42,13 +42,15 @@ def make_post(hostname, query, force):
     if force or key_path not in cache:
         data = query_maker.query_post_detail(slug=pk)
         post_type_related = get_post_type_related(hostname, data.get("post_type"))
+        ide = data.get("id")
         for pt in post_type_related:
-            data[pt] = list(Post.objects.filter(
-                primary_publication__host=hostname,
-                post_related_revert__slug=pk,
-                show_cms=True,
-                post_type=pt
-            ).values_list("id", flat=True))
+            q = Q(primary_publication__host=hostname,
+                  post_related_revert__slug=pk,
+                  show_cms=True,
+                  post_type=pt) & (Q(post_related_revert__id=ide) | Q(post_related__id=ide))
+            data[pt] = list(Post.objects.prefetch_related("post_related", "post_related_revert")
+                            .filter(q)
+                            .values_list("id", flat=True))
         cache.set(key_path, data, timeout=CACHE_TTL)
     else:
         data = cache.get(key_path)
