@@ -11,7 +11,7 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 # HELPER
 def check_page_size(options, flag, field, default=10):
     if options and options.get("theme") and options.get("theme").get(flag) and options.get("theme").get(flag).get(field):
-        return options.get(flag).get(field)
+        return options.get("theme").get(flag).get(field)
     return default
 
 
