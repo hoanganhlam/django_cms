@@ -9,9 +9,9 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 
 # HELPER
-def check_page_size(theme, flag, field, default=10):
-    if theme and theme.get(flag) and theme.get(flag).get(field):
-        return theme.get(flag).get(field)
+def check_page_size(options, flag, field, default=10):
+    if options and options.get("theme") and options.get("theme").get(flag) and options.get("theme").get(flag).get(field):
+        return options.get(flag).get(field)
     return default
 
 
@@ -57,7 +57,7 @@ def make_post(hostname, query, force):
     if query.get("is_page"):
         pub = maker_pub(hostname, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
-        limit_list_related = check_page_size(pub.get("theme"), "general", "limit_list_related", 5)
+        limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
         data["related"] = list(
             map(
                 lambda x: make_post(hostname, {"instance": str(x)}, False),
@@ -80,7 +80,7 @@ def make_post(hostname, query, force):
 def make_posts(hostname, query, force):
     pub = maker_pub(hostname, False)
     page = query.get("page", 1)
-    page_size = check_page_size(pub.get("theme"), "general", "post_limit", 10)
+    page_size = check_page_size(pub.get("options"), "options", "post_limit", 10)
     offset = page_size * page - page_size
     post_type = query.get("post_type") or pub.options.get("default_post_type", "article")
     order = query.get("order") or "p"  # n-newest|p-popular|d-daily
@@ -117,8 +117,8 @@ def make_term(hostname, query, force):
         post_type = query.get("post_type") or "article"
         key_path_post = "term_{}_{}_{}".format(instance.id, post_type, order)
         pub = maker_pub(hostname, False)
-        page_size = check_page_size(pub.get("theme"), "general", "post_limit", 10)
-        limit_list_related = check_page_size(pub.get("theme"), "general", "limit_list_related", 5)
+        page_size = check_page_size(pub.get("options"), "general", "post_limit", 10)
+        limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
         offset = page_size * page - page_size
         if force or key_path_post not in cache:
             ids = instance.make_posts(query.get("post_type", "article"), order)
@@ -144,7 +144,7 @@ def make_term(hostname, query, force):
 def make_terms(hostname, query, force):
     pub = maker_pub(hostname, force)
     page = query.get("page") or 1
-    page_size = check_page_size(pub.get("theme"), "general", "term_limit", 10)
+    page_size = check_page_size(pub.get("options"), "general", "term_limit", 10)
     taxonomy = query.get("taxonomy") or pub.options.get("default_taxonomy", "category")
     order = query.get("order") or "p"  # n-newest|p-popular|d-daily
     key_path = "{}_{}_{}".format(hostname, taxonomy, order)
