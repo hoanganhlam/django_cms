@@ -29,12 +29,12 @@ def maker_pub(hostname, query, force):
     key_path = "{}_{}".format("pub", hostname)
     if force or key_path not in cache:
         data = query_maker.query_publication(hostname)
-        cache.set(key_path, data, timeout=CACHE_TTL)
+        cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
         if type(data) is Publication:
             data = query_maker.query_publication(hostname)
-            cache.set(key_path, data)
+            cache.set(key_path, data, timeout=CACHE_TTL * 12)
     taxonomies = list(map(lambda x: x.get("label"), data.get("options").get("taxonomies")))
     if query.get("is_page"):
         for tax in taxonomies:
@@ -49,33 +49,24 @@ def make_post(hostname, query, force):
     key_path = "post-{post_id}".format(post_id=pk)
     if force or key_path not in cache:
         data = query_maker.query_post_detail(slug=pk)
-        post_type_related = get_post_type_related(hostname, data.get("post_type"))
-        ide = data.get("id")
-        for pt in post_type_related:
-            q = Q(primary_publication__host=hostname,
-                  post_related_revert__slug=pk,
-                  show_cms=True,
-                  post_type=pt) & (Q(post_related_revert__id=ide) | Q(post_related__id=ide))
-            data[pt] = list(Post.objects.prefetch_related("post_related", "post_related_revert")
-                            .filter(q)
-                            .values_list("id", flat=True))
-        cache.set(key_path, data, timeout=CACHE_TTL)
+        cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
     if query.get("is_page"):
         pub = maker_pub(hostname, {}, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
         limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
-        data["related"] = list(
-            map(
-                lambda x: make_post(hostname, {"instance": str(x)}, False),
-                data.get("related")[0: limit_list_related]))
+        data["related"] = list(map(lambda x: make_post(hostname, {"instance": str(x)}, False), data.get("related")[0: limit_list_related]))
         for pt in post_type_related:
+            key_path_related = "{}_post_{}_related_{}".format(hostname, pk, pt)
+            if key_path_related not in cache or force:
+                q = Q(primary_publication__host=hostname, post_related_revert__slug=pk, show_cms=True, post_type=pt) & (Q(post_related_revert__id=data.get("id")) | Q(post_related__id=data.get("id")))
+                ids = list(Post.objects.prefetch_related("post_related", "post_related_revert").filter(q).values_list("id", flat=True))
+                cache.set(key_path_related, ids, timeout=CACHE_TTL * 12)
+            else:
+                ids = cache.get(key_path_related)
             data[pt] = {
-                "results": list(
-                    map(
-                        lambda x: make_post(hostname, {"instance": str(x)}, False),
-                        data.get(pt, [])[0: limit_list_related])),
+                "results": list(map(lambda x: make_post(hostname, {"instance": str(x)}, False), ids[0: limit_list_related])),
                 "count": len(data.get(pt, []))
             }
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
@@ -97,7 +88,7 @@ def make_posts(hostname, query, force):
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
         ids = pub_instance.make_posts(post_type, order)
-        cache.set(key_path, ids, timeout=CACHE_TTL)
+        cache.set(key_path, ids, timeout=CACHE_TTL * 12)
     else:
         ids = cache.get(key_path)
     return {
@@ -109,8 +100,15 @@ def make_posts(hostname, query, force):
 
 def make_term(hostname, query, force):
     instance = query.get("instance")
-    if type(instance) is PublicationTerm:
-        pk = instance.id
+    if query.get("taxonomy"):
+        key_path = "{}_{}_{}".format(hostname, query.get("taxonomy"), instance)
+        if force or key_path not in cache:
+            pub = maker_pub(hostname, {}, False)
+            data = query_maker.query_term_tax(query.get("taxonomy"), instance, pub.get("id"))
+            pk = data.get("id")
+            cache.set(key_path, pk, timeout=CACHE_TTL * 12)
+        else:
+            pk = cache.get(key_path)
     elif type(instance) is dict:
         pk = instance.get("id")
     else:
@@ -118,21 +116,22 @@ def make_term(hostname, query, force):
     key_path = "{}_{}".format("term", pk)
     if force or key_path not in cache:
         data = query_maker.query_term(pk=pk)
-        cache.set(key_path, data, timeout=CACHE_TTL)
+        cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
-    if query.get("is_page") and type(instance) is PublicationTerm:
+    if query.get("is_page"):
         page = query.get("page") or 1
         order = query.get("order") or "n"
         post_type = query.get("post_type") or "article"
-        key_path_post = "term_{}_{}_{}".format(instance.id, post_type, order)
+        key_path_post = "term_{}_{}_{}".format(data.get("id"), post_type, order)
         pub = maker_pub(hostname, {}, False)
         page_size = check_page_size(pub.get("options"), "general", "post_limit", 10)
         limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
         offset = page_size * page - page_size
         if force or key_path_post not in cache:
-            ids = instance.make_posts(query.get("post_type", "article"), order)
-            cache.set(key_path_post, ids, timeout=CACHE_TTL)
+            instance = PublicationTerm.objects.get(pk=data.get("id"))
+            ids = instance.make_posts(post_type, order)
+            cache.set(key_path_post, list(ids), timeout=CACHE_TTL * 12)
         else:
             ids = cache.get(key_path_post)
         if data.get("related"):
@@ -162,7 +161,7 @@ def make_terms(hostname, query, force):
     if force or key_path not in cache:
         pub_instance = Publication.objects.get(pk=pub.get("id"))
         ids = pub_instance.maker_terms(taxonomy, order)
-        cache.set(key_path, ids, timeout=CACHE_TTL)
+        cache.set(key_path, ids, timeout=CACHE_TTL * 12)
     else:
         ids = cache.get(key_path)
     offset = page_size * page - page_size
@@ -178,7 +177,7 @@ def make_user(hostname, query, force):
     key_path = "user_{}".format(hostname, pk)
     if force or key_path not in cache:
         data = query_maker.query_user(pk, {})
-        cache.set(key_path, data, timeout=CACHE_TTL)
+        cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
     if query.get("is_page"):

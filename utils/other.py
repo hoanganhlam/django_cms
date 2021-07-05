@@ -22,12 +22,13 @@ def get_paginator(request):
     search = request.GET.get('search')
     page_size = 10 if request.GET.get('page_size') is None else int(request.GET.get('page_size'))
     page = 1 if request.GET.get('page') is None else int(request.GET.get('page'))
-    offs3t = page_size * page - page_size
+    offs3t = page_size * page - page_size,
     return {
         "search": search,
         "page_size": page_size,
         "page": page,
-        "offs3t": offs3t
+        "offs3t": offs3t,
+        "order": request.GET.get('order')
     }
 
 

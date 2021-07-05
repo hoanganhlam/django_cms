@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.db import connection
 from django.db.models import Q
 from django.core.cache import cache
@@ -112,27 +113,111 @@ def fetch_publication(request):
 
 @api_view(['GET', 'POST'])
 def fetch_taxonomies(request, app_id):
+    pub = Publication.objects.get(pk=app_id)
     if request.method == "GET":
-        p = get_paginator(request)
-        user_id = request.user.id if request.user.is_authenticated else None
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_TERM_TAXONOMIES(%s, %s, %s, %s, %s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               p.get("search"),
-                               request.GET.get("order_by"),
-                               user_id,
-                               request.GET.get("taxonomy", None),
-                               '{' + request.GET.get('taxonomies') + '}' if request.GET.get('taxonomies') else None,
-                               app_id,
-                           ])
-            result = cursor.fetchone()[0]
-            if result.get("results") is None:
-                result["results"] = []
-            cursor.close()
-            connection.close()
-            return Response(status=status.HTTP_200_OK, data=result)
+        search = request.GET.get('search')
+        page_size = 10 if request.GET.get('page_size') is None else int(request.GET.get('page_size'))
+        page = 1 if request.GET.get('page') is None else int(request.GET.get('page'))
+        auth_id = request.user.id if request.user.is_authenticated else None
+        user_id = request.get("user")
+        taxonomy = request.get("taxonomy")
+        meta = request.get("meta")
+        related = request.GET.get('related_terms').split(",") if request.GET.get('related_terms') else None
+        q = Q(show_cms=True, publication_id=app_id)
+        if taxonomy:
+            q = q & Q(taxonomy=taxonomy)
+        if related:
+            q = q & Q(related__id__in=related)
+        if search:
+            q = q & Q(term__title__icontains=search) | Q(term__description__icontains=search)
+        queryset = models.PublicationTerm.objects.order_by("-id").values_list("id", flat=True).filter(q)
+        paginator = Paginator(queryset, page_size)
+        terms = list(paginator.page(page).object_list)
+        results = []
+        for item in terms:
+            results.append(
+                clone_dict(
+                    caching_v2.make_term(pub.host, {"instance": item}, False),
+                    ["id", "term", "taxonomy"],
+                    None
+                )
+            )
+        return Response(status=status.HTTP_200_OK, data={
+            "results": results,
+            "count": queryset.count()
+        })
+
+
+@api_view(['GET', 'POST'])
+def fetch_posts(request, app_id):
+    pub = Publication.objects.get(pk=app_id)
+    if request.method == "GET":
+        search = request.GET.get('search')
+        page_size = 10 if request.GET.get('page_size') is None else int(request.GET.get('page_size'))
+        page = 1 if request.GET.get('page') is None else int(request.GET.get('page'))
+        auth_id = request.user.id if request.user.is_authenticated else None
+        user_id = request.GET.get("user")
+        post_type = request.GET.get("post_type")
+        terms = request.GET.get("terms").split(",") if request.GET.get("terms") else []
+        related_posts = request.GET.get("related_posts").split(",") if request.GET.get("related_posts") else []
+        meta = request.GET.get("meta")
+        q = Q(show_cms=True, primary_publication_id=app_id)
+        if user_id:
+            q = q & Q(user_id=user_id)
+        if post_type:
+            q = q & Q(post_type=post_type)
+        if terms:
+            q = q & Q(terms__id__in=terms)
+        if search:
+            q = q & (Q(title__icontains=search) | Q(description__icontains=search))
+        if related_posts:
+            q = q & Q(post_related__id__in=related_posts)
+        queryset = models.Post.objects.order_by("-id").values_list("id", flat=True).filter(q)
+        paginator = Paginator(queryset, page_size)
+        posts = list(paginator.page(page).object_list)
+        results = []
+        for post in posts:
+            results.append(
+                clone_dict(
+                    caching_v2.make_post(pub.host, {"instance": post}, False),
+                    ["title", "id", "post_type", "description", "media", "slug"],
+                    None
+                )
+            )
+        return Response(status=status.HTTP_200_OK, data={
+            "results": results,
+            "count": queryset.count()
+        })
+    if request.method == "POST":
+        if pub.options.get("allow_guess_post", False):
+            meta = request.data.get("meta", {})
+            post = Post.objects.create(
+                primary_publication=pub,
+                status="POSTED",
+                show_cms=pub.options.get("auto_guess_public", False),
+                post_type=request.data.get("post_type", "article"),
+                title=request.data.get("title", "Untitled"),
+                description=request.data.get("description"),
+                content=request.data.get("content"),
+                user=request.user if request.user.is_authenticated else None,
+                meta=meta,
+                is_guess_post=True
+            )
+            if request.data.get("post_related_add", None) is not None:
+                for p in request.data.get("post_related_add", None):
+                    pr = Post.objects.get(pk=p)
+                    post.post_related.add(pr)
+            if request.data.get("terms_add", None) is not None:
+                prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
+                for p in prs:
+                    post.terms.add(p)
+            if request.user.is_authenticated:
+                actions.follow(request.user, post)
+            return Response(
+                status=status.HTTP_200_OK,
+                data=caching.make_post(True, None, str(post.id), {"master": True})
+            )
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
@@ -192,9 +277,12 @@ def fetch_taxonomy(request, app_id, slug):
                 else:
                     setattr(instance, k, request.data.get(k))
             instance.save()
+            flag = True
+        else:
+            flag = False
         return Response(
             status=status.HTTP_200_OK,
-            data=caching.make_term(True, str(instance.id), True)
+            data=caching_v2.make_term(instance.publication.host, {"instance": instance.id, "is_page": True}, flag)
         )
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, )
 
@@ -252,76 +340,6 @@ def fetch_taxonomy_contribute(request, app_id, slug):
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@api_view(['GET', 'POST'])
-def fetch_posts(request, app_id):
-    if request.method == "GET":
-        app = models.Publication.objects.get(pk=app_id)
-        if app.options is None:
-            app.options = {}
-        tax_list = app.options.get("taxonomies")
-        term_ids = []
-        if tax_list:
-            for tax in tax_list:
-                if request.GET.get(tax.get("label")):
-                    qs = models.PublicationTerm.objects.filter(
-                        publication=app,
-                        taxonomy=tax.get("label"),
-                        term__slug__in=request.GET.get(tax.get("label")).split(",")
-                    )
-                    for s in qs:
-                        term_ids.append(str(s.id))
-        p = get_paginator(request)
-        user_id = request.user.id if request.user.is_authenticated else None
-        return Response(status=status.HTTP_200_OK, data=query_posts({
-            "page_size": p.get("page_size"),
-            "offs3t": p.get("offs3t"),
-            "search": p.get("search"),
-            "order_by": request.GET.get("order_by"),
-            "user_id": user_id,
-            "post_type": request.GET.get("post_type"),
-            "status": "POSTED",
-            "is_guess_post": request.GET.get("is_guess_post"),
-            "show_cms": request.GET.get("show_cms", None),
-            "taxonomies_operator": request.GET.get("taxonomies_operator"),
-            "taxonomies": "".join(term_ids),
-            "app_id": app_id,
-            "related_operator": request.GET.get("related_operator"),
-            "post_related": request.GET.get('post_related'),
-            "meta": request.GET.get("meta")
-        }))
-    if request.method == "POST":
-        pub = Publication.objects.get(pk=app_id)
-        if pub.options.get("allow_guess_post", False):
-            meta = request.data.get("meta", {})
-            post = Post.objects.create(
-                primary_publication=pub,
-                status="POSTED",
-                show_cms=pub.options.get("auto_guess_public", False),
-                post_type=request.data.get("post_type", "article"),
-                title=request.data.get("title", "Untitled"),
-                description=request.data.get("description"),
-                content=request.data.get("content"),
-                user=request.user if request.user.is_authenticated else None,
-                meta=meta,
-                is_guess_post=True
-            )
-            if request.data.get("post_related_add", None) is not None:
-                for p in request.data.get("post_related_add", None):
-                    pr = Post.objects.get(pk=p)
-                    post.post_related.add(pr)
-            if request.data.get("terms_add", None) is not None:
-                prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
-                for p in prs:
-                    post.terms.add(p)
-            if request.user.is_authenticated:
-                actions.follow(request.user, post)
-            return Response(
-                status=status.HTTP_200_OK,
-                data=caching.make_post(True, None, str(post.id), {"master": True})
-            )
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-
 @api_view(['GET', 'DELETE', 'PUT'])
 def fetch_post(request, app_id, slug):
     publication = Publication.objects.get(pk=app_id)
@@ -357,11 +375,22 @@ def fetch_post(request, app_id, slug):
                 for p in request.data.get("terms_removal"):
                     pr = PublicationTerm.objects.get(pk=p)
                     instance.terms.remove(pr)
+                    for order in ["p", "n"]:
+                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
+                        ids = instance.make_posts(instance.post_type, order)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
             if request.data.get("terms_add"):
                 for p in request.data.get("terms_add"):
                     pr = PublicationTerm.objects.get(pk=p)
                     instance.terms.add(pr)
+                    for order in ["p", "n"]:
+                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
+                        ids = instance.make_posts(instance.post_type, order)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
             instance.save()
+            flag = True
+        else:
+            flag = False
         ct = ContentType.objects.get(app_label='cms', model='post')
         for k in request.data.keys():
             val = request.data.get(k)
@@ -404,10 +433,9 @@ def fetch_post(request, app_id, slug):
                         )
         return Response(
             status=status.HTTP_200_OK,
-            data=caching.make_post(True, None, str(instance.id), {"master": True})
+            data=caching_v2.make_post(publication.host, {"instance": instance.id, "is_page": True}, flag)
         )
-
-    if request.method in ["GET"]:
+    elif request.method == "GET":
         return Response(status=status.HTTP_200_OK, data=query_post(slug, {
             "uid": request.GET.get("uid") is not None,
             "is_guess_post": request.GET.get("is_guess_post"),
@@ -735,14 +763,11 @@ def graph_v2(request):
     elif query.get("type") == "home":
         out = caching_v2.make_home(hostname, query=query, force=force)
     elif query.get("type") == "term_detail":
-        instance = PublicationTerm.objects.filter(
-            publication__host=hostname,
-            taxonomy=query.get("taxonomy"),
-            term__slug=query.get("value")).first()
         out = caching_v2.make_term(
             hostname,
             {
-                "instance": instance,
+                "instance": query.get("value"),
+                "taxonomy": query.get("taxonomy"),
                 "order": query.get("order"),
                 "post_type": query.get("post_type"),
                 "page": query.get("page"),

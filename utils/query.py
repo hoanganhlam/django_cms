@@ -64,6 +64,18 @@ def query_term(pk):
         return result
 
 
+def query_term_tax(taxonomy, term, pub_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_TAXONOMY(%s, %s, %s)", [
+            term,
+            pub_id,
+            taxonomy,
+        ])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
+
+
 def query_publication(host):
     with connection.cursor() as cursor:
         cursor.execute("SELECT FETCH_PUBLICATION(%s, %s)", [
