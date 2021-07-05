@@ -52,6 +52,8 @@ def make_post(hostname, query, force):
         cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
+    if data is None:
+        return {}
     if query.get("is_page"):
         pub = maker_pub(hostname, {}, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
