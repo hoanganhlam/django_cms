@@ -60,16 +60,19 @@ def is_equal(a, b):
 
 
 # ==========================================================================
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def init(request):
-    if request.method == "GET":
-        return Response(status=status.HTTP_200_OK, data={
-            "p": caching_v2.maker_pub(request.GET.get("host"), request.GET.get("force")),
-            "u": caching_v2.make_user(
-                request.GET.get("host"),
-                {"value": request.user.username},
-                request.GET.get("force")) if request.user.is_authenticated else None
-        })
+    return Response(status=status.HTTP_200_OK, data={
+        "p": caching_v2.maker_pub(
+            request.GET.get("host"),
+            request.body.get("schema", {}) if request.method == "GET" else {},
+            request.GET.get("force")
+        ),
+        "u": caching_v2.make_user(
+            request.GET.get("host"),
+            {"value": request.user.username},
+            request.GET.get("force")) if request.user.is_authenticated else None
+    })
 
 
 @api_view(['GET'])

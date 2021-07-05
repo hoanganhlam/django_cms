@@ -232,7 +232,7 @@ CACHES = {
         }
     }
 }
-CACHE_TTL = 60 * 60 * 30 * 24
+CACHE_TTL = 60 * 60 * 30 * 24 * 30
 
 # CELERY STUFF
 CELERY_BROKER_URL = 'redis://localhost:6379'

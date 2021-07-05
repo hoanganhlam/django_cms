@@ -1,29 +1,31 @@
 from django.db.models import Q
 from django.core.cache import cache
 from django.conf import settings
-from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from utils.other import clone_dict
 from apps.cms.models import Post, PublicationTerm, Publication
+from apps.cms.api.serializers import PublicationSerializer
 from utils import query as query_maker
 
-CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+CACHE_TTL = getattr(settings, 'CACHE_TTL')
 
 
 # HELPER
 def check_page_size(options, flag, field, default=10):
-    if options and options.get("theme") and options.get("theme").get(flag) and options.get("theme").get(flag).get(field):
+    if options and options.get("theme") and options.get("theme").get(flag) and options.get("theme").get(flag).get(
+            field):
         return options.get("theme").get(flag).get(field)
     return default
 
 
 def get_post_type_related(pub, post_type):
     if type(pub) is str:
-        pub = maker_pub(pub, False)
+        pub = maker_pub(pub, {}, False)
     post_types = pub.get("options").get("post_types")
     filtered = next((x for x in post_types if x.get("label") == post_type), None)
     return filtered.get("related") or []
 
 
-def maker_pub(hostname, force):
+def maker_pub(hostname, query, force):
     key_path = "{}_{}".format("pub", hostname)
     if force or key_path not in cache:
         data = query_maker.query_publication(hostname)
@@ -33,6 +35,11 @@ def maker_pub(hostname, force):
         if type(data) is Publication:
             data = query_maker.query_publication(hostname)
             cache.set(key_path, data)
+    taxonomies = list(map(lambda x: x.get("label"), data.get("options").get("taxonomies")))
+    for tax in taxonomies:
+        data[tax] = make_terms(hostname, {"taxonomy": tax}, False)
+    if query and query.get("schema"):
+        data = clone_dict(data, query.get("schema"), None)
     return data
 
 
@@ -55,7 +62,7 @@ def make_post(hostname, query, force):
     else:
         data = cache.get(key_path)
     if query.get("is_page"):
-        pub = maker_pub(hostname, False)
+        pub = maker_pub(hostname, {}, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
         limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
         data["related"] = list(
@@ -73,12 +80,13 @@ def make_post(hostname, query, force):
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
         "user_id") else None
     data["terms"] = list(
-        map(lambda x: make_term(hostname, {"instance": x}, False).get("instance"), data.get("terms", []))) if data.get("terms") else []
+        map(lambda x: make_term(hostname, {"instance": x}, False).get("instance"), data.get("terms", []))) if data.get(
+        "terms") else []
     return data
 
 
 def make_posts(hostname, query, force):
-    pub = maker_pub(hostname, False)
+    pub = maker_pub(hostname, {}, False)
     page = query.get("page", 1)
     page_size = check_page_size(pub.get("options"), "options", "post_limit", 10)
     offset = page_size * page - page_size
@@ -117,7 +125,7 @@ def make_term(hostname, query, force):
         order = query.get("order") or "n"
         post_type = query.get("post_type") or "article"
         key_path_post = "term_{}_{}_{}".format(instance.id, post_type, order)
-        pub = maker_pub(hostname, False)
+        pub = maker_pub(hostname, {}, False)
         page_size = check_page_size(pub.get("options"), "general", "post_limit", 10)
         limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
         offset = page_size * page - page_size
@@ -144,7 +152,7 @@ def make_term(hostname, query, force):
 
 
 def make_terms(hostname, query, force):
-    pub = maker_pub(hostname, force)
+    pub = maker_pub(hostname, {}, force)
     page = query.get("page") or 1
     page_size = check_page_size(pub.get("options"), "general", "term_limit", 10)
     taxonomy = query.get("taxonomy") or pub.options.get("default_taxonomy", "category")
@@ -206,6 +214,5 @@ def make_user(hostname, query, force):
 
 def make_home(hostname, query, force):
     return {
-        "response_post": make_posts(hostname, query, force),
-        "response_term": make_terms(hostname, query, force)
+        "response_post": make_posts(hostname, query, force)
     }

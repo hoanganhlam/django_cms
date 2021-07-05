@@ -16,7 +16,6 @@ class PublicationSerializer(serializers.ModelSerializer):
         }
 
     def to_representation(self, instance):
-        self.fields['terms'] = TermSerializer(many=True)
         return super(PublicationSerializer, self).to_representation(instance)
 
 
