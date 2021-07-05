@@ -7,6 +7,7 @@ from base import pagination
 from . import serializers
 from apps.cms import models
 from django.db.models import Q
+from utils.caching_v2 import maker_pub
 
 
 class PublicationViewSet(viewsets.ModelViewSet):
@@ -60,6 +61,7 @@ class PublicationViewSet(viewsets.ModelViewSet):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
+        maker_pub(instance.host, {}, True)
 
         return Response(serializer.data)
 
