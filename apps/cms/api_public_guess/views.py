@@ -65,7 +65,7 @@ def init(request):
     return Response(status=status.HTTP_200_OK, data={
         "p": caching_v2.maker_pub(
             request.GET.get("host"),
-            request.body.get("schema", {}) if request.method == "POST" else {},
+            request.data if request.method == "POST" else {},
             request.GET.get("force")
         ),
         "u": caching_v2.make_user(
