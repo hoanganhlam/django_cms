@@ -98,7 +98,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(
             status=status.HTTP_201_CREATED,
             data=caching_v2.make_post(instance.primary_publication.host, {
-                "instance": instance.id
+                "instance": instance.slug
             }, True),
             headers=headers
         )
@@ -131,7 +131,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(
             status=status.HTTP_200_OK,
             data=caching_v2.make_post(instance.primary_publication.host, {
-                "instance": instance.id
+                "instance": instance.slug,
             }, True)
         )
 

@@ -398,7 +398,7 @@ def fetch_post(request, app_id, slug):
                         )
         return Response(
             status=status.HTTP_200_OK,
-            data=caching_v2.make_post(publication.host, {"instance": instance.id, "is_page": True}, flag)
+            data=caching_v2.make_post(publication.host, {"instance": instance.slug, "is_page": True}, flag)
         )
     elif request.method == "GET":
         return Response(status=status.HTTP_200_OK, data=query_post(slug, {
