@@ -194,7 +194,7 @@ def fetch_posts(request, app_id):
             post = Post.objects.create(
                 primary_publication=pub,
                 status="POSTED",
-                show_cms=pub.options.get("auto_guess_public", False),
+                show_cms=pub.options.get("auto_guess_public", False) or (request.user.is_authenticated and request.user.is_staff),
                 post_type=request.data.get("post_type", "article"),
                 title=request.data.get("title", "Untitled"),
                 description=request.data.get("description"),
