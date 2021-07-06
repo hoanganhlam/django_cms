@@ -122,6 +122,10 @@ class PostViewSet(viewsets.ModelViewSet):
                 key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
                 ids = pr.make_posts(instance.post_type, order)
                 cache.set(key_path_post, list(ids), timeout=CACHE_TTL * 12)
+        for order in ["p", "n"]:
+            key_path = "{}_{}_{}".format(instance.primary_publication.host, instance.post_type, order)
+            ids = instance.primary_publication.make_posts(instance.post_type, order)
+            cache.set(key_path, ids, timeout=CACHE_TTL * 12)
         return Response(
             status=status.HTTP_200_OK,
             data=caching.make_post(True, instance.primary_publication.host, str(instance.id), {"master": True}))
