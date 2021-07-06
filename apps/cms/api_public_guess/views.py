@@ -340,7 +340,7 @@ def fetch_post(request, app_id, slug):
                     for order in ["p", "n"]:
                         key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
                         ids = pr.make_posts(instance.post_type, order)
-                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL * 12)
             if request.data.get("terms_add"):
                 for p in request.data.get("terms_add"):
                     pr = PublicationTerm.objects.get(pk=p)
@@ -348,7 +348,7 @@ def fetch_post(request, app_id, slug):
                     for order in ["p", "n"]:
                         key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
                         ids = pr.make_posts(instance.post_type, order)
-                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL * 12)
             for order in ["p", "n"]:
                 key_path = "{}_{}_{}".format(instance.primary_publication.host, instance.post_type, order)
                 ids = instance.primary_publication.make_posts(instance.post_type, order)
