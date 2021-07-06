@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db import connection
 from django.template.defaultfilters import slugify
 from utils.other import get_paginator
-from utils import caching, filter_query
+from utils import caching_v2, caching, filter_query
 from base import pagination
 from django.db.models import Q
 
@@ -97,7 +97,9 @@ class PostViewSet(viewsets.ModelViewSet):
             cache.set(key_path, ids, timeout=CACHE_TTL * 12)
         return Response(
             status=status.HTTP_201_CREATED,
-            data=caching.make_post(True, None, str(serializer.data.get("id")), {"master": True}),
+            data=caching_v2.make_post(instance.primary_publication.host, {
+                "instance": instance.id
+            }, True),
             headers=headers
         )
 
@@ -128,7 +130,10 @@ class PostViewSet(viewsets.ModelViewSet):
             cache.set(key_path, ids, timeout=CACHE_TTL * 12)
         return Response(
             status=status.HTTP_200_OK,
-            data=caching.make_post(True, instance.primary_publication.host, str(instance.id), {"master": True}))
+            data=caching_v2.make_post(instance.primary_publication.host, {
+                "instance": instance.id
+            }, True)
+        )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
