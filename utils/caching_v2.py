@@ -38,7 +38,7 @@ def maker_pub(hostname, query, force):
     taxonomies = list(map(lambda x: x.get("label"), data.get("options").get("taxonomies")))
     if query.get("is_page"):
         for tax in taxonomies:
-            data[tax] = make_terms(hostname, {"taxonomy": tax}, False)
+            data[tax] = make_terms(hostname, {"taxonomy": tax}, force)
     if query and query.get("schema"):
         data = clone_dict(data, query.get("schema"), None)
     return data
