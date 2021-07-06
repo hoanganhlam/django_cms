@@ -7,12 +7,16 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
+from django.core.cache import cache
+from django.conf import settings
 from django.db import connection
 from django.template.defaultfilters import slugify
 from utils.other import get_paginator
 from utils import caching, filter_query
 from base import pagination
 from django.db.models import Q
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL')
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -87,6 +91,10 @@ class PostViewSet(viewsets.ModelViewSet):
             for r in related:
                 if r not in old_related:
                     instance.post_related.add(r)
+        for order in ["p", "n"]:
+            key_path = "{}_{}_{}".format(instance.primary_publication.host, instance.post_type, order)
+            ids = instance.primary_publication.make_posts(instance.post_type, order)
+            cache.set(key_path, ids, timeout=CACHE_TTL * 12)
         return Response(
             status=status.HTTP_201_CREATED,
             data=caching.make_post(True, None, str(serializer.data.get("id")), {"master": True}),
@@ -99,18 +107,21 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
         if request.data.get("post_related"):
             related = models.Post.objects.filter(id__in=request.data.get("post_related"))
             old_related = instance.post_related.all()
             for r in related:
                 if r not in old_related:
                     instance.post_related.add(r)
-
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
+        for pr in instance.terms.all():
+            for order in ["p", "n"]:
+                key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
+                ids = pr.make_posts(instance.post_type, order)
+                cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
         return Response(
             status=status.HTTP_200_OK,
             data=caching.make_post(True, instance.primary_publication.host, str(instance.id), {"master": True}))
