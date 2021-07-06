@@ -207,12 +207,27 @@ def fetch_posts(request, app_id):
                 for p in request.data.get("post_related_add", None):
                     pr = Post.objects.get(pk=p)
                     post.post_related.add(pr)
+                    if pub.options.get("auto_guess_public", False):
+                        for order in ["p", "n"]:
+                            key_path_post = "term_{}_{}_{}".format(p.id, post.post_type, order)
+                            ids = p.make_posts(post.post_type, order)
+                            cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
             if request.data.get("terms_add", None) is not None:
                 prs = PublicationTerm.objects.filter(id__in=request.data.get("terms_add", []))
                 for p in prs:
                     post.terms.add(p)
+                    if pub.options.get("auto_guess_public", False):
+                        for order in ["p", "n"]:
+                            key_path_post = "term_{}_{}_{}".format(p.id, post.post_type, order)
+                            ids = p.make_posts(post.post_type, order)
+                            cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
             if request.user.is_authenticated:
                 actions.follow(request.user, post)
+            if pub.options.get("auto_guess_public", False):
+                for order in ["p", "n"]:
+                    key_path = "{}_{}_{}".format(post.primary_publication.host, post.post_type, order)
+                ids = post.primary_publication.make_posts(post.post_type, order)
+                cache.set(key_path, ids, timeout=CACHE_TTL * 12)
             return Response(
                 status=status.HTTP_200_OK,
                 data=caching.make_post(True, None, str(post.id), {"master": True})
@@ -287,6 +302,113 @@ def fetch_taxonomy(request, app_id, slug):
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, )
 
 
+@api_view(['GET', 'DELETE', 'PUT'])
+def fetch_post(request, app_id, slug):
+    publication = Publication.objects.get(pk=app_id)
+    if request.method == "PUT":
+        instance = Post.objects.get(pk=slug)
+        is_authenticated = request.user.is_authenticated and (
+                request.user.is_superuser or request.user.is_staff or request.user is instance.user)
+        if request.user.is_authenticated and request.user not in instance.collaborators.all():
+            instance.collaborators.add(request.user)
+        if is_authenticated:
+            if request.data.get("title"):
+                instance.title = request.data.get("title")
+            if request.data.get("show_cms"):
+                instance.show_cms = request.data.get("show_cms")
+            if request.data.get("description") or request.data.get("description") == "":
+                instance.description = request.data.get("description")
+            if request.data.get("content") is not None:
+                instance.content = request.data.get("content")
+            if request.data.get("meta"):
+                if instance.meta is None:
+                    instance.meta = {}
+                for key in request.data.get("meta").keys():
+                    instance.meta[key] = request.data.get("meta")[key]
+            if request.data.get("post_related_removal"):
+                for p in request.data.get("post_related_removal"):
+                    pr = Post.objects.get(pk=p)
+                    instance.post_related.remove(pr)
+            if request.data.get("post_related_add"):
+                for p in request.data.get("post_related_add"):
+                    pr = Post.objects.get(pk=p)
+                    instance.post_related.add(pr)
+            if request.data.get("terms_removal"):
+                for p in request.data.get("terms_removal"):
+                    pr = PublicationTerm.objects.get(pk=p)
+                    instance.terms.remove(pr)
+                    for order in ["p", "n"]:
+                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
+                        ids = pr.make_posts(instance.post_type, order)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
+            if request.data.get("terms_add"):
+                for p in request.data.get("terms_add"):
+                    pr = PublicationTerm.objects.get(pk=p)
+                    instance.terms.add(pr)
+                    for order in ["p", "n"]:
+                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
+                        ids = pr.make_posts(instance.post_type, order)
+                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
+            for order in ["p", "n"]:
+                key_path = "{}_{}_{}".format(instance.primary_publication.host, instance.post_type, order)
+                ids = instance.primary_publication.make_posts(instance.post_type, order)
+                cache.set(key_path, ids, timeout=CACHE_TTL * 12)
+            instance.save()
+            flag = True
+        else:
+            flag = False
+        ct = ContentType.objects.get(app_label='cms', model='post')
+        for k in request.data.keys():
+            val = request.data.get(k)
+            field = k
+            if k in ["post_related_add", "post_related_removal"]:
+                typ3 = "post"
+            elif k in ["terms_add", "terms_removal"]:
+                typ3 = "publication_term"
+            elif type(val) is dict or type(val) is list:
+                if type(val) is dict:
+                    typ3 = "dict"
+                else:
+                    typ3 = "list"
+            else:
+                typ3 = "str"
+            if not (k in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(val) == 0):
+                if k != "meta":
+                    models.Contribute.objects.create(
+                        user=request.user if request.user.is_authenticated else None,
+                        target_content_type=ct,
+                        target_object_id=instance.id,
+                        field=field,
+                        value=val,
+                        type=typ3,
+                        status="approved" if is_authenticated else "pending"
+                    )
+                else:
+                    for km in request.data.get(k):
+                        val = request.data.get(k).get(km)
+                        field = k + "__" + km
+                        models.Contribute.objects.create(
+                            user=request.user if request.user.is_authenticated else None,
+                            target_content_type=ct,
+                            target_object_id=instance.id,
+                            field=field,
+                            value=val,
+                            type=type(val),
+                            status="approved" if is_authenticated else "pending"
+                        )
+        return Response(
+            status=status.HTTP_200_OK,
+            data=caching_v2.make_post(publication.host, {"instance": instance.id, "is_page": True}, flag)
+        )
+    elif request.method == "GET":
+        return Response(status=status.HTTP_200_OK, data=query_post(slug, {
+            "uid": request.GET.get("uid") is not None,
+            "is_guess_post": request.GET.get("is_guess_post"),
+            "show_cms": request.GET.get("show_cms")
+        }))
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 @api_view(['GET', 'POST'])
 def fetch_taxonomy_contribute(request, app_id, slug):
     if request.method == "GET":
@@ -338,110 +460,6 @@ def fetch_taxonomy_contribute(request, app_id, slug):
         return Response(status=status.HTTP_202_ACCEPTED, data="DONE")
 
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-@api_view(['GET', 'DELETE', 'PUT'])
-def fetch_post(request, app_id, slug):
-    publication = Publication.objects.get(pk=app_id)
-    if request.method == "PUT":
-        instance = Post.objects.get(pk=slug)
-        is_authenticated = request.user.is_authenticated and (
-                request.user.is_superuser or request.user.is_staff or request.user is instance.user)
-        if request.user.is_authenticated and request.user not in instance.collaborators.all():
-            instance.collaborators.add(request.user)
-        if is_authenticated:
-            if request.data.get("title"):
-                instance.title = request.data.get("title")
-            if request.data.get("show_cms"):
-                instance.show_cms = request.data.get("show_cms")
-            if request.data.get("description") or request.data.get("description") == "":
-                instance.description = request.data.get("description")
-            if request.data.get("content") is not None:
-                instance.content = request.data.get("content")
-            if request.data.get("meta"):
-                if instance.meta is None:
-                    instance.meta = {}
-                for key in request.data.get("meta").keys():
-                    instance.meta[key] = request.data.get("meta")[key]
-            if request.data.get("post_related_removal"):
-                for p in request.data.get("post_related_removal"):
-                    pr = Post.objects.get(pk=p)
-                    instance.post_related.remove(pr)
-            if request.data.get("post_related_add"):
-                for p in request.data.get("post_related_add"):
-                    pr = Post.objects.get(pk=p)
-                    instance.post_related.add(pr)
-            if request.data.get("terms_removal"):
-                for p in request.data.get("terms_removal"):
-                    pr = PublicationTerm.objects.get(pk=p)
-                    instance.terms.remove(pr)
-                    for order in ["p", "n"]:
-                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
-                        ids = instance.make_posts(instance.post_type, order)
-                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
-            if request.data.get("terms_add"):
-                for p in request.data.get("terms_add"):
-                    pr = PublicationTerm.objects.get(pk=p)
-                    instance.terms.add(pr)
-                    for order in ["p", "n"]:
-                        key_path_post = "term_{}_{}_{}".format(pr.id, instance.post_type, order)
-                        ids = instance.make_posts(instance.post_type, order)
-                        cache.set(key_path_post, list(ids), timeout=CACHE_TTL)
-            instance.save()
-            flag = True
-        else:
-            flag = False
-        ct = ContentType.objects.get(app_label='cms', model='post')
-        for k in request.data.keys():
-            val = request.data.get(k)
-            field = k
-            if k in ["post_related_add", "post_related_removal"]:
-                typ3 = "post"
-            elif k in ["terms_add", "terms_removal"]:
-                typ3 = "publication_term"
-            elif type(val) is dict or type(val) is list:
-                if type(val) is dict:
-                    typ3 = "dict"
-                else:
-                    typ3 = "list"
-            else:
-                typ3 = "str"
-
-            if not (k in ["post_related_add", "post_related_removal", "terms_add", "terms_removal"] and len(val) == 0):
-                if k != "meta":
-                    models.Contribute.objects.create(
-                        user=request.user if request.user.is_authenticated else None,
-                        target_content_type=ct,
-                        target_object_id=instance.id,
-                        field=field,
-                        value=val,
-                        type=typ3,
-                        status="approved" if is_authenticated else "pending"
-                    )
-                else:
-                    for km in request.data.get(k):
-                        val = request.data.get(k).get(km)
-                        field = k + "__" + km
-                        models.Contribute.objects.create(
-                            user=request.user if request.user.is_authenticated else None,
-                            target_content_type=ct,
-                            target_object_id=instance.id,
-                            field=field,
-                            value=val,
-                            type=type(val),
-                            status="approved" if is_authenticated else "pending"
-                        )
-        return Response(
-            status=status.HTTP_200_OK,
-            data=caching_v2.make_post(publication.host, {"instance": instance.id, "is_page": True}, flag)
-        )
-    elif request.method == "GET":
-        return Response(status=status.HTTP_200_OK, data=query_post(slug, {
-            "uid": request.GET.get("uid") is not None,
-            "is_guess_post": request.GET.get("is_guess_post"),
-            "show_cms": request.GET.get("show_cms")
-        }))
-    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
