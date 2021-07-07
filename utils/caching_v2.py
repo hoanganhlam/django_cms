@@ -65,7 +65,7 @@ def make_post(hostname, query, force):
         pub = maker_pub(hostname, {}, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
         limit_list_related = check_page_size(pub.get("options"), "general", "limit_list_related", 5)
-        data["related"] = list(map(lambda x: make_post(hostname, {"instance": str(x)}, False), data.get("related")[0: limit_list_related]))
+        data["related"] = list(map(lambda x: make_post(hostname, {"instance": x}, False), data.get("related")[0: limit_list_related]))
         for pt in post_type_related:
             key_path_related = "{}_post_{}_related_{}".format(hostname, pk, pt)
             if key_path_related not in cache or force:
@@ -75,7 +75,7 @@ def make_post(hostname, query, force):
             else:
                 ids = cache.get(key_path_related)
             data[pt] = {
-                "results": list(map(lambda x: make_post(hostname, {"instance": str(x)}, False), ids[0: limit_list_related])),
+                "results": list(map(lambda x: make_post(hostname, {"instance": x}, False), ids[0: limit_list_related])),
                 "count": len(ids)
             }
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
@@ -102,7 +102,7 @@ def make_posts(hostname, query, force):
         ids = cache.get(key_path)
     return {
         "results": list(
-            map(lambda x: make_post(hostname, {"instance": str(x)}, False), ids[offset: offset + page_size])),
+            map(lambda x: make_post(hostname, {"instance": x}, False), ids[offset: offset + page_size])),
         "count": len(ids)
     }
 
@@ -154,7 +154,7 @@ def make_term(hostname, query, force):
         "instance": data,
         "post_response": {
             "results": list(
-                map(lambda x: make_post(hostname, {"instance": str(x)}, False), ids[offset: offset + page_size])),
+                map(lambda x: make_post(hostname, {"instance": x}, False), ids[offset: offset + page_size])),
             "count": len(ids)
         }
     }
@@ -215,7 +215,7 @@ def make_user(hostname, query, force):
     return {
         "instance": data,
         "post_response": {
-            "results": list(map(lambda x: make_post(hostname, str(x), False), ids[offset: offset + page_size])),
+            "results": list(map(lambda x: make_post(hostname, x, False), ids[offset: offset + page_size])),
             "count": len(ids)
         }
     }
