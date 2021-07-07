@@ -45,12 +45,9 @@ def query_post(slug, query):
         return result
 
 
-def query_post_detail(slug):
+def query_post_detail(pk):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT FETCH_POST_DETAIL(%s, %s)", [
-            slug if type(slug) is str and not slug.isnumeric() else None,
-            int(slug) if type(slug) is int or (type(slug) is str and slug.isnumeric()) else None,
-        ])
+        cursor.execute("SELECT FETCH_POST_DETAIL(%s)", [pk])
         result = cursor.fetchone()[0]
         cursor.close()
         return result

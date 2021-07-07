@@ -61,7 +61,7 @@ def make_post(hostname, query, force):
             pk = cache.get(key_path)
     key_path = "post-{post_id}".format(post_id=pk)
     if force or key_path not in cache:
-        data = query_maker.query_post_detail(slug=pk)
+        data = query_maker.query_post_detail(pk)
         cache.set(key_path, data, timeout=CACHE_TTL * 12)
     else:
         data = cache.get(key_path)
