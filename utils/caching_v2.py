@@ -46,10 +46,16 @@ def maker_pub(hostname, query, force):
 
 def make_post(hostname, query, force):
     pk = query.get("instance")
-    if type(pk) is str and not pk.isnumeric():
-        key_path = "post-slug-{post_id}".format(post_id=pk)
+    if (type(pk) is str and not pk.isnumeric()) or query.get("is_pid"):
+        if query.get("is_pid"):
+            key_path = "post-pid-{post_id}".format(post_id=pk)
+        else:
+            key_path = "post-slug-{post_id}".format(post_id=pk)
         if key_path not in cache:
-            pk = Post.objects.get(slug=pk).id
+            if query.get("is_pid"):
+                pk = Post.objects.get(pid=pk, primary_publication__host=hostname).id
+            else:
+                pk = Post.objects.get(slug=pk).id
             cache.set(key_path, pk, timeout=CACHE_TTL * 12)
         else:
             pk = cache.get(key_path)

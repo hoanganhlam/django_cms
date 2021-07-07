@@ -628,21 +628,6 @@ def fetch_instance(host_name, pk, is_pid):
     return post_instance.id if post_instance is not None else None
 
 
-def fetch_instance2(host_name, pk, is_pid):
-    try:
-        if is_pid:
-            post_instance = Post.objects.get(pid=pk, primary_publication__host=host_name)
-        else:
-            if type(pk) == int or pk.isnumeric():
-                post_instance = Post.objects.get(pk=pk)
-            else:
-                return pk
-    except Exception as e:
-        print(e)
-        post_instance = None
-    return post_instance.slug if post_instance is not None else None
-
-
 # Init
 @api_view(['POST'])
 def graph(request):
@@ -774,8 +759,11 @@ def graph_v2(request):
     if query.get("type") == "post_list":
         out = caching_v2.make_posts(hostname, query=query, force=force)
     elif query.get("type") == "post_detail":
-        pk = fetch_instance2(hostname, query.get("value"), query.get("is_pid"))
-        out = caching_v2.make_post(hostname, {"instance": pk, "is_page": True}, force=force)
+        out = caching_v2.make_post(hostname, {
+            "instance": query.get("value"),
+            "is_page": True,
+            "is_pid": query.get("is_pid")
+        }, force=force)
     elif query.get("type") == "term_list":
         out = caching_v2.make_terms(hostname, query=query, force=force)
     elif query.get("type") == "home":
