@@ -62,7 +62,7 @@ def make_post(hostname, query, force):
         for pt in post_type_related:
             key_path_related = "{}_post_{}_related_{}".format(hostname, pk, pt)
             if key_path_related not in cache or force:
-                q = Q(primary_publication__host=hostname, post_related_revert__slug=pk, show_cms=True, post_type=pt) & (Q(post_related_revert__id=data.get("id")) | Q(post_related__id=data.get("id")))
+                q = Q(post_related_revert__slug=pk, show_cms=True, post_type=pt) & (Q(post_related_revert__id=data.get("id")) | Q(post_related__id=data.get("id")))
                 ids = list(Post.objects.prefetch_related("post_related", "post_related_revert").filter(q).values_list("id", flat=True))
                 cache.set(key_path_related, ids, timeout=CACHE_TTL * 12)
             else:
