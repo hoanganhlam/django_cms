@@ -69,7 +69,7 @@ def make_post(hostname, query, force):
                 ids = cache.get(key_path_related)
             data[pt] = {
                 "results": list(map(lambda x: make_post(hostname, {"instance": str(x)}, False), ids[0: limit_list_related])),
-                "count": len(data.get(pt, []))
+                "count": len(ids)
             }
     data["user"] = make_user(hostname, {"value": data.get("user_id")}, False).get("instance") if data.get(
         "user_id") else None
