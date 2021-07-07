@@ -46,7 +46,7 @@ def maker_pub(hostname, query, force):
 
 def make_post(hostname, query, force):
     pk = query.get("instance")
-    if type(pk) is str:
+    if type(pk) is str and not pk.isnumeric():
         key_path = "post-slug-{post_id}".format(post_id=pk)
         if key_path not in cache:
             pk = Post.objects.get(slug=pk).id
