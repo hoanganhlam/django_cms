@@ -67,6 +67,8 @@ def make_post(hostname, query, force):
         data = cache.get(key_path)
     if data is None:
         return {}
+    if data.get("related") is None:
+        data["related"] = []
     if query.get("is_page"):
         pub = maker_pub(hostname, {}, False)
         post_type_related = get_post_type_related(pub, data.get("post_type"))
