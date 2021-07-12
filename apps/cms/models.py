@@ -75,6 +75,18 @@ class Publication(BaseModel, Taxonomy):
     def maker_terms(self, taxonomy, order):
         return self.pub_terms.filter(taxonomy=taxonomy, show_cms=True).values_list('id', flat=True)
 
+    def test(self):
+        if self.options:
+            options = dict(self.options)
+            options["taxonomy_list"] = {}
+            options["post_type_list"] = {}
+            for item in options["taxonomies"]:
+                options["taxonomy_list"][item.get("label")] = item
+            for item in options["post_types"]:
+                options["post_type_list"][item.get("label")] = item
+            self.options = options
+            self.save()
+
 
 class PublicationCooperation(BaseModel):
     publication = models.ForeignKey(Publication, related_name="pub_cooperation_from", on_delete=models.CASCADE)

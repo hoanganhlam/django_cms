@@ -1,6 +1,6 @@
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from collections import OrderedDict
-
+from apps.cms.models import Publication
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -51,3 +51,19 @@ def clone_dict(dct, schemas, out=None):
         for d in dct:
             out.append(clone_dict(d, schemas, None))
     return out
+
+
+def make_static_fields(options, pub_id):
+    static_fields = []
+    for item in options["post_types"]:
+        static_fields.append(item["label"])
+        if item.get("sitemap"):
+            for pt in ["url_pattern_list", "url_pattern"]:
+                if item.get(pt):
+                    for x in item[pt]:
+                        if x != "/" and "__" not in x:
+                            static_fields.append(x)
+    pub = Publication.objects.get(pk=pub_id)
+    pub.options["static_fields"] = static_fields
+    pub.save()
+    return static_fields

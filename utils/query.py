@@ -108,3 +108,19 @@ def query_user(username, query):
         result = cursor.fetchone()[0]
         cursor.close()
         return result
+
+
+def query_user_id(username, query):
+    with connection.cursor() as cursor:
+        if type(username) is str:
+            cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s, %s)", [
+                username,
+                query.get("auth_id")
+            ])
+        else:
+            cursor.execute("SELECT FETCH_USER_ID(%s)", [
+                username
+            ])
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result

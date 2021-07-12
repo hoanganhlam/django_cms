@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^v1/commerce/', include(('apps.commerce.api.urls', 'api_commerce'))),
 
     url(r'^v1/', include(('apps.cms.api_public_guess.urls', 'api_public_cms_v2'))),
+    url(r'^v1/', include(('apps.cms.api_custom.urls', 'api_api_custom_v2'))),
 
     re_path(r'^main-sitemap.xsl', views.sitemap_style),
     re_path(r'^sitemap_index.xml', views.sitemap_index),

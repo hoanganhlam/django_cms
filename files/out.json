@@ -1,75 +1,900 @@
 {
-  "feeds": [],
-  "theme": {
-    "css": {},
-    "menu": {},
-    "layout": {},
-    "widget": {},
-    "homepage": {}
+  'id': 7,
+  'updated': '2021-07-10T17:56:21.301496+00:00',
+  'created': '2021-07-10T17:56:21.301486+00:00',
+  'db_status': 1,
+  'title': '9Plant',
+  'slug': '9plant',
+  'description': 'Plant everywhere',
+  'options': {
+    'feeds': [],
+    'theme': {
+      'css': {},
+      'menu': {},
+      'header': {},
+      'layout': {},
+      'widget': {},
+      'general': {
+        'filter_fields': [
+          'category',
+          'genus',
+          'family'
+        ],
+        'limit_list_related': 6,
+        'limit_list_post_reverse': 24
+      },
+      'homepage': {}
+    },
+    'allow_vote': True,
+    'post_types': [
+      {
+        'label': 'post',
+        'title': 'Post',
+        'related': [
+          'plant'
+        ],
+        'description': None,
+        'field_addons': [
+          {
+            'type': 'media',
+            'field': 'medias',
+            'label': 'Medias',
+            'options': {
+              'multiple': True
+            }
+          },
+          {
+            'type': 'text',
+            'field': 'credit',
+            'label': 'Credit',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'product_url',
+            'label': 'Product',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'origin_url',
+            'label': 'Origin Url',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'product_price',
+            'label': 'Product price',
+            'options': {
+              'multiple': False
+            }
+          },
+          {
+            'type': 'boolean',
+            'field': 'for_sale',
+            'label': 'Available for sale',
+            'options': {}
+          }
+        ]
+      },
+      {
+        'label': 'product',
+        'title': 'Product',
+        'related': [],
+        'description': None,
+        'field_addons': []
+      },
+      {
+        'label': 'plant',
+        'title': 'Plant',
+        'related': [
+          'question',
+          'disease',
+          'post',
+          'store'
+        ],
+        'sitemap': True,
+        'taxonomies': [
+          'category',
+          'phylum',
+          'class',
+          'order',
+          'family',
+          'tribe',
+          'genus',
+          'rate',
+          'tag',
+          'origin'
+        ],
+        'description': None,
+        'url_pattern': [
+          '/',
+          'plant__slug'
+        ],
+        'field_addons': [
+          {
+            'type': 'number',
+            'field': 'score_temperature',
+            'label': 'S.Temperature',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'temperature',
+            'label': 'Temperature',
+            'options': {}
+          },
+          {
+            'type': 'number',
+            'field': 'score_light',
+            'label': 'S.Light',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'light',
+            'label': 'Light',
+            'options': {}
+          },
+          {
+            'type': 'number',
+            'field': 'score_watering',
+            'label': 'S.Watering',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'watering',
+            'label': 'Watering',
+            'options': {}
+          },
+          {
+            'type': 'number',
+            'field': 'score_humidity',
+            'label': 'S.Humidity',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'humidity',
+            'label': 'Humidity',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'score_soil',
+            'label': 'S.Soil',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'soil',
+            'label': 'Soil',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'scientific_name',
+            'label': 'Scientific name',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'common_name',
+            'label': 'Common Name',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'propagation',
+            'label': 'Propagation',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'toxicity',
+            'label': 'Toxicity',
+            'options': {}
+          },
+          {
+            'type': 'EDITOR',
+            'field': 'fertilizing',
+            'label': 'Fertilizing',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'size',
+            'label': 'Size',
+            'options': {}
+          },
+          {
+            'type': 'json_array',
+            'field': 'refer',
+            'label': 'Reference',
+            'options': {
+              'schemas': [
+                {
+                  'type': 'text',
+                  'field': 'label',
+                  'label': 'Label',
+                  'options': {}
+                },
+                {
+                  'type': 'text',
+                  'field': 'value',
+                  'label': 'Value',
+                  'options': {}
+                }
+              ]
+            }
+          },
+          {
+            'type': 'text',
+            'field': 'height',
+            'label': 'Height',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'spread',
+            'label': 'Spread',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'bloom_time',
+            'label': 'bloom_time',
+            'options': {}
+          },
+          {
+            'type': None,
+            'field': 'leaf',
+            'label': 'Leaf',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'flower',
+            'label': 'Flower',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'foliage',
+            'label': 'Foliage',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'habit',
+            'label': 'Habit',
+            'options': {}
+          }
+        ],
+        'url_pattern_list': [
+          '/',
+          'plant'
+        ]
+      },
+      {
+        'label': 'question',
+        'title': 'Question',
+        'related': [
+          'plant'
+        ],
+        'taxonomies': [
+          'genus'
+        ],
+        'description': None
+      },
+      {
+        'label': 'user_plant',
+        'title': 'User Plant',
+        'related': [
+          'plant'
+        ],
+        'description': None
+      },
+      {
+        'label': 'disease',
+        'title': 'Disease',
+        'related': [],
+        'taxonomies': [
+          'genus'
+        ],
+        'description': None
+      },
+      {
+        'label': 'store',
+        'title': 'Store',
+        'related': [
+          'plant'
+        ],
+        'sitemap': True,
+        'id_field': 'slug',
+        'taxonomies': [
+          'category',
+          'tag',
+          'location'
+        ],
+        'description': None,
+        'url_pattern': [
+          '/',
+          'shop',
+          '/',
+          'store__slug'
+        ],
+        'field_addons': [
+          {
+            'type': 'text',
+            'field': 'address',
+            'label': 'Address',
+            'options': {
+              'help': 'Address'
+            }
+          },
+          {
+            'type': 'json',
+            'field': 'location',
+            'label': 'Location',
+            'options': {
+              'schemas': [
+                {}
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'store_type',
+            'label': 'Store type',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Online',
+                  'value': 'online'
+                },
+                {
+                  'label': 'Offiline',
+                  'value': 'offline'
+                }
+              ],
+              'multiple': True
+            }
+          },
+          {
+            'type': 'text',
+            'field': 'phone',
+            'label': 'Phone',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'open_time',
+            'label': 'Open time',
+            'options': {
+              'help': '7.AM - 7.PM'
+            }
+          },
+          {
+            'type': 'text',
+            'field': 'ig_username',
+            'label': 'IG username',
+            'options': {}
+          },
+          {
+            'type': 'text',
+            'field': 'ig_id',
+            'label': 'IG ID',
+            'options': {}
+          },
+          {
+            'type': 'media',
+            'field': 'medias',
+            'label': 'Medias',
+            'options': {
+              'multiple': True
+            }
+          }
+        ]
+      },
+      {
+        'label': 'problem',
+        'title': 'Problem',
+        'sitemap': False,
+        'id_field': 'slug',
+        'taxonomies': [
+          'genus'
+        ],
+        'description': None,
+        'url_pattern': []
+      }
+    ],
+    'taxonomies': [
+      {
+        'label': 'category',
+        'title': 'Category',
+        'sitemap': True,
+        'description': None,
+        'url_pattern': [
+          '/',
+          'category',
+          '/',
+          'category__term__slug'
+        ]
+      },
+      {
+        'label': 'tag',
+        'title': 'Tag',
+        'sitemap': True,
+        'description': None,
+        'url_pattern': [
+          '/',
+          'tag',
+          '/',
+          'tag__term__slug'
+        ]
+      },
+      {
+        'label': 'horoscope',
+        'title': 'Horoscope',
+        'sitemap': False,
+        'description': None,
+        'url_pattern': [
+          '/',
+          'taxonomy',
+          '/',
+          'slug'
+        ]
+      },
+      {
+        'label': 'origin',
+        'title': 'Origin',
+        'sitemap': True,
+        'description': None,
+        'url_pattern': [
+          '/',
+          'origin',
+          '/',
+          'origin__term__slug'
+        ]
+      },
+      {
+        'label': 'keyword',
+        'title': 'Keyword',
+        'description': None
+      },
+      {
+        'label': 'phylum',
+        'title': 'Phylum',
+        'sitemap': True,
+        'description': 'In biology, a phylum is a level of classification or taxonomic rank below kingdom and above class. Traditionally, in botany, the term division has been used instead of phylum, although the International Code of Nomenclature for algae, fungi, and plants accepts the terms as equivalent.',
+        'url_pattern': [
+          '/',
+          'phylum',
+          '/',
+          'phylum__term__slug'
+        ]
+      },
+      {
+        'label': 'class',
+        'title': 'Class',
+        'sitemap': True,
+        'taxonomies': [
+          'phylum',
+          'clade'
+        ],
+        'description': None,
+        'url_pattern': [
+          '/',
+          'class',
+          '/',
+          'class__term__slug'
+        ]
+      },
+      {
+        'label': 'order',
+        'title': 'Order',
+        'sitemap': True,
+        'taxonomies': [
+          'phylum',
+          'class',
+          'clade'
+        ],
+        'description': 'In biological classification, the order is a taxonomic rank used in the classification of organisms and recognized by the nomenclature codes. Other well-known ranks are life, domain, kingdom, phylum, class, family, genus, and species, with order fitting in between class and family.',
+        'url_pattern': [
+          '/',
+          'order',
+          '/',
+          'order__term__slug'
+        ]
+      },
+      {
+        'label': 'family',
+        'title': 'Family',
+        'sitemap': True,
+        'taxonomies': [
+          'phylum',
+          'class',
+          'order',
+          'clade'
+        ],
+        'description': 'Family is one of the eight major hierarchical taxonomic ranks in Linnaean taxonomy; it is classified between order and genus. A family may be divided into subfamilies, which are intermediate ranks between the ranks of family and genus.',
+        'url_pattern': [
+          '/',
+          'family',
+          '/',
+          'family__term__slug'
+        ]
+      },
+      {
+        'label': 'tribe',
+        'title': 'Tribe',
+        'sitemap': True,
+        'id_field': 'slug',
+        'taxonomies': [
+          'phylum',
+          'class',
+          'order',
+          'family',
+          'clade'
+        ],
+        'description': 'In biology, a tribe is a taxonomic rank above genus, but below family and subfamily. It is sometimes subdivided into subtribes.',
+        'url_pattern': [
+          '/',
+          'tribe',
+          '/',
+          'tribe__term__slug'
+        ]
+      },
+      {
+        'label': 'genus',
+        'title': 'Genus',
+        'sitemap': True,
+        'taxonomies': [
+          'phylum',
+          'class',
+          'order',
+          'family',
+          'tribe',
+          'clade'
+        ],
+        'description': 'A genus is a taxonomic rank used in the biological classification of living and fossil organisms, as well as viruses, in biology. In the hierarchy of biological classification, genus comes above species and below family. ',
+        'url_pattern': [
+          '/',
+          'genus',
+          '/',
+          'genus__term__slug'
+        ],
+        'field_addons': [
+          {
+            'type': 'select',
+            'field': 'temperature',
+            'label': 'temperature',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Less than 15',
+                  'value': '1'
+                },
+                {
+                  'label': '15 - 24',
+                  'value': '2'
+                },
+                {
+                  'label': 'More than 24',
+                  'value': '3'
+                }
+              ],
+              'schemas': [
+                {
+                  'type': None,
+                  'field': '123',
+                  'label': '123',
+                  'options': {}
+                }
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'light',
+            'label': 'light',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Low light',
+                  'value': '1'
+                },
+                {
+                  'label': 'Indirect light',
+                  'value': '2'
+                },
+                {
+                  'label': 'Bright light',
+                  'value': '3'
+                }
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'watering',
+            'label': 'watering',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Low',
+                  'value': '1'
+                },
+                {
+                  'label': 'Medium',
+                  'value': '2'
+                },
+                {
+                  'label': 'High',
+                  'value': '3'
+                }
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'humidity',
+            'label': 'humidity',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Less than 40',
+                  'value': '1'
+                },
+                {
+                  'label': '50 - 60',
+                  'value': '2'
+                },
+                {
+                  'label': 'More than 70',
+                  'value': '3'
+                }
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'soil',
+            'label': 'soil',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Mix soil',
+                  'value': 'mix'
+                },
+                {
+                  'label': 'Succulent soil',
+                  'value': 'succulent'
+                },
+                {
+                  'label': 'Clay soil',
+                  'value': 'clay'
+                },
+                {
+                  'label': 'Sandy soil',
+                  'value': 'sandy'
+                },
+                {
+                  'label': 'Water',
+                  'value': 'water'
+                }
+              ]
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'propagation',
+            'label': 'Propagation',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Cuttings',
+                  'value': 'cuttings'
+                },
+                {
+                  'label': 'Division',
+                  'value': 'division'
+                },
+                {
+                  'label': 'Ground layering',
+                  'value': 'ground_layering'
+                },
+                {
+                  'label': 'Offsets',
+                  'value': 'offsets'
+                },
+                {
+                  'label': 'Micropropagation',
+                  'value': 'micropropagation'
+                },
+                {
+                  'label': 'Storage organs',
+                  'value': 'storage_organs'
+                },
+                {
+                  'label': 'Grafting',
+                  'value': 'grafting'
+                },
+                {
+                  'label': 'Leaf',
+                  'value': 'leaf'
+                }
+              ],
+              'multiple': True
+            }
+          },
+          {
+            'type': 'boolean',
+            'field': 'toxicity',
+            'label': 'Toxicity',
+            'options': {
+              'dataset': []
+            }
+          },
+          {
+            'type': 'select',
+            'field': 'fertilizing',
+            'label': 'Fertilizing',
+            'options': {
+              'dataset': [
+                {
+                  'label': 'Low',
+                  'value': '1'
+                },
+                {
+                  'label': 'Medium',
+                  'value': '2'
+                },
+                {
+                  'label': 'High',
+                  'value': '3'
+                }
+              ]
+            }
+          },
+          {
+            'type': 'json_array',
+            'field': 'refer',
+            'label': 'References',
+            'options': {
+              'schemas': [
+                {
+                  'type': 'text',
+                  'field': 'label',
+                  'label': 'Label',
+                  'options': {}
+                },
+                {
+                  'type': 'text',
+                  'field': 'value',
+                  'label': 'Value',
+                  'options': {}
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        'label': 'species',
+        'title': 'Species',
+        'sitemap': False,
+        'taxonomies': [
+          'phylum',
+          'class',
+          'order',
+          'family',
+          'tribe',
+          'genus',
+          'clade'
+        ],
+        'description': 'Species, in biology, classification comprising related organisms that share common characteristics and are capable of interbreeding. This biological species concept is widely used in biology and related fields of study.',
+        'url_pattern': [
+          '/',
+          'species',
+          '/',
+          'slug'
+        ]
+      },
+      {
+        'label': 'clade',
+        'title': 'Clade',
+        'sitemap': False,
+        'id_field': 'slug',
+        'description': 'A clade, also known as a monophyletic group or natural group, is a group of organisms that are monophyletic—that is, composed of a common ancestor and all its lineal descendants - on a phylogenetic tree. Rather than the English term, the equivalent Latin term cladus is often used in taxonomical literature.',
+        'url_pattern': [
+          '/',
+          'taxonomy',
+          '/',
+          'slug'
+        ]
+      },
+      {
+        'label': 'location',
+        'title': 'Location',
+        'sitemap': False,
+        'id_field': 'slug',
+        'description': None,
+        'url_pattern': []
+      },
+      {
+        'label': 'rate',
+        'title': 'Rate',
+        'sitemap': False,
+        'id_field': 'slug',
+        'description': None,
+        'url_pattern': []
+      }
+    ],
+    'post_fields': [],
+    'allow_comment': True,
+    'allow_guess_post': True,
+    'auto_guess_public': True,
+    'default_post_type': 'plant'
   },
-  "allow_vote": false,
-  "post_types": [
-    {
-      "label": "post",
-      "title": "Post",
-      "sitemap": false,
-      "description": null,
-      "url_pattern": [
-        "/",
-        "post_type",
-        "/",
-        "slug"
-      ]
-    },
-    {
-      "label": "article",
-      "title": "Article",
-      "sitemap": true,
-      "taxonomies": [
-        "tag"
-      ],
-      "description": null,
-      "url_pattern": [
-        "/",
-        "article",
-        "/",
-        "post__slug"
-      ],
-      "url_pattern_list": [
-        "/",
-        "article"
-      ]
-    },
-    {
-      "label": "question",
-      "title": "Question",
-      "related": [
-        "article"
-      ],
-      "sitemap": false,
-      "id_field": "slug",
-      "description": null,
-      "url_pattern": [],
-      "field_addons": []
+  'measure': {
+    'cal_post': {
+      '2021-2-7': 1,
+      '2020-10-1': 3,
+      '2020-10-3': 2,
+      '2020-10-4': 403,
+      '2020-11-2': 2,
+      '2020-11-3': 1,
+      '2020-11-7': 2,
+      '2020-11-9': 2,
+      '2020-12-1': 6,
+      '2020-12-2': 6,
+      '2020-9-24': 10,
+      '2020-9-27': 9,
+      '2020-9-28': 12,
+      '2020-9-30': 4,
+      '2021-1-26': 2,
+      '2021-1-29': 4,
+      '2021-2-10': 112,
+      '2021-2-11': 1405,
+      '2021-2-12': 47,
+      '2021-2-14': 12,
+      '2021-2-18': 7,
+      '2021-2-19': 645,
+      '2021-2-20': 6,
+      '2021-2-21': 174,
+      '2021-2-22': 76,
+      '2021-2-23': 230,
+      '2021-2-24': 856,
+      '2021-2-25': 115,
+      '2021-2-26': 1378,
+      '2021-2-27': 844,
+      '2020-10-10': 232,
+      '2020-10-11': 178,
+      '2020-10-12': 731,
+      '2020-10-13': 520,
+      '2020-10-14': 458,
+      '2020-10-15': 4203,
+      '2020-10-19': 4,
+      '2020-10-20': 758,
+      '2020-10-22': 458,
+      '2020-10-24': 968,
+      '2020-10-28': 854,
+      '2020-10-30': 686,
+      '2020-11-19': 1,
+      '2020-11-29': 2,
+      '2020-11-30': 23
     }
-  ],
-  "taxonomies": [
+  },
+  'user_id': 5005,
+  'host': '9plant.com',
+  'is_following': False,
+  'count_followed': 0,
+  'corps': [
     {
-      "label": "tag",
-      "title": "Tag",
-      "sitemap": true,
-      "description": null,
-      "url_pattern": [
-        "/",
-        "tagged",
-        "/",
-        "tag__term__slug"
-      ]
+      'id': 15
     }
-  ],
-  "post_fields": [],
-  "allow_comment": false,
-  "allow_guess_post": false,
-  "auto_guess_public": false,
-  "default_post_type": "article"
+  ]
 }
