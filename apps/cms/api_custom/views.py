@@ -64,7 +64,7 @@ def get_path_info(publication, path):
     if options.get("default_post_type"):
         post_type = options.get("default_post_type")
     if options.get("default_taxonomy"):
-        post_type = options.get("default_taxonomy")
+        taxonomy = options["default_taxonomy"]
     params = list(filter(lambda x: x != "", path.split("/")))
     count = len(params)
     if count > 0:
@@ -178,7 +178,7 @@ def path_to_data(publication, request):
             data[info["taxonomy"]] = caching_v3.make_term(
                 host_name,
                 pk,
-                theme_options["term"].get("schemas_{}".format(info["taxonomy"]), default_schemas.TERM_DETAIL),
+                theme_options["term"].get("{}_schemas".format(info["taxonomy"]), default_schemas.TERM_DETAIL),
                 is_force
             )
             info["title"] = data[info["taxonomy"]]["term"]["title"]
@@ -201,7 +201,7 @@ def path_to_data(publication, request):
             data[info["post_type"]] = caching_v3.make_post(
                 host_name,
                 pk,
-                theme_options["post"].get("schemas_{}".format(info["post_type"]), default_schemas.POST_DETAIL),
+                theme_options["post"].get("{}_schemas".format(info["post_type"]), default_schemas.POST_DETAIL),
                 is_force
             )
             if info["type"] == "post":
@@ -220,8 +220,8 @@ def path_to_data(publication, request):
                 for pt in info["related_fields"]:
                     q = {
                         "term": None,
-                        "page_size": theme_options["post"].get("limit_{}".format(pt), default_limit),
-                        "order": theme_options["post"].get("order_{}".format(pt), default_order),
+                        "page_size": theme_options["post"].get("{}_limit".format(pt), default_limit),
+                        "order": theme_options["post"].get("{}_order".format(pt), default_order),
                         "page": 1,
                         "post_type": pt,
                         "related": pk,
@@ -232,7 +232,7 @@ def path_to_data(publication, request):
                     data[info["post_type"]][pt] = caching_v3.make_list_post(
                         host_name,
                         q,
-                        theme_options["post"].get("schemas_{}_list".format(pt), default_schemas.POST_LIST),
+                        theme_options["post"].get("{}_schemas_list".format(pt), default_schemas.POST_LIST),
                         is_force
                     )
         elif key == "user" and username:
@@ -271,14 +271,14 @@ def path_to_data(publication, request):
             data["response_post"] = caching_v3.make_list_post(
                 host_name,
                 query,
-                theme_options["post"].get("schemas_{}_list".format(info["post_type"]), default_schemas.POST_LIST),
+                theme_options["post"].get("{}_schemas_list".format(info["post_type"]), default_schemas.POST_LIST),
                 is_force
             )
         elif source == "term":
             data["response_term"] = caching_v3.make_list_term(
                 host_name,
                 query,
-                theme_options["term"].get("schemas_{}_list".format(info["taxonomy"]), default_schemas.TERM_LIST),
+                theme_options["term"].get("{}_schemas_list".format(info["taxonomy"]), default_schemas.TERM_LIST),
                 is_force
             )
     return {
