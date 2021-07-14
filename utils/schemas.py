@@ -60,6 +60,7 @@ TERM_DETAIL = [
     "id",
     "to",
     "description",
+    "media",
     "taxonomy",
     {
         "term": [
@@ -73,6 +74,7 @@ TERM_LIST = [
     "id",
     "to",
     "description",
+    "media",
     "taxonomy",
     {
         "term": [
