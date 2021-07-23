@@ -1,14 +1,10 @@
 from django.core.management.base import BaseCommand
-from utils.instagram import fetch_by_hash_tag
-import time
 import json
 import sqlite3
 from apps.media.models import Media
 from apps.cms.models import Post, Publication, Term, PublicationTerm
 from apps.authentication.models import Profile
 from django.contrib.auth.models import User
-from utils.instagram import fetch_by_hash_tag, get_comment, fetch_avatar
-from django.core.serializers.json import DjangoJSONEncoder
 
 con = sqlite3.connect('instagram.db')
 cur = con.cursor()
@@ -20,23 +16,19 @@ def sync_ig_user(user_raw):
     test_user, created = User.objects.get_or_create(username=user_raw.get("username"))
     user = test_user
     if created:
-        raw_avatar = fetch_avatar(user_raw.get("profile_pic_id"))
-        media = None
-        if raw_avatar:
-            media = Media.objects.save_url(raw_avatar)
         test_profile, is_created = Profile.objects.get_or_create(
             user=user,
             defaults={
                 "nick": user_raw.get("full_name"),
                 "options": {"source": "instagram", "id": user_raw.get("id")},
-                "media": media if media is not None else None
+                "media": None
             }
         )
         if test_profile.media is None and not is_created:
             if test_profile.media is None:
                 test_profile.nick = user_raw.get("full_name")
                 test_profile.options = {"source": "instagram", "id": user_raw.get("id")}
-                test_profile.media = media if media is not None else None
+                test_profile.media = None
                 test_profile.save()
     return user
 
