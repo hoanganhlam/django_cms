@@ -1,1 +1,0 @@
-{"head":{"title":"assert","category":"Node.js","layout":"2017/sheet"},"body":[{"title":"Assertions","elms":"\n```js\nassert(val)\nassert.equal(actual, expected)\nassert.notEqual(a, e)\n```\n\n```js\nassert.deepEqual(a, e)\nassert.notDeepEqual(a, e)\n```\n\n```js\nassert.throws(fn)\n```\n","h2":null},{"title":"References","elms":"\n- http://nodejs.org/api/assert.html","h2":null}]}

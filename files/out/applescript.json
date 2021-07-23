@@ -1,0 +1,38 @@
+{
+    "head": {
+        "title": "AppleScript",
+        "updated": "2018-12-06T00:00:00.000Z",
+        "layout": "2017/sheet",
+        "category": "macOS",
+        "prism_languages": [
+            "applescript"
+        ]
+    },
+    "body": [
+        {
+            "title": "Running",
+            "elms": "\n```applescript\nosascript -e \"...\"\n```\n\n```applescript\ndisplay notification \"X\" with title \"Y\"\n```\n",
+            "h2": null
+        },
+        {
+            "title": "Comments",
+            "elms": "\n```applescript\n-- This is a single line comment\n```\n\n```applescript\n# This is another single line comment\n```\n\n```applescript\n(*\nThis is\na multi\nline comment\n*)\n```\n",
+            "h2": null
+        },
+        {
+            "title": "Say",
+            "elms": "\n```applescript\n-- default voice\nsay \"Hi I am a Mac\"\n```\n\n```applescript\n-- specified voice\nsay \"Hi I am a Mac\" using \"Zarvox\"\n```\n",
+            "h2": null
+        },
+        {
+            "title": "Beep",
+            "elms": "\n```applescript\n-- beep once\nbeep\n```\n\n```applescript\n-- beep 10 times\nbeep 10\n```\n",
+            "h2": null
+        },
+        {
+            "title": "Delay",
+            "elms": "\n```applescript\n-- delay for 5 seconds\ndelay 5\n```",
+            "h2": null
+        }
+    ]
+}

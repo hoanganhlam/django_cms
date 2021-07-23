@@ -35,13 +35,16 @@ def publication_options():
 
 def theme_options():
     return {
-        "general": {},
-        "header": {},
-        "layout": {},
-        "menu": {},
-        "css": {},
-        "widget": {},
-        "homepage": {}
+        "general": [],
+        "header": [],
+        "layout": [],
+        "menu": [],
+        "css": [],
+        "widget": [],
+        "homepage": [],
+        "user": [],
+        "post": [],
+        "term": []
     }
 
 

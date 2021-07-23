@@ -1,0 +1,177 @@
+{
+  "css": [],
+  "menu": [],
+  "post": [
+    {
+      "type": "json_array",
+      "field": "post_schemas",
+      "label": "post_schemas",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "text_array",
+      "field": "post_schemas_list",
+      "label": "post_schemas_list",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "text_array",
+      "field": "post_related_post_types",
+      "label": "post_related_post_types",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "text_array",
+      "field": "post_taxonomies",
+      "label": "post_taxonomies",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "number",
+      "field": "post_limit",
+      "label": "post_limit",
+      "options": {
+        "default": "5"
+      }
+    },
+    {
+      "type": "text",
+      "field": "post_order",
+      "label": "post_order",
+      "options": {
+        "default": "p"
+      }
+    }
+  ],
+  "term": [
+    {
+      "type": "json_array",
+      "field": "category_schemas",
+      "label": "category_schemas",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "json_array",
+      "field": "category_schemas_list",
+      "label": "category_schemas_list",
+      "options": {
+        "multiple": true
+      }
+    }
+  ],
+  "user": [
+    {
+      "type": "json_array",
+      "field": "user_schemas",
+      "label": "User schemas",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "text_array",
+      "field": "data_sources",
+      "label": "Data sources",
+      "options": {}
+    }
+  ],
+  "header": [],
+  "layout": [],
+  "widget": [],
+  "general": [
+    {
+      "type": "number",
+      "field": "limit_list_related",
+      "label": "Limit list related",
+      "options": {}
+    },
+    {
+      "type": "text_array",
+      "field": "filter_fields",
+      "label": "Filter fields",
+      "options": {
+        "multiple": true
+      }
+    },
+    {
+      "type": "number",
+      "field": "limit",
+      "label": "Limit",
+      "options": {}
+    },
+    {
+      "type": "text",
+      "field": "default_order",
+      "label": "Default order",
+      "options": {
+        "default": "p"
+      }
+    },
+    {
+      "type": "text",
+      "field": "define_member_page",
+      "label": "Define member page",
+      "options": {}
+    }
+  ],
+  "homepage": [
+    {
+      "type": "text_array",
+      "field": "data_sources",
+      "label": "Data sources",
+      "options": {
+        "multiple": true
+      }
+    }
+  ]
+}
+
+
+{
+  "general": {
+    "filter_fields": [],
+    "define_member_page": "profile",
+    "default_order": "p",
+    "limit": 10,
+    "limit_list_related": 5
+  },
+  "homepage": {
+    "data_sources": [
+      "post"
+    ]
+  },
+  "term": {
+    "category_schemas": [],
+    "category_schemas_list": []
+  },
+  "post": {
+    "post_schemas": [],
+    "post_schemas_list": [],
+    "post_related_post_types": [],
+    "post_taxonomies": [],
+    "post_limit": 5,
+    "post_order": "p"
+  },
+  "user": {
+    "user_schemas": [],
+    "data_sources": [
+      "post"
+    ]
+  },
+  "header": {},
+  "layout": {},
+  "menu": {},
+  "css": {},
+  "widget": {}
+}
+

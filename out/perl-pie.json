@@ -1,1 +1,0 @@
-{"head":{"title":"Perl-pie","category":"Development"},"body":[{"title":"Search and replace","elms":"\n```sh\nperl -p -i -e 's/hello/hola/g' *.txt\n```\n","h2":null},{"title":"Back-referencing","elms":"\nUse `\\1` et al.\n\n```sh\n# '@include align-items(center);' => 'align-items: center;'\nperl -p -i -e \"s/\\@include (align-items)\\((.*)\\);/\\1: \\2;/g\"\n```","h2":null}]}

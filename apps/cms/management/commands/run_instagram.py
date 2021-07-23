@@ -18,7 +18,13 @@ def plant_universe_worker(k, n, count):
         results = cur.execute("SELECT * FROM ig_posts WHERE ig_id = '%s'" % item.get("ig_id")).fetchall()
         if len(results) == 0:
             data = json.dumps(item, cls=DjangoJSONEncoder)
-            cur.execute('''INSERT INTO ig_posts VALUES (?, ?)''', (item.get("ig_id"), data))
+            cur.execute('''INSERT INTO ig_posts VALUES (?, ?, ?, ?, ?)''', (
+                item.get("ig_id"),
+                data,
+                ",".join(item.get("tags", [])),
+                0,
+                0
+            ))
     con.commit()
     if out.get("next_id"):
         time.sleep(2)
@@ -27,4 +33,4 @@ def plant_universe_worker(k, n, count):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        plant_universe_worker("anthuriumcrystallinum", None, 0)
+        plant_universe_worker("monsteradeliciosavariegata", None, 0)
