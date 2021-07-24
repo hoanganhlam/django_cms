@@ -37,7 +37,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         pub = Publication.objects.get(pk=31)
         admin = User.objects.get(pk=1)
-        for t in ["ficusaltissimavariegata", "ficuspumilavariegata", "ficuslyratavarirgata", "ficustriangularisvariegata"]:
+        for t in ["ficusaltissimavariegata", "ficuspumilavariegata", "ficuslyratavariegata"]:
             results = cur.execute("SELECT * FROM ig_posts WHERE tags LIKE '%{}%'".format(t)).fetchall()
             for r in results:
                 pk = r[0]

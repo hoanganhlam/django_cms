@@ -33,4 +33,4 @@ def plant_universe_worker(k, n, count):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        plant_universe_worker("monsteradeliciosavariegata", None, 0)
+        plant_universe_worker("ficusaltissimavariegata", None, 0)
