@@ -48,12 +48,15 @@ class Command(BaseCommand):
                     medias = []
                     for img in item.get("images", []):
                         media = Media.objects.save_url(img)
-                        medias.append(media.id)
+                        if media:
+                            medias.append(media.id)
                     meta = {
                         "ig_id": pk,
                         "credit": item.get("user").get("username"),
                         "medias": medias
                     }
+                    if len(medias) == 0:
+                        break
                     new_post = Post.objects.create(
                         title="Post by " + item.get("user").get("full_name") if item.get("user").get(
                             "full_name") else item.get("user").get("username"),
