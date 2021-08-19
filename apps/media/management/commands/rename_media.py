@@ -7,4 +7,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         medias = Media.objects.order_by("-id")
         for media in medias:
-            print(MediaSerializer(media).data.get("id"))
+            print(media.id)
+            media.path.name = media.path.name.replace("favdes/images", "")
+            media.save()
